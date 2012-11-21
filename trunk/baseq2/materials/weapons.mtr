@@ -1,0 +1,165 @@
+
+//
+// Banner
+//
+
+models/objects/banner/banner
+{
+
+}
+
+models/objects/banner/ball
+{
+
+}
+
+models/objects/banner/pole
+{
+
+}
+
+//
+// Blaster Bolt
+//
+
+models/objects/laser/laser
+{
+
+}
+
+//
+// Rocket
+//
+
+models/objects/rocket/flash
+{
+
+}
+
+models/objects/rocket/flare
+{
+
+}
+
+models/objects/rocket/glow
+{
+
+}
+
+//
+// Blaster Glow
+//
+
+
+models/weapons/v_blast/skin
+{
+
+}
+
+//
+// Shotgun Glow
+//
+
+models/weapons/v_shotg/skin
+{
+
+}
+
+//
+// Rocket Launcher Glow
+//
+
+models/weapons/v_rocket/skin
+{
+
+}
+
+//
+// Railgun Glow
+//
+
+models/weapons/v_rail/skin
+{
+
+}
+
+//
+// BFGK10K Glow
+//
+
+models/weapons/v_bfg/skin
+{
+
+}
+
+//
+// Beamer2 Glow
+//
+
+models/weapons/v_beamer2/skin
+{
+
+}
+
+//
+// Beamer Glow
+//
+
+models/weapons/v_beamer/skin1
+{
+
+}
+
+//
+// Trap Glow
+//
+
+models/weapons/v_trap/t_skin2
+{
+
+}
+
+//
+// ShotX Glow
+//
+
+models/weapons/v_trap/t_skin2
+{
+
+}
+
+//
+// Boomer Glow
+//
+
+models/weapons/v_trap/t_skin2
+{
+
+}
+
+//
+// Sonic Glow
+//
+
+models/weapons/v_trap/t_skin2
+{
+
+}
+
+//
+// ENuke Glow
+//
+
+models/weapons/v_trap/t_skin2
+{
+
+}
+
+//
+// Ionripper
+//
+
+models/weapons/v_trap/t_skin2
+{
+
+}

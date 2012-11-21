@@ -1,0 +1,18 @@
+
+//
+// Ejecting Brass
+//
+
+models/misc/b_shell/bullet
+{
+	{
+
+	}
+}
+
+models/misc/s_shell/shell
+{
+	{
+
+	}
+}

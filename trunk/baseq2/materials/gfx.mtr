@@ -1,0 +1,80 @@
+
+white
+{
+	{
+		map		_white
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+charset
+{
+	{
+		linear
+		map		gfx/charset.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+lagometer
+{
+	{
+		linear
+		map 		gfx/lag.tga
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+	{
+		linear
+		map		_lagometer
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+disconnected
+{
+	{
+		linear
+		map		gfx/net.tga
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+pause
+{
+	{
+		linear
+		map		gfx/pause_cloud1.tga
+		scroll		time * 0.02, 0
+		blend		add
+	}
+	{
+		linear
+		map		gfx/pause_cloud2.tga
+		scroll		time * 0.2, 1
+		blend		add
+	}
+	{
+		linear
+		map		gfx/paused.tga
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+console
+{
+	{
+		linear
+		map		gfx/console01.tga
+		scroll		time * 0.02, 0
+		scale		2, 1
+	}
+	{
+		linear
+		map		gfx/console02.tga
+		scroll		time * 0.2, time * 0.1
+		scale		2, 1
+		blend 		add
+	}
+}
