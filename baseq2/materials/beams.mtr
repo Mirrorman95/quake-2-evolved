@@ -1,0 +1,60 @@
+
+gfx/beams/laser
+{
+	twoSided
+	{
+		map		gfx/beams/laser_flat.tga
+		colored
+		blend		add
+	}
+	{
+		map		gfx/beams/laser_noise.tga
+		scroll		time * 0.45, 0
+		colored
+		blend		add
+	}
+	{
+		map		gfx/beams/laser_noise.tga
+		scroll		time * -0.45, 0
+		colored
+		blend		add
+	}
+}
+
+gfx/beams/grapple
+{
+	twoSided
+	{
+		map		gfx/beams/grapple.tga
+		scale		2, 1
+		colored
+		alphaTest	0
+	}
+}
+
+gfx/beams/lightning
+{
+	twoSided
+	{
+		map		gfx/beams/lightning_1.tga
+		colored
+		blend		GL_SRC_ALPHA, GL_ONE
+	}
+}
+
+gfx/beams/heat
+{
+	twoSided
+	{
+		map		gfx/beams/heatbeam_1.tga
+		scroll		time * 50, 0
+		colored
+		blend		GL_SRC_ALPHA, GL_ONE
+	}
+	{
+		map		gfx/beams/heatbeam_2.tga
+		scroll		time * 35, 0
+		colored
+		blend		GL_SRC_ALPHA, GL_ONE
+	}
+}

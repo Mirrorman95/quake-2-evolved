@@ -1,0 +1,57 @@
+
+//
+// Mouse Glow
+//
+
+ui/assets/misc/mouse_cursor
+{
+	{
+		linear
+		clamp map 	ui/assets/misc/mouse_cursor.tga
+		blend 		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+/*
+	{
+		linear
+		clamp map 	ui/assets/misc/mouse_cursor_glow.tga
+		blend 		add
+		rgb		0.5 + sinTable[time * 0.3]
+	}
+*/
+}
+
+//
+// In-Game Menu
+//
+
+ui/assets/ingui/main
+{
+
+}
+
+//
+// Levelshot Detail
+//
+
+ui/assets/loading/loading_detail
+{
+
+}
+
+//
+// Unknown Map Menu Shot
+//
+
+ui/assets/mission_levelshots/unknownmap
+{
+
+}
+
+//
+// Loading Animation
+//
+
+ui/assets/loading/load_main
+{
+
+}

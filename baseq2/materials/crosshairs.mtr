@@ -1,0 +1,201 @@
+
+gfx/crosshairs/crosshair1
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair1.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair2
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair2.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+
+gfx/crosshairs/crosshair3
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair3.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair4
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair4.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair5
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair5.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair6
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair6.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair7
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair7.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair8
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair8.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair9
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair9.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair10
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair10.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair11
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair11.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair12
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair12.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair13
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair13.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair14
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair14.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair15
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair15.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair16
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair16.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair17
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair17.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair18
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair18.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair19
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair19.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/crosshairs/crosshair20
+{
+	{
+		linear
+		map		gfx/crosshairs/crosshair20.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}

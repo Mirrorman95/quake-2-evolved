@@ -1,0 +1,162 @@
+/*=================================================================
+
+Mission Data For Single Player Mission Screen
+Created 25th November, 2002
+Edited 4th Oktober, 2005
+Created by o'dium (odium@planetquake.com)
+All material included in this file has been collected and/or created for Quake II Evolved.
+
+=================================================================*/
+
+base
+{
+	name		"Crash Land In The Middle Of Hell"
+
+	objective	"After barely making it out of your crashed pod\n"
+			"alive, you climb to your feet and look at the\n"
+			"environment around you. Your off target. Way off\n"
+			"target. You missed the LZ by a long shot. Its\n"
+			"obvious that your going to need new orders in\n"
+			"order to make it out of this hell hole alive. With\n"
+			"your Blaster in hand, you take one last breath\n"
+			"before heading into unknown territory..."
+
+	levelshots	base1_2 base2_2 base3_3 train_2
+}
+
+warehouse
+{
+	name		"Time To Light This Place Up"
+
+	objective	"After finally reaching the Comm Center and\n"
+			"gaining an up link, you find yourself entering\n"
+			"an old abandoned warehouse. However, the\n"
+			"bright corridors of your previous enviroment\n"
+			"have been replaced with dark and ever more\n"
+			"dangerous traps. Find each of the 4 Power\n"
+			"Cubes in order to turn the power back on,\n"
+			"then make your way into the Jail Complex."
+
+	levelshots	bunk1_1 ware1_1 ware2_1
+}
+
+jail
+{
+	name		"Imprisoned Heroes"
+
+	objective	"After arriving at yet another new and dangerous\n"
+			"location via a handy conveyor belt, you soon\n"
+			"find yourself in even more shit than before. With\n"
+			"little ammo, and still no help from the guys\n"
+			"upstairs, you move on into the next area; The\n"
+			"Strogg Jail House. With any luck, you may run\n"
+			"into some of your fellow marine buddies and\n"
+			"finally lay some serious ownage down."
+
+	levelshots	jail1_1 jail2_3 jail3_3 jail4_1 jail5_1 security_1
+}
+
+mine
+{
+	name		"The Haunted Mines"
+
+	objective	"With the sounds of your fallen comrades\n"
+			"screams still fresh in your mind, you walk ever\n"
+			"deeper into the Strogg base. However, a new\n"
+			"threat soon becomes apparent. Not the Strogg,\n"
+			"not even the planets mutant inhabitants... Now\n"
+			"you have to survive the crumbling and decaying\n"
+			"mines as well..."
+
+	levelshots	mintro_1 mine1_2 mine2_3 mine3_3 mine4_3
+}
+
+factory
+{
+	name		"Not For The Faint Hearted"
+
+	objective	"As you exit the Mines, you take one long breath\n"
+			"and thank god you made it out of that place alive.\n"
+			"But the breath isn't even remotely fresh; It stinks.\n"
+			"You instantly recognize its aroma. You smelt it\nw"
+			"hen you landed. You smelt it in the Jails... For\n"
+			"it is the smell of death. You cover your mouth\n"
+			"with your dirty palm, and continue once more\n"
+			"with your mission..."
+
+	levelshots	fact1_3 fact2_1 fact3_1
+}
+
+power
+{
+	name		"Power To The Strogg"
+
+	objective	"At last, air... As you walk outside, you are\n"
+			"confronted with two huge pillars. Your at the\n"
+			"reactor. You need to infiltrate and destroy the\n"
+			"Strogg main reactor to cause all kinds of shit\n"
+			"to go wrong for these bastards. In order to do this,\n"
+			"you need to find and expose the reactor core."
+
+	levelshots	power1_2 power2_3 cool1_2 waste1_2 waste2_1 waste3_1
+}
+
+biggun
+{
+	name		"Operation Big Gun"
+
+	objective	"The radio lights up; 'The disable and destroy\n"
+			"orders are green for Biggun, in primary area.'\n"
+			"Finally, the target is in sight. But don't expect\n"
+			"the Strogg to just give up their most powerful\n"
+			"weapon easily. In order to successfully destroy\n"
+			"the target, you need to lock down the laser grid.\n"
+			"Its location, however, is another story..."
+
+	levelshots	biggun_1 biggun_2 biggun_3
+}
+
+hangar
+{
+	name		"Search For A Hole"
+
+	objective	"Finally, one target down. With the Big Gun finally\n"
+			"shut down, you have given your superiors the word\n"
+			"that the bombardment on the planet can continue.\n"
+			"However, the threat is not over yet. You have just\n"
+			"stumbled across the location of the Black Hole\n"
+			"Generator; A transportation device that can shift\n"
+			"massive amounts of Strogg to Earth in a very short\n"
+			"space of time. Shut it down, and fast."
+
+	levelshots	hangar1_1 hangar2_3 lab_3 command_1
+}
+
+city
+{
+	name		"The Last Defensive"
+
+	objective	"With both targets shut down, your mission\n"
+			"is finally over. However, your not ready to leave\n"
+			"quite yet. With your Railgun in hand, you make the\n"
+			"final decent into the heart Strogg city. You figure\n"
+			"if the Strogg leader is going to be anywhere, its\n"
+			"here. With one last breath, you leave the elevator\n"
+			"platform and engage the enemy in battle for one\n"
+			"last time..."		
+
+	levelshots	city1_1 city2_2 city3_1
+}
+
+boss
+{
+	name		"The Final Encounter"
+
+	objective	"As the final battle grows closer, you follow the\n"
+			"Makron further into the city. This is everything you\n"
+			"trained for. Its up to you to destroy the Strogg\n"
+			"leader and put an end to this war. This is it; The\n"
+			"Final Battle... The Final Showdown..."
+
+	levelshots	boss1_2 boss1_3 boss2_1
+}

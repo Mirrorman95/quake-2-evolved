@@ -1,0 +1,118 @@
+
+gfx/effects/particles/energy
+{
+	{
+		map		gfx/effects/particles/energy.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE
+	}
+}
+
+gfx/effects/particles/glow
+{
+	{
+		map		gfx/effects/particles/glow.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE
+	}	
+}
+
+gfx/effects/particles/flame
+{
+	{
+		map		gfx/effects/particles/flame.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE
+	}
+}
+
+gfx/effects/particles/smoke
+{
+	{
+		map		gfx/effects/particles/smoke.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/effects/particles/liteSmoke
+{
+	{
+		map		gfx/effects/particles/litesmoke.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/effects/particles/bubble
+{
+	sort 	underwater
+	{
+		map		gfx/effects/particles/bubble.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/effects/particles/droplet
+{
+	{
+		map		gfx/effects/particles/droplet.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE
+	}
+}
+
+gfx/effects/particles/steam
+{
+	{
+		map		gfx/effects/particles/steam.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE
+	}
+}
+
+gfx/effects/particles/spark
+{
+	{
+		map		gfx/effects/particles/spark.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE
+	}
+}
+
+gfx/effects/particles/impactSpark
+{
+	{
+		map		gfx/effects/particles/impactspark.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE
+	}
+}
+
+gfx/effects/particles/tracker
+{
+	{
+		map		gfx/effects/particles/tracker.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/effects/particles/fly
+{
+	{
+		if ((time * 20) % 2 == 0)
+
+		map		gfx/effects/particles/fly_1.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+	{
+		if ((time * 20) % 2 == 1)
+
+		map		gfx/effects/particles/fly_2.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}

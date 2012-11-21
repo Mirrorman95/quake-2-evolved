@@ -1,0 +1,173 @@
+
+//
+// Weapon Marks
+//
+
+gfx/decals/energyMark
+{
+	decalMacro
+	decalInfo		0 2 10 (1 1 1 5) (0 0 0 0) (-1 -1 -1 0)
+	{
+		map		gfx/decals/energymark.tga
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+gfx/decals/bulletMark
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/bulletmark.tga
+		vertexColor
+		blend		GL_ZERO, GL_ONE_MINUS_SRC_COLOR
+	}
+}
+
+gfx/decals/burnMark
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/burnmark.tga
+		vertexColor
+		blend		GL_ZERO, GL_ONE_MINUS_SRC_COLOR
+	}
+}
+
+//
+// Blood Marks
+//
+
+gfx/decals/bloodMark1
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_1.tga
+		vertexColor
+		blend		GL_ZERO, GL_ONE_MINUS_SRC_COLOR
+	}
+}
+
+gfx/decals/bloodMark2
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_2.tga
+		vertexColor
+		blend		GL_ZERO, GL_ONE_MINUS_SRC_COLOR
+	}
+}
+
+gfx/decals/bloodMark3
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_3.tga
+		vertexColor
+		blend		GL_ZERO, GL_ONE_MINUS_SRC_COLOR
+	}
+}
+
+gfx/decals/bloodMark4
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_4.tga
+		vertexColor
+		blend		GL_ZERO, GL_ONE_MINUS_SRC_COLOR
+	}
+}
+
+gfx/decals/bloodMark5
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_5.tga
+		vertexColor
+		blend		GL_ZERO, GL_ONE_MINUS_SRC_COLOR
+	}
+}
+
+gfx/decals/bloodMark6
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_6.tga
+		vertexColor
+		blend		GL_ZERO, GL_ONE_MINUS_SRC_COLOR
+	}
+}
+
+gfx/decals/greenBloodMark1
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_1g.tga
+		vertexColor
+		blend		add
+	}
+}
+
+gfx/decals/greenBloodMark2
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_2g.tga
+		vertexColor
+		blend		add
+	}
+}
+
+gfx/decals/greenBloodMark3
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_3g.tga
+		vertexColor
+		blend		add
+	}
+}
+
+gfx/decals/greenBloodMark4
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_4g.tga
+		vertexColor
+		blend		add
+	}
+}
+
+gfx/decals/greenBloodMark5
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_5g.tga
+		vertexColor
+		blend		add
+	}
+}
+
+gfx/decals/greenBloodMark6
+{
+	decalMacro
+	decalInfo		0 27 3 (1 1 1 1) (0 0 0 0) (0 0 0 0)
+	{
+		map		gfx/decals/blood_6g.tga
+		vertexColor
+		blend		add
+	}
+}
