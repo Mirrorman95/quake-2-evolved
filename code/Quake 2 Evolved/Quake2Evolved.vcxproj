@@ -1,0 +1,255 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{B74C35A7-D255-493A-8B66-2D1512E2F35F}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>Quake2Evolved</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <TargetName>q2e</TargetName>
+    <OutDir>C:\Users\Kevin\Desktop\Quake2\</OutDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>windows\lib\libogg.lib;windows\lib\libvorbis.lib;windows\lib\libvorbisfile.lib;windows\lib\zlib.lib;winmm.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="client\cinematic.h" />
+    <ClInclude Include="client\client.h" />
+    <ClInclude Include="client\input.h" />
+    <ClInclude Include="collision\cm_local.h" />
+    <ClInclude Include="collision\cm_public.h" />
+    <ClInclude Include="common\cmdSystem.h" />
+    <ClInclude Include="common\common.h" />
+    <ClInclude Include="common\cvarSystem.h" />
+    <ClInclude Include="common\fileFormats.h" />
+    <ClInclude Include="common\fileSystem.h" />
+    <ClInclude Include="common\memory.h" />
+    <ClInclude Include="common\msgSystem.h" />
+    <ClInclude Include="common\netChan.h" />
+    <ClInclude Include="common\network.h" />
+    <ClInclude Include="common\parser.h" />
+    <ClInclude Include="common\system.h" />
+    <ClInclude Include="common\table.h" />
+    <ClInclude Include="renderer\palette.h" />
+    <ClInclude Include="renderer\refresh.h" />
+    <ClInclude Include="renderer\r_local.h" />
+    <ClInclude Include="server\server.h" />
+    <ClInclude Include="shared\anorms.h" />
+    <ClInclude Include="shared\math\angles.h" />
+    <ClInclude Include="shared\math\bounds.h" />
+    <ClInclude Include="shared\math\color.h" />
+    <ClInclude Include="shared\math\math.h" />
+    <ClInclude Include="shared\math\matrix.h" />
+    <ClInclude Include="shared\math\plane.h" />
+    <ClInclude Include="shared\math\vector.h" />
+    <ClInclude Include="shared\q_shared.h" />
+    <ClInclude Include="shared\string.h" />
+    <ClInclude Include="shared\surfaceflags.h" />
+    <ClInclude Include="sound\s_local.h" />
+    <ClInclude Include="sound\s_public.h" />
+    <ClInclude Include="ui\ui_local.h" />
+    <ClInclude Include="ui\ui_public.h" />
+    <ClInclude Include="windows\qal.h" />
+    <ClInclude Include="windows\qgl.h" />
+    <ClInclude Include="windows\resource.h" />
+    <ClInclude Include="windows\win_local.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="client\cl_cinematic.c" />
+    <ClCompile Include="client\cl_console.c" />
+    <ClCompile Include="client\cl_demo.c" />
+    <ClCompile Include="client\cl_draw.c" />
+    <ClCompile Include="client\cl_effects.c" />
+    <ClCompile Include="client\cl_entity.c" />
+    <ClCompile Include="client\cl_input.c" />
+    <ClCompile Include="client\cl_load.c" />
+    <ClCompile Include="client\cl_localEntity.c" />
+    <ClCompile Include="client\cl_main.c" />
+    <ClCompile Include="client\cl_parse.c" />
+    <ClCompile Include="client\cl_particles.c" />
+    <ClCompile Include="client\cl_predict.c" />
+    <ClCompile Include="client\cl_screen.c" />
+    <ClCompile Include="client\cl_server.c" />
+    <ClCompile Include="client\cl_tempEntity.c" />
+    <ClCompile Include="client\cl_userCmd.c" />
+    <ClCompile Include="client\cl_view.c" />
+    <ClCompile Include="client\cl_key.c" />
+    <ClCompile Include="collision\cmodel.c" />
+    <ClCompile Include="collision\cm_area.c" />
+    <ClCompile Include="collision\cm_main.c" />
+    <ClCompile Include="collision\cm_model.c" />
+    <ClCompile Include="collision\cm_trace.c" />
+    <ClCompile Include="common\cmdSystem.c" />
+    <ClCompile Include="common\common.c" />
+    <ClCompile Include="common\crc.c" />
+    <ClCompile Include="common\cvarSystem.c" />
+    <ClCompile Include="common\fileSystem.c" />
+    <ClCompile Include="common\md4.c" />
+    <ClCompile Include="common\memory.c" />
+    <ClCompile Include="common\msgSystem.c" />
+    <ClCompile Include="common\netChan.c" />
+    <ClCompile Include="common\network.c" />
+    <ClCompile Include="common\parser.c" />
+    <ClCompile Include="common\pmove.c" />
+    <ClCompile Include="common\table.c" />
+    <ClCompile Include="game\m_flash.c" />
+    <ClCompile Include="renderer\r_alias.c" />
+    <ClCompile Include="renderer\r_arrayBuffer.c" />
+    <ClCompile Include="renderer\r_backEnd.c" />
+    <ClCompile Include="renderer\r_batch.c" />
+    <ClCompile Include="renderer\r_commands.c" />
+    <ClCompile Include="renderer\r_debug.c" />
+    <ClCompile Include="renderer\r_decal.c" />
+    <ClCompile Include="renderer\r_deform.c" />
+    <ClCompile Include="renderer\r_font.c" />
+    <ClCompile Include="renderer\r_frontEnd.c" />
+    <ClCompile Include="renderer\r_glState.c" />
+    <ClCompile Include="renderer\r_image.c" />
+    <ClCompile Include="renderer\r_light.c" />
+    <ClCompile Include="renderer\r_main.c" />
+    <ClCompile Include="renderer\r_material.c" />
+    <ClCompile Include="renderer\r_mesh.c" />
+    <ClCompile Include="renderer\r_model.c" />
+    <ClCompile Include="renderer\r_program.c" />
+    <ClCompile Include="renderer\r_render.c" />
+    <ClCompile Include="renderer\r_renderCommon.c" />
+    <ClCompile Include="renderer\r_scene.c" />
+    <ClCompile Include="renderer\r_shader.c" />
+    <ClCompile Include="renderer\r_shadow.c" />
+    <ClCompile Include="renderer\r_subview.c" />
+    <ClCompile Include="renderer\r_texture.c" />
+    <ClCompile Include="renderer\r_world.c" />
+    <ClCompile Include="server\sv_commands.c" />
+    <ClCompile Include="server\sv_ents.c" />
+    <ClCompile Include="server\sv_game.c" />
+    <ClCompile Include="server\sv_main.c" />
+    <ClCompile Include="server\sv_parse.c" />
+    <ClCompile Include="server\sv_send.c" />
+    <ClCompile Include="server\sv_spawn.c" />
+    <ClCompile Include="server\sv_world.c" />
+    <ClCompile Include="shared\math\angles.c" />
+    <ClCompile Include="shared\math\bounds.c" />
+    <ClCompile Include="shared\math\color.c" />
+    <ClCompile Include="shared\math\math.c" />
+    <ClCompile Include="shared\math\matrix.c" />
+    <ClCompile Include="shared\math\plane.c" />
+    <ClCompile Include="shared\math\vector.c" />
+    <ClCompile Include="shared\q_math.c" />
+    <ClCompile Include="shared\q_shared.c" />
+    <ClCompile Include="shared\string.c" />
+    <ClCompile Include="sound\s_channel.c" />
+    <ClCompile Include="sound\s_listener.c" />
+    <ClCompile Include="sound\s_main.c" />
+    <ClCompile Include="sound\s_music.c" />
+    <ClCompile Include="sound\s_rawSamples.c" />
+    <ClCompile Include="sound\s_sound.c" />
+    <ClCompile Include="ui\ui_advanced.c" />
+    <ClCompile Include="ui\ui_audio.c" />
+    <ClCompile Include="ui\ui_cinematics.c" />
+    <ClCompile Include="ui\ui_controls.c" />
+    <ClCompile Include="ui\ui_credits.c" />
+    <ClCompile Include="ui\ui_defaults.c" />
+    <ClCompile Include="ui\ui_demos.c" />
+    <ClCompile Include="ui\ui_gameoptions.c" />
+    <ClCompile Include="ui\ui_gotosite.c" />
+    <ClCompile Include="ui\ui_ingame.c" />
+    <ClCompile Include="ui\ui_loadgame.c" />
+    <ClCompile Include="ui\ui_main.c" />
+    <ClCompile Include="ui\ui_menu.c" />
+    <ClCompile Include="ui\ui_mods.c" />
+    <ClCompile Include="ui\ui_multiplayer.c" />
+    <ClCompile Include="ui\ui_network.c" />
+    <ClCompile Include="ui\ui_options.c" />
+    <ClCompile Include="ui\ui_performance.c" />
+    <ClCompile Include="ui\ui_playersetup.c" />
+    <ClCompile Include="ui\ui_qmenu.c" />
+    <ClCompile Include="ui\ui_quit.c" />
+    <ClCompile Include="ui\ui_savegame.c" />
+    <ClCompile Include="ui\ui_singleplayer.c" />
+    <ClCompile Include="ui\ui_video.c" />
+    <ClCompile Include="windows\win_al.c" />
+    <ClCompile Include="windows\win_console.c" />
+    <ClCompile Include="windows\win_gl.c" />
+    <ClCompile Include="windows\win_input.c" />
+    <ClCompile Include="windows\win_network.c" />
+    <ClCompile Include="windows\win_qal.c" />
+    <ClCompile Include="windows\win_qgl.c" />
+    <ClCompile Include="windows\win_system.c" />
+    <ClCompile Include="windows\win_wndProc.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="windows\q2.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="windows\q2.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

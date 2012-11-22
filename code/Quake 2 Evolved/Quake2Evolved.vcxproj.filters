@@ -1,0 +1,574 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\client">
+      <UniqueIdentifier>{e4cf024a-75ec-469f-8acf-eb995ad5ccd5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\client">
+      <UniqueIdentifier>{2fa4fbc2-28d4-4988-ad28-e8d18169d063}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\windows">
+      <UniqueIdentifier>{ac813434-569f-4bb1-89d7-c42bef5887d5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\windows">
+      <UniqueIdentifier>{678a07b6-a431-4b7c-9947-ce2fe4106b52}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\sound">
+      <UniqueIdentifier>{3dca76bd-5cfe-49a8-9753-b6169d884718}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\sound">
+      <UniqueIdentifier>{ac4461d4-8d32-439d-acde-e38f385ca8a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\server">
+      <UniqueIdentifier>{092307be-48b8-4608-878a-8cfd058e2b6a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\server">
+      <UniqueIdentifier>{faa8182a-b177-45f9-b5e6-2e8ba6d1e8bd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ui">
+      <UniqueIdentifier>{7cdc6f1b-ee7f-4715-8dfc-97d4ec2ff304}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\ui">
+      <UniqueIdentifier>{c3ced7ff-e9bd-4403-958c-ce1ef5105aaf}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\common">
+      <UniqueIdentifier>{57e5bb91-cc5d-4aac-bf54-0e5875db4853}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\common">
+      <UniqueIdentifier>{c04d325b-9d69-4a69-b066-aa2cb0836228}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\renderer">
+      <UniqueIdentifier>{82fdafdd-a1af-4129-9feb-a53c9302634a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\renderer">
+      <UniqueIdentifier>{e24495a2-59c6-4eea-a112-33f5c32ea668}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared">
+      <UniqueIdentifier>{8975cf45-0754-402c-9b7d-b5522cbb6126}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\shared\math">
+      <UniqueIdentifier>{acf065b8-c321-4cf2-8e00-1fa07e81cbc7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared">
+      <UniqueIdentifier>{215d667e-8453-4fba-8a47-45be59d9f2be}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\shared\math">
+      <UniqueIdentifier>{262a4fb1-eec3-4169-9306-57d90cd35604}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\collision">
+      <UniqueIdentifier>{13665d2c-2e3d-4804-b4b2-c36c71e4c367}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\collision">
+      <UniqueIdentifier>{fa0550aa-ba80-4544-8937-36d977c4e56b}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="client\cinematic.h">
+      <Filter>Header Files\client</Filter>
+    </ClInclude>
+    <ClInclude Include="client\client.h">
+      <Filter>Header Files\client</Filter>
+    </ClInclude>
+    <ClInclude Include="client\input.h">
+      <Filter>Header Files\client</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\resource.h">
+      <Filter>Resource Files</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\qal.h">
+      <Filter>Header Files\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\qgl.h">
+      <Filter>Header Files\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="windows\win_local.h">
+      <Filter>Header Files\windows</Filter>
+    </ClInclude>
+    <ClInclude Include="sound\s_local.h">
+      <Filter>Header Files\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="sound\s_public.h">
+      <Filter>Header Files\sound</Filter>
+    </ClInclude>
+    <ClInclude Include="server\server.h">
+      <Filter>Header Files\server</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\ui_local.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="ui\ui_public.h">
+      <Filter>Header Files\ui</Filter>
+    </ClInclude>
+    <ClInclude Include="common\cmdSystem.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\common.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\cvarSystem.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\fileFormats.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\fileSystem.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\memory.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\msgSystem.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\netChan.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\network.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\parser.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\system.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="common\table.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\palette.h">
+      <Filter>Header Files\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\r_local.h">
+      <Filter>Header Files\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\anorms.h">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\q_shared.h">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\string.h">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\surfaceflags.h">
+      <Filter>Header Files\shared</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\angles.h">
+      <Filter>Header Files\shared\math</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\bounds.h">
+      <Filter>Header Files\shared\math</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\color.h">
+      <Filter>Header Files\shared\math</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\math.h">
+      <Filter>Header Files\shared\math</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\matrix.h">
+      <Filter>Header Files\shared\math</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\plane.h">
+      <Filter>Header Files\shared\math</Filter>
+    </ClInclude>
+    <ClInclude Include="shared\math\vector.h">
+      <Filter>Header Files\shared\math</Filter>
+    </ClInclude>
+    <ClInclude Include="collision\cm_local.h">
+      <Filter>Header Files\collision</Filter>
+    </ClInclude>
+    <ClInclude Include="collision\cm_public.h">
+      <Filter>Header Files\collision</Filter>
+    </ClInclude>
+    <ClInclude Include="renderer\refresh.h">
+      <Filter>Header Files\renderer</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="client\cl_cinematic.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_console.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_demo.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_draw.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_effects.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_entity.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_input.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_load.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_localEntity.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_main.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_parse.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_particles.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_predict.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_screen.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_server.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_tempEntity.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_userCmd.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_view.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\win_al.c">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\win_console.c">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\win_gl.c">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\win_input.c">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\win_network.c">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\win_qal.c">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\win_system.c">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\win_wndProc.c">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\s_channel.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\s_listener.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\s_main.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\s_music.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\s_rawSamples.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\s_sound.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_commands.c">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_ents.c">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_game.c">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_main.c">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_parse.c">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_send.c">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_spawn.c">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="server\sv_world.c">
+      <Filter>Source Files\server</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_advanced.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_audio.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_cinematics.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_controls.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_credits.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_defaults.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_demos.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_gameoptions.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_gotosite.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_ingame.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_loadgame.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_main.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_menu.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_mods.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_multiplayer.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_network.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_options.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_performance.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_playersetup.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_qmenu.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_quit.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_savegame.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_singleplayer.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\ui_video.c">
+      <Filter>Source Files\ui</Filter>
+    </ClCompile>
+    <ClCompile Include="common\cmdSystem.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\common.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\crc.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\cvarSystem.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\fileSystem.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\md4.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\memory.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\msgSystem.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\netChan.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\network.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\parser.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\pmove.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="common\table.c">
+      <Filter>Source Files\common</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_alias.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_arrayBuffer.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_backEnd.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_batch.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_commands.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_debug.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_decal.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_deform.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_font.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_frontEnd.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_glState.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_image.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_light.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_main.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_material.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_mesh.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_model.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_program.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_render.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_renderCommon.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_scene.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_shader.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_shadow.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_subview.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_texture.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_world.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\q_math.c">
+      <Filter>Source Files\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\q_shared.c">
+      <Filter>Source Files\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\string.c">
+      <Filter>Source Files\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\angles.c">
+      <Filter>Source Files\shared\math</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\bounds.c">
+      <Filter>Source Files\shared\math</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\color.c">
+      <Filter>Source Files\shared\math</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\math.c">
+      <Filter>Source Files\shared\math</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\matrix.c">
+      <Filter>Source Files\shared\math</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\plane.c">
+      <Filter>Source Files\shared\math</Filter>
+    </ClCompile>
+    <ClCompile Include="shared\math\vector.c">
+      <Filter>Source Files\shared\math</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_area.c">
+      <Filter>Source Files\collision</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_main.c">
+      <Filter>Source Files\collision</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_model.c">
+      <Filter>Source Files\collision</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_trace.c">
+      <Filter>Source Files\collision</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cmodel.c">
+      <Filter>Source Files\collision</Filter>
+    </ClCompile>
+    <ClCompile Include="windows\win_qgl.c">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
+    <ClCompile Include="game\m_flash.c">
+      <Filter>Source Files\shared</Filter>
+    </ClCompile>
+    <ClCompile Include="client\cl_key.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="windows\q2.ico">
+      <Filter>Resource Files</Filter>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="windows\q2.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
+  </ItemGroup>
+</Project>
