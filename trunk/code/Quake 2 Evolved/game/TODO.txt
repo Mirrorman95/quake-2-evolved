@@ -1,0 +1,17 @@
+=============================================
+Work
+=============================================
+- Fix sg_allowMonsterSpawn
+
+=============================================
+Future Ideas
+=============================================
+AI
+- Monsters should not be able to see through opaque water
+- Medic should be improved a looot
+
+=============================================
+Changes To V0.40.1 BETA
+=============================================
+Bugs
+- Fixed the monster spawning

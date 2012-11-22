@@ -1,0 +1,264 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    </Filter>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
+      <Extensions>h;hpp;hxx;hm;inl;inc;xsd</Extensions>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+    <Filter Include="Source Files\monsters">
+      <UniqueIdentifier>{a7cee838-8e25-42dd-9be9-c289cfc644b0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\old">
+      <UniqueIdentifier>{53a40d84-c09f-4e5c-b539-6cbf090ca8f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\qshared">
+      <UniqueIdentifier>{b5364bbc-d58e-42d1-a78b-dab4622bca46}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\qshared">
+      <UniqueIdentifier>{8b551132-7daa-4ca8-8eb6-724621fe523c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\monsters">
+      <UniqueIdentifier>{0480f7ab-cf88-473f-95b7-a163a542365a}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="m_tank.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_medic.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_commands.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="m_infantry.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_main.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="m_gladiator.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_parasite.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_projectile.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_weapon.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="m_gunner.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_brain.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_serverCommands.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="m_berserk.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_mutant.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_hornet.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_makron.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_monster.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="m_jorg.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_flash.c">
+      <Filter>Source Files\qshared</Filter>
+    </ClCompile>
+    <ClCompile Include="q_shared.c">
+      <Filter>Source Files\qshared</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_ai.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_combat.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="m_soldier.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_spawn.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_target.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_trigger.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_misc.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_func.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="m_makron_teleport.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_insane.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_flipper.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_floater.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_flyer.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_icarus.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_ironMaiden.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="m_actor.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_save.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_turret.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_clientHUD.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_clientTrail.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="g_phys.c">
+      <Filter>Source Files\old</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_clientView.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_chaseCamera.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_utilities.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_client.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_items.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="sg_monsterMovement.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="m_superTank.c">
+      <Filter>Source Files\monsters</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="g_local.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="game.h">
+      <Filter>Header Files\qshared</Filter>
+    </ClInclude>
+    <ClInclude Include="m_actor.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_tank.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_berserk.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_boss2.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_boss31.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_boss32.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_brain.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_chick.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_flipper.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_float.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_flyer.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_gladiator.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_gunner.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_hover.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_infantry.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_insane.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_medic.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_mutant.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_parasite.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_player.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_rider.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_soldier.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="m_supertank.h">
+      <Filter>Header Files\monsters</Filter>
+    </ClInclude>
+    <ClInclude Include="q_shared.h">
+      <Filter>Header Files\qshared</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SGame.def">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="TODO.txt" />
+  </ItemGroup>
+</Project>
