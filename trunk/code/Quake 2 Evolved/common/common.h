@@ -285,6 +285,7 @@ void			CL_UpdateScreen ();
 void			CL_ForwardCommandToServer ();
 void			CL_ClearMemory ();
 void			CL_Drop ();
+void			CL_MapLoading ();
 
 void			CL_Frame (int msec);
 void			CL_Init ();

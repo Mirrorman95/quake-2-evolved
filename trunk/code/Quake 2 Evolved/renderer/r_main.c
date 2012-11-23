@@ -25,10 +25,6 @@
 // r_main.c - Primary renderer file
 //
 
-// TODO:
-// - render 'command->data' crashes when loading a map
-// - ->numMeshes has no meshes to draw
-
 
 #include "r_local.h"
 

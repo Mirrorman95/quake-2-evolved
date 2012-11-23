@@ -25,44 +25,41 @@
 // cmdSystem.c - Script command processing
 //
 
-
 #include "common.h"
 
 
 #define ALIAS_HASH_SIZE				32
-
 #define	MAX_ALIAS_COUNT				16
 
-typedef struct cmdAlias_s {
-	char *				name;
-	char *				command;
-	struct cmdAlias_s *	next;
-	struct cmdAlias_s *	nextHash;
-} cmdAlias_t;
-
-static cmdAlias_t *		cmd_aliasHash[ALIAS_HASH_SIZE];
-static cmdAlias_t *		cmd_alias;
-
 #define CMDS_HASH_SIZE				512
-
 #define MAX_LIST_CMDS				2048
 
-typedef struct cmd_s {
-	const char *		name;
-	cmdFunction_t		function;
-	const char *		description;
-	argCompletion_t		argCompletion;
+typedef struct cmdAlias_s {
+	char *					name;
+	char *					command;
+	struct cmdAlias_s *		next;
+	struct cmdAlias_s *		nextHash;
+} cmdAlias_t;
 
-	struct cmd_s *		next;
-	struct cmd_s *		nextHash;
+typedef struct cmd_s {
+	const char *			name;
+	cmdFunction_t			function;
+	const char *			description;
+	argCompletion_t			argCompletion;
+
+	struct cmd_s *			next;
+	struct cmd_s *			nextHash;
 } cmd_t;
 
-static cmd_t *			cmd_functionsHashTable[CMDS_HASH_SIZE];
-static cmd_t *			cmd_functions;
+static cmdAlias_t *			cmd_aliasHash[ALIAS_HASH_SIZE];
+static cmdAlias_t *			cmd_alias;
 
-static int				cmd_aliasCount;		// For detecting runaway loops
+static cmd_t *				cmd_functionsHashTable[CMDS_HASH_SIZE];
+static cmd_t *				cmd_functions;
 
-static int				cmd_wait;
+static int					cmd_aliasCount;		// For detecting runaway loops
+
+static int					cmd_wait;
 
 
 /*
@@ -420,10 +417,14 @@ void Cmd_ArgCompletion_TextureName (void (*callback)(const char *string)){
 	Cmd_ArgCompletion_PathExtension(callback, "gfx", ".tga", false);
 
 	Cmd_ArgCompletion_PathExtension(callback, "models", ".tga", false);
+	Cmd_ArgCompletion_PathExtension(callback, "models", ".pcx", false);
 
 	Cmd_ArgCompletion_PathExtension(callback, "textures", ".tga", false);
+	Cmd_ArgCompletion_PathExtension(callback, "textures", ".pcx", false);
+	Cmd_ArgCompletion_PathExtension(callback, "textures", ".wal", false);
 
 	Cmd_ArgCompletion_PathExtension(callback, "videos", ".tga", false);
+	Cmd_ArgCompletion_PathExtension(callback, "videos", ".pcx", false);
 }
 
 /*
@@ -454,6 +455,7 @@ void Cmd_ArgCompletion_MusicName (void (*callback)(const char *string)){
 void Cmd_ArgCompletion_VideoName (void (*callback)(const char *string)){
 
 	Cmd_ArgCompletion_PathExtension(callback, "videos", ".RoQ", false);
+	Cmd_ArgCompletion_PathExtension(callback, "videos", ".cin", false);
 }
 
 /*
@@ -475,9 +477,12 @@ void Cmd_ArgCompletion_MaterialName (void (*callback)(const char *string)){
  ==============================================================================
 */
 
-static int				cmd_argc;
-static char *			cmd_argv[MAX_STRING_TOKENS];
-static char				cmd_args[MAX_STRING_CHARS];
+#define MAX_COMMAND_STRING			MAX_STRING_LENGTH * 2
+
+static int					cmd_argc;
+static char *				cmd_argv[MAX_STRING_TOKENS];
+static char					cmd_args[MAX_STRING_CHARS];
+static char					cmd_string[MAX_COMMAND_STRING];
 
 
 /*

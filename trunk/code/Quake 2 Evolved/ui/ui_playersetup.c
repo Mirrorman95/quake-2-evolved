@@ -105,6 +105,8 @@ static uiPlayerSetup_t		uiPlayerSetup;
  ==================
  UI_PlayerSetup_CalcFov
 
+ TODO: rewrite?
+
  I need this here...
  ==================
 */
@@ -139,11 +141,11 @@ static void UI_PlayerSetup_FindModels (){
 
 	uiPlayerSetup.numPlayerModels = 0;
 
-	// Get file list
+	// Load the models into a list
 	fileList = FS_ListFiles("players", "/", true, &numFiles);
 
 	for (i = 0; i < numFiles; i++){
-		if (Str_FindChar(fileList[i], '.'))
+		if (strrchr(fileList[i], '.'))
 			continue;
 
 		if (count == MAX_PLAYER_MODELS)
@@ -157,9 +159,10 @@ static void UI_PlayerSetup_FindModels (){
 
 	// Build the model list
 	for (i = 0; i < count; i++){
-		// Make sure a model exists
+		// Check if the model exists
 		Str_SPrintf(pathMD2, sizeof(pathMD2), "players/%s/tris.md2", list[i]);
 		Str_SPrintf(pathMD3, sizeof(pathMD3), "players/%s/tris.md3", list[i]);
+
 		if (!FS_FileExists(pathMD2) && !FS_FileExists(pathMD3))
 			continue;
 
@@ -172,11 +175,11 @@ static void UI_PlayerSetup_FindModels (){
  ==================
  UI_PlayerSetup_FindSkins
 
- TODO: replace Com_StripExtension
+ TODO: crashes for some reason
  ==================
 */
 static void UI_PlayerSetup_FindSkins (const char *model){
-/*
+#if 0
 	const char	**fileList;
 	int			numFiles;
 	char		pathPCX[MAX_OSPATH], pathTGA[MAX_OSPATH];
@@ -186,7 +189,7 @@ static void UI_PlayerSetup_FindSkins (const char *model){
 
 	uiPlayerSetup.numPlayerSkins = 0;
 
-	// Get file list
+	// Load the skin into a list
 	fileList = FS_ListFiles(Str_VarArgs("players/%s", model), NULL, true, &numFiles);
 
 	for (i = 0; i < numFiles; i++){
@@ -210,16 +213,16 @@ static void UI_PlayerSetup_FindSkins (const char *model){
 
 	// Build the skin list
 	for (i = 0; i < count; i++){
-		// Make sure an icon exists
 		Str_SPrintf(pathPCX, sizeof(pathPCX), "players/%s/%s_i.pcx", model, list[i]);
 		Str_SPrintf(pathTGA, sizeof(pathTGA), "players/%s/%s_i.tga", model, list[i]);
+
 		if (!FS_FileExists(pathPCX) && !FS_FileExists(pathTGA))
 			continue;
 
 		Str_Copy(uiPlayerSetup.playerSkins[uiPlayerSetup.numPlayerSkins], list[i], sizeof(uiPlayerSetup.playerSkins[uiPlayerSetup.numPlayerSkins]));
 		uiPlayerSetup.numPlayerSkins++;
 	}
-*/
+#endif
 }
 
 /*
@@ -237,7 +240,6 @@ static void UI_PlayerSetup_GetConfig (){
 
 	// Get user set skin
 	Str_Copy(model, CVar_GetVariableString("skin"), sizeof(model));
-
 	ch = Str_FindChar(model, '/');
 	if (!ch)
 		ch = Str_FindChar(model, '\\');
@@ -402,7 +404,7 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 
 		entity.type = RE_MODEL;
 
-		VectorSet(entity.origin, 80.0f, 0.0f, 0.0f);
+		VectorSet(entity.origin, 80.0f, -80.0f, 0.0f);
 		VectorCopy(entity.origin, entity.oldOrigin);
 		VectorSet(angles, 0.0f, (uiStatic.realTime & 4095) * 360.0f / 4096.0f, 0.0f);
 		AnglesToMat3(angles, entity.axis);
@@ -429,7 +431,7 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 
 		entity.type = RE_MODEL;
 
-		VectorSet(entity.origin, 80.0f, 0.0f, 0.0f);
+		VectorSet(entity.origin, 80.0f, -80.0f, 0.0f);
 		VectorCopy(entity.origin, entity.oldOrigin);
 		VectorSet(angles, 0.0f, (uiStatic.realTime & 4095) * 360.0f / 4096.0f, 0.0f);
 		AnglesToMat3(angles, entity.axis);
@@ -459,10 +461,17 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 		renderView.width = item->width - (item->width / 6);
 		renderView.height = item->height - (item->height / 6);
 
-		Matrix3_Copy(mat3_identity, renderView.axis);
+		renderView.horzAdjust = H_NONE;
+		renderView.horzPercent = 1.0f;
 
-		renderView.fovX = 40.0f;
+		renderView.vertAdjust = V_NONE;
+		renderView.vertPercent = 1.0f;
+
+		renderView.fovX = DEFAULT_FOV;
 		renderView.fovY = UI_PlayerSetup_CalcFov(renderView.fovX, renderView.width, renderView.height);
+		renderView.fovScale = renderView.fovX * (1.0f / DEFAULT_FOV);
+
+		Matrix3_Copy(mat3_identity, renderView.axis);
 
 		renderView.time = MS2SEC(uiStatic.realTime);
 

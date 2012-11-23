@@ -419,11 +419,30 @@ static void CL_DrawLayout (){
 
 /*
  ==================
- 
+ CL_ScanForPlayerEntity
  ==================
 */
 static void CL_ScanForPlayerEntity (){
 
+	trace_t	trace;
+	vec3_t	start, end;
+	int		entNumber;
+
+	VectorCopy(cl.renderView.origin, start);
+	VectorMA(cl.renderView.origin, 8192.0f, cl.renderView.axis[0], end);
+
+	trace = CL_Trace(start, vec3_origin, vec3_origin, end, cl.clientNum, MASK_PLAYERSOLID, false, &entNumber);
+	if (trace.fraction == 0.0f || trace.fraction == 1.0f)
+		return;
+
+	if (entNumber < 1 || entNumber > MAX_CLIENTS)
+		return;		// Not a valid entity
+
+	if (cl.entities[entNumber].current.modelindex != 255)
+		return;		// Not a player, or invisible
+
+	cl.crosshairEntTime = cl.time;
+	cl.crosshairEntNumber = entNumber;
 }
 
 /*
@@ -440,12 +459,21 @@ static void CL_DrawCrosshair (){
 /*
  ==================
  
+ TODO: fix position
  ==================
 */
 static void CL_DrawCenterString (){
 
+	float	*fadeColor;
+
 	if (!cl_drawCenterString->integerValue)
 		return;
+
+	fadeColor = CL_FadeAlpha(colorWhite, cl.centerPrintTime, cl_centerTime->integerValue, cl_centerTime->integerValue / 4);
+	if (!fadeColor)
+		return;
+
+	R_DrawString(0.0f, SCREEN_HEIGHT - 320.0f, 10.0f, 10.0f, cl.centerPrint, fadeColor, true, 1.0f, 2.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
 }
 
 /*
@@ -461,35 +489,108 @@ static void CL_DrawLagometer (){
 
 /*
  ==================
- 
+ CL_DrawDisconnected
  ==================
 */
 static void CL_DrawDisconnected (){
 
 	if (!cl_drawDisconnected->integerValue)
 		return;
+
+	// Don't draw if we're also the server
+	if (Com_ServerState())
+		return;
+
+	if (cls.netChan.outgoingSequence - cls.netChan.incomingAcknowledged < CMD_BACKUP-1)
+		return;
+
+	// TODO: draw text?
+
+	// Draw the icon if needed
+	if ((cl.time >> 9) & 1)
+		return;
+
+	R_SetColor1(1.0f);
+	R_DrawStretchPic(SCREEN_WIDTH - 64.0f, SCREEN_HEIGHT - 136.0f, 48.0f, 48.0f, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_RIGHT, 1.0f, V_ALIGN_BOTTOM, 1.0f, cl.media.disconnectedMaterial);
 }
 
 /*
  ==================
- 
+ CL_DrawDemoRecording
  ==================
 */
-static void CL_DrawRecording (){
+static void CL_DrawDemoRecording (){
+
+	char	string[MAX_STRING_LENGTH];
+	int		length;
 
 	if (!cl_drawRecording->integerValue)
 		return;
+
+	// Check if recording a demo
+	if (!cls.demoFile)
+		return;
+
+	// Set the string
+	length = Str_SPrintf(string, sizeof(string), "RECORDING: %s (%i KB)", cls.demoName, FS_Tell(cls.demoFile) / 1024);
+
+	// Draw it
+	R_DrawString((SCREEN_WIDTH - length * 8.0f) * 0.5f, 96.0f, 8.0f, 16.0f, string, colorWhite, true, 1.0f, 2.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
 }
 
 /*
  ==================
- 
+ CL_DrawFPS
  ==================
 */
 static void CL_DrawFPS (){
 
-	if (!cl_drawFPS->integerValue)
+	static int	previousTime;
+	int			time, totalTime;
+	int			fps;
+	char		string[16];
+	vec4_t		color;
+	int			length;
+	int			i;
+
+	time = Sys_Milliseconds();
+
+	cls.fpsTimes[cls.fpsIndex & (FPS_FRAMES - 1)] = time - previousTime;
+	cls.fpsIndex++;
+
+	previousTime = time;
+
+	if (!cl_drawFPS->integerValue || cls.fpsIndex <= FPS_FRAMES)
 		return;
+
+	// Average multiple frames together to smooth changes out a bit
+	totalTime = 0;
+
+	for (i = 0; i < FPS_FRAMES; i++)
+		totalTime += cls.fpsTimes[i];
+
+	if (totalTime < 1)
+		totalTime = 1;
+
+	fps = 1000 * FPS_FRAMES / totalTime;
+	if (fps > 1000)
+		fps = 1000;
+
+	// Set the string
+	length = Str_SPrintf(string, sizeof(string), "%i FPS", fps);
+
+	// Set the color
+	if (fps >= 60)
+		MakeRGBA(color, 1.0f, 1.0f, 1.0f, 1.0f);
+	else {
+		if (fps < 30)
+			MakeRGBA(color, 1.0f, (float)fps / 30.0f, 0.0f, 1.0f);
+		else
+			MakeRGBA(color, 1.0f, 1.0f, (float)(fps - 30) / 30.0f, 1.0f);
+	}
+
+	// Draw it
+	R_DrawString((SCREEN_WIDTH - length * 12.0f) - 6.0f, 6.0f, 12.0f, 12.0f, string, color, true, 2.0f, 2.0f, H_ALIGN_RIGHT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
 }
 
 /*
@@ -549,8 +650,8 @@ void CL_Draw2D (){
 	// Draw the disconnected icon
 	CL_DrawDisconnected();
 
-	// Draw the recording information
-	CL_DrawRecording();
+	// Draw the demo recording information
+	CL_DrawDemoRecording();
 
 	// Draw the pause frames-per-second counter
 	CL_DrawFPS();

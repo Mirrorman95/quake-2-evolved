@@ -475,6 +475,8 @@ static void RB_BatchParticle (meshData_t *data){
 	backEnd.numIndices += 6;
 
 	// Batch vertices
+	vertices = backEnd.vertices + backEnd.numVertices;
+
 	if (particle->length != 1.0f){
 		// Find orientation vectors
 		VectorSubtract(rg.renderView.origin, particle->origin, axis[0]);

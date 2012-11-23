@@ -25,6 +25,9 @@
 // cl_console.c - Client console
 //
 
+// TODO:
+// - chat messages and console background drawing
+
 
 #include "client.h"
 
@@ -1280,16 +1283,37 @@ void Con_CharMessageEvent (int ch){
  ==============================================================================
 */
 
-#define OUTPUT_TEXT_BOX_X			0
-#define OUTPUT_TEXT_BOX_Y			0
-#define OUTPUT_TEXT_BOX_W			0
-#define OUTPUT_TEXT_BOX_H			0
+#define OUTPUT_TEXT_BOX_X			(SPACE_SIZE)
+#define OUTPUT_TEXT_BOX_Y			(SPACE_SIZE)
+#define OUTPUT_TEXT_BOX_W			(SCREEN_WIDTH - (SPACE_SIZE << 1))
+#define OUTPUT_TEXT_BOX_H			((SCREEN_HEIGHT >> 1) - SPACE_SIZE - (CHAR_HEIGHT + (SPACE_SIZE << 1)) - (SPACE_SIZE << 1))
+
+#define INPUT_TEXT_BOX_X			(SPACE_SIZE)
+#define INPUT_TEXT_BOX_Y			((SCREEN_HEIGHT >> 1) - SPACE_SIZE - (CHAR_HEIGHT + (SPACE_SIZE << 1)))
+#define INPUT_TEXT_BOX_W			(SCREEN_WIDTH - (SPACE_SIZE << 1))
+#define INPUT_TEXT_BOX_H			(CHAR_HEIGHT + (SPACE_SIZE << 1))
+
+#define SCROLL_BAR_X				(SCREEN_WIDTH - (SPACE_SIZE + (SPACE_SIZE << 1)))
+#define SCROLL_BAR_Y				(SPACE_SIZE + (CHAR_HEIGHT + (SPACE_SIZE << 1)))
+#define SCROLL_BAR_W				(SPACE_SIZE)
+#define SCROLL_BAR_H				((SCREEN_HEIGHT >> 1) - ((CHAR_HEIGHT + (SPACE_SIZE << 1)) << 1) - (SPACE_SIZE << 2))
 
 #define NOTIFY_TEXT_X				(SPACE_SIZE)
 #define NOTIFY_TEXT_Y				(SPACE_SIZE)
 
+#define OUTPUT_TEXT_X				(OUTPUT_TEXT_BOX_X + SPACE_SIZE)
+#define OUTPUT_TEXT_Y				(OUTPUT_TEXT_BOX_Y + SPACE_SIZE + CHAR_HEIGHT + SPACE_SIZE)
+
+#define INPUT_TEXT_X				(INPUT_TEXT_BOX_X + SPACE_SIZE)
+#define INPUT_TEXT_Y				(INPUT_TEXT_BOX_Y + SPACE_SIZE)
+
 #define VERSION_STRING_X			(OUTPUT_TEXT_BOX_X)
 #define VERSION_STRING_Y			(OUTPUT_TEXT_BOX_Y + SPACE_SIZE)
+
+#define OUTPUT_TEXT_LINES			(((SCREEN_HEIGHT >> 1) - ((CHAR_HEIGHT + (SPACE_SIZE << 1)) << 1) - (SPACE_SIZE << 2)) / CHAR_HEIGHT)
+
+#define INPUT_TEXT_LENGTH			((SCREEN_WIDTH - (SPACE_SIZE << 2)) / CHAR_WIDTH)
+
 
 /*
  ==================
@@ -1303,11 +1327,45 @@ static void Con_DrawTextBox (int x, int y, int w, int h, bool input){
 
 /*
  ==================
- 
+ Con_DrawScrollBar
  ==================
 */
 static void Con_DrawScrollBar (int x, int y, int w, int h){
 
+	float	fraction;
+	int		size, offset;
+	int		totalLines;
+
+	// Draw the border
+	R_SetColor4(0.36f, 0.41f, 0.44f, 0.5f * con.opacity);
+
+	R_DrawStretchPic(x, y, w, BORDER_SIZE, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_RIGHT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.whiteMaterial);
+	R_DrawStretchPic(x, y + h - BORDER_SIZE, w, BORDER_SIZE, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_RIGHT, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
+	R_DrawStretchPic(x, y + BORDER_SIZE, BORDER_SIZE, h - (BORDER_SIZE << 1), 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_RIGHT, 1.0f, V_STRETCH_TOP, 1.0f, cls.media.whiteMaterial);
+	R_DrawStretchPic(x + w - BORDER_SIZE, y + BORDER_SIZE, BORDER_SIZE, h - (BORDER_SIZE << 1), 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_RIGHT, 1.0f, V_STRETCH_TOP, 1.0f, cls.media.whiteMaterial);
+
+	// Calculate scroll bar size and offset
+	if (con.currentLine == 0){
+		size = h;
+
+		offset = 0;
+	}
+	else {
+		totalLines = con.currentLine;
+		if (totalLines > TOTAL_LINES)
+			totalLines = TOTAL_LINES;
+
+		fraction = 1.0f - ((float)totalLines / TOTAL_LINES);
+		size = FloatToInt(h * (0.05f + 0.95f * fraction));
+
+		fraction = 1.0f - ((float)(con.currentLine - con.displayLine) / totalLines);
+		offset = FloatToInt((h - size) * fraction);
+	}
+
+	// Draw the scroll bar
+	R_SetColor4(colorDefault[0], colorDefault[1], colorDefault[2], con.opacity);
+
+	R_DrawStretchPic(x + BORDER_SIZE, y + BORDER_SIZE + offset, w - (BORDER_SIZE << 1), size - (BORDER_SIZE << 1), 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_RIGHT, 1.0f, V_STRETCH_TOP, 1.0f, cls.media.whiteMaterial);
 }
 
 /*
@@ -1322,6 +1380,7 @@ static void Con_DrawNotify (){
 	const short	*text;
 	int			color, oldColor;
 	int			time;
+	int			skip;
 	int			c, x, y;
 	int			i, j;
 
@@ -1370,22 +1429,157 @@ static void Con_DrawNotify (){
 
 		y += CHAR_HEIGHT;
 	}
+
+	// Draw chat messages
+	if (Key_GetKeyDest() == KEY_MESSAGE){
+		if (con.chatTeam){
+			R_DrawString(8.0f, y, CHAR_WIDTH, CHAR_HEIGHT, "say_team: ", colorWhite, false, 0.0f, 0.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			skip = 11;
+		}
+		else {
+			R_DrawString(8.0f, y, CHAR_WIDTH, CHAR_HEIGHT, "say: ", colorWhite, false, 0.0f, 0.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			skip = 6;
+		}
+
+		// TODO: draw the text
+	}
 }
 
 /*
  ==================
- 
+ Con_DrawInput
 
  The input line scrolls horizontally if typing goes beyond the right edge
  ==================
 */
 static void Con_DrawInput (){
 
+	const char	*text;
+	int			color, oldColor;
+	int			cursor, selection;
+	int			length, scroll;
+	int			i;
+
+	// Find the cursor position
+	cursor = con.inputPos;
+
+	for (i = 0; i < con.inputPos; i++){
+		if (!Str_IsColor(&con.inputText[i]))
+			continue;
+
+		if (i == con.inputPos - 1)
+			cursor -= 1;
+		else
+			cursor -= 2;
+
+		i++;
+	}
+
+	// Find the selection cursor position
+	selection = con.inputSel;
+
+	for (i = 0; i < con.inputSel; i++){
+		if (!Str_IsColor(&con.inputText[i]))
+			continue;
+
+		if (i == con.inputSel - 1)
+			selection -= 1;
+		else
+			selection -= 2;
+
+		i++;
+	}
+
+	// Prestep if horizontally scrolling
+	text = con.inputText;
+	length = INPUT_TEXT_LENGTH - 2;
+
+	color = COLOR_WHITE;
+
+	if (cursor > length){
+		scroll = cursor - length;
+
+		cursor -= scroll;
+		selection -= scroll;
+
+		while (*text && scroll){
+			if (Str_IsColor(text)){
+				color = Str_ColorIndexForChar(text[1]);
+				text += 2;
+				continue;
+			}
+
+			text++;
+			scroll--;
+		}
+	}
+
+	if (con.inputPos != con.inputLength)
+		length++;
+
+	oldColor = color;
+
+	// Draw the text box
+	Con_DrawTextBox(INPUT_TEXT_BOX_X, INPUT_TEXT_BOX_Y, INPUT_TEXT_BOX_W, INPUT_TEXT_BOX_H, true);
+
+	// Draw the prompt
+	R_SetColor4(0.36f, 0.41f, 0.44f, con.opacity);
+	R_DrawChar(INPUT_TEXT_X, INPUT_TEXT_Y, CHAR_WIDTH, CHAR_HEIGHT, ']', H_ALIGN_LEFT, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.charsetMaterial);
+
+	// Draw the selection if needed
+	if (con.inputSel != -1){
+		if (selection > length)
+			selection = length;
+
+		if (cursor < selection)
+			R_DrawStretchPic(INPUT_TEXT_X + (cursor + 1) * CHAR_WIDTH, INPUT_TEXT_Y, (selection - cursor) * CHAR_WIDTH, CHAR_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
+		else
+			R_DrawStretchPic(INPUT_TEXT_X + (selection + 1) * CHAR_WIDTH, INPUT_TEXT_Y, (cursor - selection) * CHAR_WIDTH, CHAR_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
+	}
+
+	// Draw the text
+	i = 0;
+
+	R_SetColor4(color_table[color][0], color_table[color][1], color_table[color][2], con.opacity);
+
+	while (*text && i < length){
+		if (Str_IsColor(text)){
+			color = Str_ColorIndexForChar(text[1]);
+
+			if (color != oldColor){
+				oldColor = color;
+
+				R_SetColor4(color_table[color][0], color_table[color][1], color_table[color][2], con.opacity);
+			}
+
+			text += 2;
+			continue;
+		}
+
+		R_DrawChar(INPUT_TEXT_X + (i + 1) * CHAR_WIDTH, INPUT_TEXT_Y, CHAR_WIDTH, CHAR_HEIGHT, *text, H_ALIGN_LEFT, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.charsetMaterial);
+
+		text++;
+		i++;
+	}
+
+	// Draw the cursor if needed
+	if ((cls.realTime >> 9) & 1)
+		return;
+
+	if (con.overstrikeMode && con.inputPos != con.inputLength && con.inputSel == -1){
+		R_SetColor2(1.0f, 0.5f * con.opacity);
+		R_DrawStretchPic(INPUT_TEXT_X + (cursor + 1) * CHAR_WIDTH, INPUT_TEXT_Y, CHAR_WIDTH, CHAR_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
+
+		return;
+	}
+
+	R_SetColor2(1.0f, con.opacity);
+	R_DrawStretchPic(INPUT_TEXT_X + (cursor + 1) * CHAR_WIDTH, INPUT_TEXT_Y + CHAR_HEIGHT - BORDER_SIZE, CHAR_WIDTH, BORDER_SIZE, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
 }
 
 /*
  ==================
- 
+ Con_Redraw
  ==================
 */
 void Con_Redraw (){
@@ -1394,7 +1588,7 @@ void Con_Redraw (){
 	const short	*text;
 	float		opacity;
 	int			color, oldColor;
-	int			len, line;
+	int			length, line;
 	int			c, x, y;
 	int			i, j;
 
@@ -1428,16 +1622,53 @@ void Con_Redraw (){
 	Con_DrawTextBox(OUTPUT_TEXT_BOX_X, OUTPUT_TEXT_BOX_Y, OUTPUT_TEXT_BOX_W, OUTPUT_TEXT_BOX_H, false);
 
 	// Draw the version string
-	len = Str_Length(com_version->value);
+	length = Str_Length(com_version->value);
 
-	x = VERSION_STRING_X + ((OUTPUT_TEXT_BOX_W - len * CHAR_WIDTH) >> 1);
+	x = VERSION_STRING_X + ((OUTPUT_TEXT_BOX_W - length * CHAR_WIDTH) >> 1);
 	y = VERSION_STRING_Y;
 
 	R_DrawString(x, y, CHAR_WIDTH, CHAR_HEIGHT, com_version->value, textColor, true, 0.0f, 0.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
 
 	// Draw the scroll bar
+	Con_DrawScrollBar(SCROLL_BAR_X, SCROLL_BAR_Y, SCROLL_BAR_W, SCROLL_BAR_H);
 
 	// Draw the text from the top down
+	if (con.pos != 0 || con.displayLine != con.currentLine)
+		line = con.displayLine;
+	else
+		line = con.displayLine - 1;
+
+	color = COLOR_DEFAULT;
+	oldColor = COLOR_DEFAULT;
+
+	R_SetColor4(color_table[color][0], color_table[color][1], color_table[color][2], con.opacity);
+
+	for (i = line - OUTPUT_TEXT_LINES + 1, y = OUTPUT_TEXT_Y; i <= line; i++, y += CHAR_HEIGHT){
+		if (i < 0 || i < con.currentLine - TOTAL_LINES + 1)
+			continue;
+
+		// Draw the text
+		text = con.text[i % TOTAL_LINES];
+
+		for (j = 0, x = OUTPUT_TEXT_X; j < MAX_LINE_LENGTH; j++, x += CHAR_WIDTH){
+			c = text[j] & 0xFF;
+			if (c == 0)
+				break;
+
+			if (c == ' ')
+				continue;
+
+			color = (text[j] >> 8) & COLOR_MASK;
+
+			if (color != oldColor){
+				oldColor = color;
+
+				R_SetColor4(color_table[color][0], color_table[color][1], color_table[color][2], con.opacity);
+			}
+
+			R_DrawChar(x, y, CHAR_WIDTH, CHAR_HEIGHT, c, H_ALIGN_LEFT, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.charsetMaterial);
+		}
+	}
 
 	// Draw the input prompt, selection, text, and cursor if needed
 	Con_DrawInput();

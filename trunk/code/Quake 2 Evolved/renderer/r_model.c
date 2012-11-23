@@ -26,7 +26,6 @@
 //
 
 // TODO:
-// - R_LoadLighting, R_LoadTexInfo, R_CheckTexClamp, R_GetTexSize
 // - add .md5mesh and .md5anim support?
 // - use FS_CacheFile for loading the BSP model?
 // - something happend with lerping because the animation "laggs"
@@ -287,25 +286,86 @@ static void R_LoadPlanes (const byte *data, const bspLump_t *lump){
 
 /*
  ==================
- 
+ R_GetTexSize
  ==================
 */
 static void R_GetTexSize (texInfo_t *texInfo){
 
+	material_t		*material = texInfo->material;
+	stage_t			*stage;
+	char			name[MAX_OSPATH];
+	mipTex_t		mt;
+	fileHandle_t	f;
+	int				i;
+
+	// Look for a .wal texture first. This is so that retextures work.
+	Q_snprintfz(name, sizeof(name), "%s.wal", material->name);
+	FS_OpenFile(name, FS_READ, &f);
+	if (f){
+		// Found it, use its dimensions
+		FS_Read(f, &mt, sizeof(mipTex_t));
+		FS_CloseFile(f);
+
+		texInfo->width = LittleLong(mt.width);
+		texInfo->height = LittleLong(mt.height);
+		return;
+	}
+
+	// No, so look for the first texture stage in the material
+	for (i = 0, stage = material->stages; i < material->numStages; i++, stage++){
+		if (stage->shaderStage.program)
+			continue;
+
+		if (stage->textureStage.texture->flags & TF_INTERNAL)
+			continue;
+
+		// Found it, use its dimensions
+		texInfo->width = stage->textureStage.texture->width;
+		texInfo->height = stage->textureStage.texture->height;
+		return;
+	}
+
+	// Couldn't find shit, so just default to 64x64
+	texInfo->width = 64;
+	texInfo->height = 64;
 }
 
 /*
  ==================
- 
+ R_CheckTexClamp
+
+ TODO: ignore other texture types?
  ==================
 */
 static void R_CheckTexClamp (texInfo_t *texInfo){
 
+	material_t	*material = texInfo->material;
+	stage_t		*stage;
+	int			i;
+
+	// If at least one stage uses any form of texture clamping, then all
+	// surfaces using this material will need their texture coordinates
+	// to be clamped to the 0.0 - 1.0 range for things to work properly
+	for (i = 0, stage = material->stages; i < material->numStages; i++, stage++){
+		if (stage->shaderStage.program)
+			continue;
+
+		if (stage->textureStage.texture->type == TT_CUBE)
+			continue;
+
+		if (stage->textureStage.texture->wrap != TW_REPEAT){
+			texInfo->clamp = true;
+			return;
+		}
+	}
+
+	// No need to clamp texture coordinates
+	texInfo->clamp = false;
 }
 
 /*
  ==================
- 
+ R_LoadTexInfo
  ==================
 */
 static void R_LoadTexInfo (const byte *data, const bspLump_t *lump){
@@ -326,22 +386,38 @@ static void R_LoadTexInfo (const byte *data, const bspLump_t *lump){
 	rg.worldModel->size += rg.worldModel->numTexInfo * sizeof(texInfo_t);
 
 	for (i = 0; i < rg.worldModel->numTexInfo; i++, in++, out++){
+		out->flags = LittleLong(in->flags);
+
 		for (j = 0; j < 4; j++){
 			out->vecs[0][j] = LittleFloat(in->vecs[0][j]);
 			out->vecs[1][j] = LittleFloat(in->vecs[1][j]);
 		}
 
-		out->flags = LittleLong(in->flags);
+		out->numFrames = 1;
 
 		next = LittleLong(in->nextTexInfo);
 		if (next > 0)
 			out->next = rg.worldModel->texInfo + next;
+		else
+			out->next = NULL;
 
-		// TODO: special cases for sky and nodraw
+		// Special case for sky surfaces
+		if (out->flags & SURF_SKY){
+			out->material = rg.worldModel->sky->material;
+			out->width = 64;
+			out->height = 64;
+			out->clamp = false;
 
-		if (out->flags & (SURF_SKY | SURF_NODRAW)){
-			// This is not actually needed
-			out->material = rg.defaultMaterial;
+			continue;
+		}
+
+		// Special case for no-draw surfaces
+		if (out->flags & SURF_NODRAW){
+			out->material = rg.noDrawMaterial;
+			out->width = 64;
+			out->height = 64;
+			out->clamp = false;
+
 			continue;
 		}
 

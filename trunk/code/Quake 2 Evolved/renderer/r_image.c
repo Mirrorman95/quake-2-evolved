@@ -26,7 +26,7 @@
 //
 
 // TODO:
-// - loading for pcx and wal images
+// - make sure we load PCX and WAL images where it is needed
 
 
 #include "r_local.h"
@@ -2059,9 +2059,69 @@ static textureFormat_t R_SelectImageFormat (int numImages, byte **images, int wi
 
 /*
  ==================
- R_LoadImage
+ R_LoadImageFormat
+ ==================
+*/
+static bool R_LoadImageFormat (const char *name, const char *realName, textureWrap_t wrap, byte **image, int *width, int *height, bool isImageProgram){
 
- TODO: R_LoadPCX and R_LoadWAL
+	char	loadName[MAX_OSPATH];
+	bool	failed = true;
+	byte	*imgData;
+	int		imgWidth, imgHeight;
+
+	Str_SPrintf(loadName, sizeof(loadName), "%s.tga", name);
+	if (R_LoadTGA(loadName, &imgData, &imgWidth, &imgHeight)){
+		failed = false;
+
+		*image = imgData;
+		*width = imgWidth;
+		*height = imgHeight;
+
+		return true;
+	}
+
+	Str_SPrintf(loadName, sizeof(loadName), "%s.pcx", name);
+	if (R_LoadPCX(loadName, &imgData, NULL, &imgWidth, &imgHeight)){
+		failed = false;
+
+		*image = imgData;
+		*width = imgWidth;
+		*height = imgHeight;
+
+		return true;
+	}
+
+	Str_SPrintf(loadName, sizeof(loadName), "%s.wal", name);
+	if (R_LoadWAL(loadName, &imgData, &imgWidth, &imgHeight)){
+		failed = false;
+
+		*image = imgData;
+		*width = imgWidth;
+		*height = imgHeight;
+
+		return true;
+	}
+
+	if (failed){
+		if (!isImageProgram)
+			return false;
+
+		if (!R_LoadImageProgram(name, &imgData, &imgWidth, &imgHeight, (wrap != TW_REPEAT && wrap != TW_REPEAT_MIRRORED)))
+			return false;
+
+		// Development tool
+		if (r_writeImagePrograms->integerValue)
+			R_WriteImageProgram(realName, imgData, imgWidth, imgHeight);
+
+		return true;
+	}
+
+	return false;
+}
+
+/*
+ ==================
+ R_LoadImage
  ==================
 */
 bool R_LoadImage (const char *name, int flags, textureWrap_t wrap, byte **image, int *width, int *height, textureFormat_t *format, bool *uncompressed){
@@ -2104,17 +2164,8 @@ bool R_LoadImage (const char *name, int flags, textureWrap_t wrap, byte **image,
 			isCompressed = R_LoadDDS(compressedName, &imgData, &imgWidth, &imgHeight, &imgFourCC, &imgAlphaPixels);
 
 		if (!isCompressed){
-			if (!R_LoadTGA(realName, &imgData, &imgWidth, &imgHeight)){
-				if (!isImageProgram)
-					return false;
-
-				if (!R_LoadImageProgram(name, &imgData, &imgWidth, &imgHeight, (wrap != TW_REPEAT && wrap != TW_REPEAT_MIRRORED)))
-					return false;
-
-				// Development tool
-				if (r_writeImagePrograms->integerValue)
-					R_WriteImageProgram(realName, imgData, imgWidth, imgHeight);
-			}
+			if (!R_LoadImageFormat(name, realName, wrap, &imgData, &imgWidth, &imgHeight, isImageProgram))
+				return false;
 		}
 	}
 

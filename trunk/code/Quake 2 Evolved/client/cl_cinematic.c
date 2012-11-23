@@ -26,7 +26,7 @@
 //
 
 // TODO!!!
-// - use handle based indices for drawing?
+// - use handle based indices for drawing
 // - move huffman into it's own file?
 
 
