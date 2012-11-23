@@ -251,7 +251,7 @@ void CL_DynamicLight (const vec3_t origin, float intensity, float r, float g, fl
 	// A duration of 0 means a temporary light, so we should just send
 	// it to the renderer and forget about it
 	if (duration == 0){
-		VectorCopy(dl->origin, light.origin);
+		VectorCopy(origin, light.origin);
 
 		light.material = NULL;
 

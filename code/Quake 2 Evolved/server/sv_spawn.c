@@ -205,9 +205,7 @@ static void SV_SpawnServer (const char *levelName, const char *spawnPoint, bool 
 	CVar_ForceSet("paused", "0");
 
 	// Load client assets
-	CL_Loading();
-	CL_UpdateScreen();
-	CL_ClearMemory();
+	CL_MapLoading();
 
 	// Initialize the game for the first time
 	if (sv.state == SS_DEAD && !loadGame)

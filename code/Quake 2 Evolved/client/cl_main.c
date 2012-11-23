@@ -485,6 +485,49 @@ void CL_Drop (){
 		Com_Error(ERR_FATAL, "Client system not fully initialized");
 }
 
+/*
+ ==================
+ CL_MapLoading
+
+ A local server is starting to load a map, so update the screen to let
+ the user know about it
+ ==================
+*/
+void CL_MapLoading (){
+
+	if (cls.state == CA_UNINITIALIZED)
+		return;
+
+	// If we're already connected to the local server, stay connected
+	if (cls.state >= CA_CONNECTED && NET_IsLocalAddress(cls.serverAddress)){
+		cls.state = CA_CONNECTED;
+
+		// Draw the loading screen
+		CL_Loading();
+		CL_UpdateScreen();
+
+		return;
+	}
+
+	// Disconnect from server
+	CL_Disconnect(false);
+
+	// Connect to the local server
+	Str_Copy(cls.serverName, "localhost", sizeof(cls.serverName));
+	Str_Copy(cls.serverMessage, "", sizeof(cls.serverMessage));
+
+	NET_StringToAddress(cls.serverName, &cls.serverAddress);
+
+	// CL_CheckForResend will fire immediately
+	cls.state = CA_CHALLENGING;		// We don't need a challenge on the localhost
+	cls.connectTime = -99999;
+	cls.connectCount = 0;
+
+	// Draw the loading screen
+	CL_Loading();
+	CL_UpdateScreen();
+}
+
 
 /*
  ==============================================================================

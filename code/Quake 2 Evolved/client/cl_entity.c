@@ -545,6 +545,7 @@ void CL_ParseFrame (){
 
 	frame_t	*oldFrame;
 	int     cmd, length;
+	short	delta[3];
 
 	Mem_Fill(&cl.frame, 0, sizeof(cl.frame));
 
@@ -611,6 +612,34 @@ void CL_ParseFrame (){
 	// Save the frame off in the backup array for later delta 
 	// comparisons
 	cl.frames[cl.frame.serverFrame & UPDATE_MASK] = cl.frame;
+
+    // Find the previous frame to interpolate from
+    oldFrame = &cl.frames[(cl.frame.serverFrame - 1) & UPDATE_MASK];
+    if ((oldFrame->serverFrame != cl.frame.serverFrame -1) || !oldFrame->valid)
+        oldFrame = &cl.frame;		// Previous frame was dropped or invalid
+
+	// Find the previous player state to interpolate from
+	cl.playerState = &cl.frame.playerState;
+	cl.oldPlayerState = &oldFrame->playerState;
+
+	// See if the player respawned this frame
+	if (cl.playerState->stats[STAT_HEALTH] > 0 && cl.oldPlayerState->stats[STAT_HEALTH] <= 0){
+		// Clear a few things
+		cl.doubleVisionEndTime = 0;
+		cl.underwaterVisionEndTime = 0;
+		cl.fireScreenEndTime = 0;
+
+		cl.crosshairEntTime = 0;
+		cl.crosshairEntNumber = 0;
+	}
+
+    // See if the player entity was teleported this frame
+	delta[0] = cl.oldPlayerState->pmove.origin[0] - cl.playerState->pmove.origin[0];
+	delta[1] = cl.oldPlayerState->pmove.origin[1] - cl.playerState->pmove.origin[1];
+	delta[2] = cl.oldPlayerState->pmove.origin[2] - cl.playerState->pmove.origin[2];
+
+    if (abs(delta[0]) > 2048 || abs(delta[1]) > 2048 || abs(delta[2]) > 2048)
+		cl.oldPlayerState = (player_state_t *)&cl.playerState;	// Don't interpolate
 
 	if (!cl.frame.valid)
 		return;

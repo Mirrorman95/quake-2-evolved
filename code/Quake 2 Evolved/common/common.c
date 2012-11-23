@@ -853,10 +853,10 @@ void Com_Init (const char *cmdLine){
 	NetChan_Init();
 
 	// Show or hide the system console
-//	if (dedicated->integerValue)
+	if (dedicated->integerValue)
 		Sys_ShowConsole(true);
-//	else
-//		Sys_ShowConsole(false);
+	else
+		Sys_ShowConsole(false);
 
 	dedicated->modified = false;
 

@@ -38,6 +38,8 @@
 #include "../ui/ui_public.h"
 
 
+#define DEFAULT_FOV					90.0f
+
 // The cl.parseEntities array must be large enough to hold UPDATE_BACKUP
 // frames of entities, so that when a delta compressed message arrives 
 // from the server it can be un-deltaed from the original 

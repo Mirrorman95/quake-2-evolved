@@ -1242,8 +1242,6 @@ static int FS_AddFileToList (const char *name, const char **files, int fileCount
 /*
  ==================
  FS_ListFiles
-
- TODO: when loading materials, fileInPack->name is q2e_pak0/materials when i should be only materials
  ==================
 */
 const char **FS_ListFiles (const char *path, const char *extension, bool sort, int *numFiles){
