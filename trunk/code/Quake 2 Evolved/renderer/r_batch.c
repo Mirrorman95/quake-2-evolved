@@ -142,16 +142,17 @@ static void RB_BatchSurface (meshData_t *data){
 		vertices->xyz[0] = vertex->xyz[0];
 		vertices->xyz[1] = vertex->xyz[1];
 		vertices->xyz[2] = vertex->xyz[2];
-		vertices->normal[0] = surface->normal[0];
-		vertices->normal[1] = surface->normal[1];
-		vertices->normal[2] = surface->normal[2];
-
-		// TODO: tangent space vectors
-
+		vertices->normal[0] = vertex->normal[0];
+		vertices->normal[1] = vertex->normal[1];
+		vertices->normal[2] = vertex->normal[2];
+		vertices->tangents[0][0] = vertex->tangents[0][0];
+		vertices->tangents[0][1] = vertex->tangents[0][1];
+		vertices->tangents[0][2] = vertex->tangents[0][2];
+		vertices->tangents[1][0] = vertex->tangents[1][0];
+		vertices->tangents[1][1] = vertex->tangents[1][1];
+		vertices->tangents[1][2] = vertex->tangents[1][2];
 		vertices->st[0] = vertex->st[0];
 		vertices->st[1] = vertex->st[1];
-		vertices->st[2] = vertex->lightmap[0];
-		vertices->st[3] = vertex->lightmap[1];
 		vertices->color[0] = vertex->color[0];
 		vertices->color[1] = vertex->color[1];
 		vertices->color[2] = vertex->color[2];
@@ -623,6 +624,15 @@ void RB_BatchGeometry (meshType_t type, meshData_t *data){
 
  ==================
 */
+static void RB_BatchSurfaceShadow (meshData_t *data){
+
+}
+
+/*
+ ==================
+
+ ==================
+*/
 static void RB_BatchAliasModelShadow (meshData_t *data){
 
 }
@@ -637,6 +647,9 @@ void RB_BatchShadowGeometry (meshType_t type, meshData_t *data){
 	backEnd.meshData = data;
 
 	switch (type){
+	case MESH_SURFACE:
+		RB_BatchSurfaceShadow(data);
+		break;
 	case MESH_ALIASMODEL:
 		RB_BatchAliasModelShadow(data);
 		break;

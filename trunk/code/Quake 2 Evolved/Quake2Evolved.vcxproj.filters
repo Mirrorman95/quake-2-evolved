@@ -560,6 +560,9 @@
     <ClCompile Include="client\cl_key.c">
       <Filter>Source Files\client</Filter>
     </ClCompile>
+    <ClCompile Include="windows\win_editor.c">
+      <Filter>Source Files\windows</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="windows\q2.ico">

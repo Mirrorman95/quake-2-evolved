@@ -282,8 +282,29 @@ void RB_BindMultitexture (material_t *material, texture_t *texture, int cinemati
 */
 void RB_ComputeTexturePlanes (material_t *material, textureStage_t *textureStage, vec4_t planes[4]){
 
+	mat4_t	matrix;
+
 	if (textureStage->texGen == TG_EXPLICIT || textureStage->texGen == TG_NORMAL || textureStage->texGen == TG_REFLECT)
 		return;
+
+	if (textureStage->texGen == TG_VECTOR){
+		VectorCopy(textureStage->texGenVectors[0], planes[0]);
+		VectorCopy(textureStage->texGenVectors[1], planes[1]);
+
+		return;
+	}
+
+	if (textureStage->texGen == TG_SKYBOX){
+		Matrix4_Identity(matrix);
+		Matrix4_Translate(matrix, -backEnd.localParms.viewOrigin[0], -backEnd.localParms.viewOrigin[1], -backEnd.localParms.viewOrigin[2]);
+	}
+
+	if (textureStage->texGen == TG_SCREEN){
+
+		if (material->subviewType == ST_MIRROR){
+
+		}
+	}
 }
 
 /*

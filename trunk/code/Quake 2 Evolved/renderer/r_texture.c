@@ -613,7 +613,7 @@ static void R_UploadTexture (texture_t *texture, int numImages, byte **images, i
 					mipHeight = 1;
 
 				// Development tool
-				if (r_colorMipLevels->integerValue && !(texture->flags & (TF_INTERNAL | TF_BUMP))){
+				if (r_colorMipLevels->integerValue && !(texture->flags & (TF_INTERNAL | TF_BUMP | TF_LIGHT))){
 					if (texture->format == TF_RGB || texture->format == TF_RGBA){
 						blend = R_BlendOverTexture(data, mipWidth * mipHeight, r_mipBlendColors[mipLevel]);
 
@@ -821,7 +821,7 @@ static void R_UploadArrayTexture (texture_t *texture, byte *image, int width, in
  R_LoadTexture
  ==================
 */
-static texture_t *R_LoadTexture (const char *name, byte *image, int width, int height, int flags, textureFormat_t format, textureFilter_t filter, textureWrap_t wrap, bool uncompressed){
+texture_t *R_LoadTexture (const char *name, byte *image, int width, int height, int flags, textureFormat_t format, textureFilter_t filter, textureWrap_t wrap, bool uncompressed){
 
 	texture_t	*texture;
 	uint		hashKey;
@@ -1610,14 +1610,16 @@ static void R_ListTextures_f (){
 /*
  ==================
  R_CreateInternalTextures
-
- TODO: lightmapTextures
  ==================
 */
 static void R_CreateInternalTextures (){
 
-	byte		image[256*256*4];
+	byte		image[256*256*4], *cubeImages[6];
 	byte		emptyImage[4*4*4], *emptyCubeImages[6];
+	byte		*out;
+	float		value;
+	float		s, t;
+	int			intensity;
 	int			x, y;
 	int			i;
 
@@ -1656,7 +1658,133 @@ static void R_CreateInternalTextures (){
 
 	rg.flatTexture = R_LoadTexture("_flat", image, 4, 4, TF_INTERNAL | TF_NOPICMIP | TF_BUMP, TF_RGB, TF_DEFAULT, TW_REPEAT, true);
 
-	// TODO: rg.lightmapTextures
+	// Attenuation texture
+	out = image;
+
+	for (y = 0; y < 128; y++){
+		for (x = 0; x < 128; x++, out += 4){
+			s = (((float)x + 0.5f) * (2.0f / 128.0f) - 1.0f) * (1.0f / 0.9375f);
+			t = (((float)y + 0.5f) * (2.0f / 128.0f) - 1.0f) * (1.0f / 0.9375f);
+
+			value = 1.0f - Sqrt(s*s + t*t);
+
+			intensity = FloatToByte(value * 255.0f);
+
+			out[0] = intensity;
+			out[1] = intensity;
+			out[2] = intensity;
+			out[3] = 255;
+		}
+	}
+
+	rg.attenuationTexture = R_LoadTexture("_attenuation", image, 128, 128, TF_INTERNAL | TF_NOPICMIP | TF_LIGHT, TF_LUMINANCE, TF_DEFAULT, TW_CLAMP_TO_ZERO, true);
+
+	// No attenuation texture
+	out = image;
+
+	for (y = 0; y < 128; y++){
+		for (x = 0; x < 128; x++, out += 4){
+			if (x == 0 || x == 127 || y == 0 || y == 127)
+				*(dword *)out = LittleLong(0xFF000000);
+			else
+				*(dword *)out = LittleLong(0xFFFFFFFF);
+		}
+	}
+
+	rg.noAttenuationTexture = R_LoadTexture("_noAttenuation", image, 128, 128, TF_INTERNAL | TF_NOPICMIP | TF_LIGHT, TF_LUMINANCE, TF_DEFAULT, TW_CLAMP_TO_ZERO, true);
+
+	// Falloff texture
+	out = image;
+
+	for (y = 0; y < 4; y++){
+		for (x = 0; x < 64; x++, out += 4){
+			s = (((float)x + 0.5f) * (2.0f / 64.0f) - 1.0f) * (1.0f / 0.9375f);
+
+			value = 1.0f - Sqrt(s*s);
+
+			intensity = FloatToByte(value * 255.0f);
+
+			out[0] = intensity;
+			out[1] = intensity;
+			out[2] = intensity;
+			out[3] = 255;
+		}
+	}
+
+	rg.falloffTexture = R_LoadTexture("_falloff", image, 64, 4, TF_INTERNAL | TF_NOPICMIP | TF_LIGHT, TF_LUMINANCE, TF_LINEAR, TW_CLAMP, true);
+
+	// No falloff texture
+	out = image;
+
+	for (y = 0; y < 4; y++){
+		for (x = 0; x < 64; x++, out += 4){
+			if (x == 0 || x == 63)
+				*(dword *)out = LittleLong(0xFF000000);
+			else
+				*(dword *)out = LittleLong(0xFFFFFFFF);
+		}
+	}
+
+	rg.noFalloffTexture = R_LoadTexture("_noFalloff", image, 64, 4, TF_INTERNAL | TF_NOPICMIP | TF_LIGHT, TF_LUMINANCE, TF_LINEAR, TW_CLAMP, true);
+
+	// Cubic filter texture
+	for (i = 0; i < 6; i++){
+		cubeImages[i] = image + (i << 6);
+
+		out = cubeImages[i];
+
+		for (y = 0; y < 4; y++){
+			for (x = 0; x < 4; x++, out += 4)
+				*(dword *)out = LittleLong(0xFFFFFFFF);
+		}
+	}
+
+	rg.cubicFilterTexture = R_LoadCubeTexture("_cubicFilter", cubeImages, 4, 4, TF_INTERNAL | TF_NOPICMIP | TF_LIGHT, TF_LUMINANCE, TF_DEFAULT, true);
+
+	// Fog texture
+	out = image;
+
+	for (y = 0; y < 128; y++){
+		for (x = 0; x < 128; x++, out += 4){
+			s = (((float)x + 0.5f) * (2.0f / 128.0f) - 1.0f) * (1.0f / 0.9375f);
+			t = (((float)y + 0.5f) * (2.0f / 128.0f) - 1.0f) * (1.0f / 0.9375f);
+
+			value = Pow(Sqrt(s*s + t*t), 0.5f);
+
+			intensity = FloatToByte(value * 255.0f);
+
+			out[0] = 255;
+			out[1] = 255;
+			out[2] = 255;
+			out[3] = intensity;
+		}
+	}
+
+	rg.fogTexture = R_LoadTexture("_fog", image, 128, 128, TF_INTERNAL | TF_NOPICMIP | TF_LIGHT, TF_LUMINANCE_ALPHA, TF_LINEAR, TW_CLAMP, true);
+
+	// Fog enter texture
+	out = image;
+
+	for (y = 0; y < 64; y++){
+		for (x = 0; x < 64; x++, out += 4){
+			s = (((float)x + 0.5f) * (2.0f / 64.0f) - 1.0f) * (1.0f / 0.3750f);
+			t = (((float)y + 0.5f) * (2.0f / 64.0f) - 1.0f) * (1.0f / 0.3750f);
+
+			s = ClampFloat(s + (1.0f / 16.0f), -1.0f, 0.0f);
+			t = ClampFloat(t + (1.0f / 16.0f), -1.0f, 0.0f);
+
+			value = Pow(Sqrt(s*s + t*t), 0.5f);
+
+			intensity = FloatToByte(value * 255.0f);
+
+			out[0] = 255;
+			out[1] = 255;
+			out[2] = 255;
+			out[3] = intensity;
+		}
+	}
+
+	rg.fogEnterTexture = R_LoadTexture("_fogEnter", image, 64, 64, TF_INTERNAL | TF_NOPICMIP | TF_LIGHT, TF_LUMINANCE_ALPHA, TF_LINEAR, TW_CLAMP, true);
 
 	// Cinematic textures
 	for (i = 0; i < MAX_CINEMATICS; i++)

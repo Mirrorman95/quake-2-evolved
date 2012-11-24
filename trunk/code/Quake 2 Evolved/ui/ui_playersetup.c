@@ -145,7 +145,7 @@ static void UI_PlayerSetup_FindModels (){
 	fileList = FS_ListFiles("players", "/", true, &numFiles);
 
 	for (i = 0; i < numFiles; i++){
-		if (strrchr(fileList[i], '.'))
+		if (Str_FindChar(fileList[i], '.'))
 			continue;
 
 		if (count == MAX_PLAYER_MODELS)
@@ -174,12 +174,10 @@ static void UI_PlayerSetup_FindModels (){
 /*
  ==================
  UI_PlayerSetup_FindSkins
-
- TODO: crashes for some reason
  ==================
 */
 static void UI_PlayerSetup_FindSkins (const char *model){
-#if 0
+
 	const char	**fileList;
 	int			numFiles;
 	char		pathPCX[MAX_OSPATH], pathTGA[MAX_OSPATH];
@@ -205,7 +203,9 @@ static void UI_PlayerSetup_FindSkins (const char *model){
 		if (count == MAX_PLAYER_SKINS)
 			break;
 
-		Com_StripExtension(fileList[i], list[count], sizeof(list[count]));
+		Str_Copy(list[count], fileList[i], sizeof(list[count]));
+		Str_StripFileExtension(list[count]);
+
 		count++;
 	}
 
@@ -222,7 +222,6 @@ static void UI_PlayerSetup_FindSkins (const char *model){
 		Str_Copy(uiPlayerSetup.playerSkins[uiPlayerSetup.numPlayerSkins], list[i], sizeof(uiPlayerSetup.playerSkins[uiPlayerSetup.numPlayerSkins]));
 		uiPlayerSetup.numPlayerSkins++;
 	}
-#endif
 }
 
 /*
@@ -381,7 +380,8 @@ static void UI_PlayerSetup_Callback (void *self, int event){
 static void UI_PlayerSetup_Ownerdraw (void *self){
 
 	menuCommon_t	*item = (menuCommon_t *)self;
-	renderEntity_t	entity;
+	renderEntity_t	renderEntity;
+	renderLight_t	renderLight;
 	renderView_t	renderView;
 	vec4_t			iconTrans = {1.0f, 1.0f, 1.0f, 0.5f};
 	vec3_t			angles;
@@ -400,58 +400,88 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 		R_ClearScene();
 
 		// Draw the player model
-		Mem_Fill(&entity, 0, sizeof(renderEntity_t));
+		Mem_Fill(&renderEntity, 0, sizeof(renderEntity_t));
 
-		entity.type = RE_MODEL;
+		renderEntity.type = RE_MODEL;
 
-		VectorSet(entity.origin, 80.0f, -80.0f, 0.0f);
-		VectorCopy(entity.origin, entity.oldOrigin);
+		VectorSet(renderEntity.origin, 80.0f, -80.0f, 0.0f);
+		VectorCopy(renderEntity.origin, renderEntity.oldOrigin);
 		VectorSet(angles, 0.0f, (uiStatic.realTime & 4095) * 360.0f / 4096.0f, 0.0f);
-		AnglesToMat3(angles, entity.axis);
+		AnglesToMat3(angles, renderEntity.axis);
 
 		Str_SPrintf(path, sizeof(path), "players/%s/tris.md2", uiPlayerSetup.currentModel);
-		entity.model = R_RegisterModel(path);
+		renderEntity.model = R_RegisterModel(path);
 
 		Str_SPrintf(path, sizeof(path), "players/%s/%s", uiPlayerSetup.currentModel, uiPlayerSetup.currentSkin);
-		entity.material = R_RegisterMaterial(path);
+		renderEntity.material = R_RegisterMaterial(path, true);
 
-		entity.materialParms[MATERIALPARM_RED] = 1.0f;
-		entity.materialParms[MATERIALPARM_GREEN] = 1.0f;
-		entity.materialParms[MATERIALPARM_BLUE] = 1.0f;
-		entity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-		entity.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
-		entity.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
-		entity.materialParms[MATERIALPARM_MISC] = 0.0f;
-		entity.materialParms[MATERIALPARM_MODE] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_RED] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_BLUE] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
+		renderEntity.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
+		renderEntity.materialParms[MATERIALPARM_MISC] = 0.0f;
+		renderEntity.materialParms[MATERIALPARM_MODE] = 1.0f;
 
-		R_AddEntityToScene(&entity);
+		R_AddEntityToScene(&renderEntity);
 
 		// Also draw the default weapon model
-		Mem_Fill(&entity, 0, sizeof(renderEntity_t));
+		Mem_Fill(&renderEntity, 0, sizeof(renderEntity_t));
 
-		entity.type = RE_MODEL;
+		renderEntity.type = RE_MODEL;
 
-		VectorSet(entity.origin, 80.0f, -80.0f, 0.0f);
-		VectorCopy(entity.origin, entity.oldOrigin);
+		VectorSet(renderEntity.origin, 80.0f, -80.0f, 0.0f);
+		VectorCopy(renderEntity.origin, renderEntity.oldOrigin);
 		VectorSet(angles, 0.0f, (uiStatic.realTime & 4095) * 360.0f / 4096.0f, 0.0f);
-		AnglesToMat3(angles, entity.axis);
+		AnglesToMat3(angles, renderEntity.axis);
 
 		Str_SPrintf(path, sizeof(path), "players/%s/weapon.md2", uiPlayerSetup.currentModel);
-		entity.model = R_RegisterModel(path);
+		renderEntity.model = R_RegisterModel(path);
 
 		Str_SPrintf(path, sizeof(path), "players/%s/weapon", uiPlayerSetup.currentModel);
-		entity.material = R_RegisterMaterial(path);
+		renderEntity.material = R_RegisterMaterial(path, true);
 
-		entity.materialParms[MATERIALPARM_RED] = 1.0f;
-		entity.materialParms[MATERIALPARM_GREEN] = 1.0f;
-		entity.materialParms[MATERIALPARM_BLUE] = 1.0f;
-		entity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-		entity.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
-		entity.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
-		entity.materialParms[MATERIALPARM_MISC] = 0.0f;
-		entity.materialParms[MATERIALPARM_MODE] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_RED] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_BLUE] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
+		renderEntity.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
+		renderEntity.materialParms[MATERIALPARM_MISC] = 0.0f;
+		renderEntity.materialParms[MATERIALPARM_MODE] = 1.0f;
 
-		R_AddEntityToScene(&entity);
+		R_AddEntityToScene(&renderEntity);
+
+		// Add a light
+		Mem_Fill(&renderLight, 0, sizeof(renderLight_t));
+
+		renderLight.type = RL_POINT;
+		renderLight.lightNum = 0;
+
+		VectorSet(renderLight.origin, 0.0f, -50.0f, 0.0f);
+		VectorClear(renderLight.center);
+		Matrix3_Identity(renderLight.axis);
+
+		VectorSet(renderLight.radius, 200.0f, 200.0f, 200.0f);
+
+		renderLight.fogDistance = 500.0f;
+		renderLight.fogHeight = 500.0f;
+
+		renderLight.allowInView = VIEW_MAIN;
+
+		renderLight.material = NULL;
+
+		renderLight.materialParms[MATERIALPARM_RED] = 1.0f;
+		renderLight.materialParms[MATERIALPARM_GREEN] = 1.0f;
+		renderLight.materialParms[MATERIALPARM_BLUE] = 1.0f;
+		renderLight.materialParms[MATERIALPARM_ALPHA] = 1.0f;
+		renderLight.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
+		renderLight.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
+		renderLight.materialParms[MATERIALPARM_MISC] = 0.0f;
+		renderLight.materialParms[MATERIALPARM_MODE] = 1.0f;
+
+		R_AddLightToScene(&renderLight);
 
 		// Create and render the scene
 		Mem_Fill(&renderView, 0, sizeof(renderView_t));

@@ -202,6 +202,8 @@ void CL_DrawPicShearedST (float x, float y, float w, float h, float s1, float t1
 /*
  ==================
  CL_DrawPicByName
+
+ TODO: why does this not scale to screen dimensions?
  ==================
 */
 void CL_DrawPicByName (float x, float y, float w, float h, const vec4_t color, const char *pic){
@@ -261,12 +263,12 @@ void CL_DrawLoading (){
 	switch (cls.state){
 	case CA_DISCONNECTED:
 		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, "ui/assets/title_screen/title_backg");
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, 160.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
+		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
 
 		break;
 	case CA_CONNECTING:
 		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, "ui/assets/title_screen/title_backg");
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, 160.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
+		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
 
 		if (NET_IsLocalAddress(cls.serverAddress)){
 			Str_SPrintf(string, sizeof(string), "Starting up...");
@@ -283,7 +285,7 @@ void CL_DrawLoading (){
 		break;
 	case CA_CHALLENGING:
 		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, "ui/assets/title_screen/title_backg");
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, 160.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
+		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
 
 		if (NET_IsLocalAddress(cls.serverAddress)){
 			Str_SPrintf(string, sizeof(string), "Starting up...");
@@ -301,7 +303,7 @@ void CL_DrawLoading (){
 	case CA_CONNECTED:
 		if (cls.downloadFile){
 			CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, "ui/assets/title_screen/title_backg");
-			CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, 160.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
+			CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
 
 			if (cls.downloadStart != cls.realTime)
 				speed = (float)(cls.downloadBytes / 1024) / ((cls.realTime - cls.downloadStart) / 1000);
@@ -328,7 +330,7 @@ void CL_DrawLoading (){
 		}
 
 		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, "ui/assets/title_screen/title_backg");
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, 160.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
+		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
 
 		if (NET_IsLocalAddress(cls.serverAddress)){
 			Str_SPrintf(string, sizeof(string), "Starting up...");
@@ -343,7 +345,7 @@ void CL_DrawLoading (){
 	case CA_LOADING:
 		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshot);
 		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshotDetail);
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, 160.0f, colorWhite, cl.media.loadingLogo);
+		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, cl.media.loadingLogo);
 
 		if (NET_IsLocalAddress(cls.serverAddress)){
 			Str_SPrintf(string, sizeof(string), "Loading %s\n\"%s\"\n\n\nLoading... %s\n", cls.loadingInfo.map, cls.loadingInfo.name, cls.loadingInfo.string);
@@ -365,13 +367,13 @@ void CL_DrawLoading (){
 	case CA_PRIMED:
 		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshot);
 		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshotDetail);
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, 160.0f, colorWhite, cl.media.loadingLogo);
+		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, cl.media.loadingLogo);
 
 		break;
 	case CA_ACTIVE:
 		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshot);
 		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshotDetail);
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, 160.0f, colorWhite, cl.media.loadingLogo);
+		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, cl.media.loadingLogo);
 
 		Str_SPrintf(string, sizeof(string), "Awaiting frame...");
 		// CL_DrawString

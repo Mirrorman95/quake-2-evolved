@@ -351,8 +351,10 @@ typedef enum {
 #define NUM_VERTEX_NORMALS		162
 extern vec3_t	byteDirs[NUM_VERTEX_NORMALS];
 
+float Sqrt (float x);
 float Tan (float x);
 float ATan (float y, float x);
+float ClampFloat (float value, float min, float max);
 
 int			Square (int x);
 

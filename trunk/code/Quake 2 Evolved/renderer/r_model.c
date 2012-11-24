@@ -237,25 +237,6 @@ static void R_LoadSurfEdges (const byte *data, const bspLump_t *lump){
 
 /*
  ==================
- R_LoadLighting
- ==================
-*/
-static void R_LoadLighting (const byte *data, const bspLump_t *lump){
-
-	if (r_skipLightning->integerValue)
-		return;
-
-	if (!lump->length)
-		return;
-
-	rg.worldModel->lightData = (byte *)Mem_ClearedAlloc(lump->length, TAG_RENDERER);
-	rg.worldModel->size += lump->length;
-
-	Mem_Copy(rg.worldModel->lightData, data + lump->offset, lump->length);
-}
-
-/*
- ==================
  R_LoadPlanes
  ==================
 */
@@ -441,12 +422,6 @@ static void R_LoadTexInfo (const byte *data, const bspLump_t *lump){
 				surfaceParm |= SURFACEPARM_FLOWING;
 		}
 
-		// Lightmap visualization tool
-		if (r_singleLightmap->integerValue && (surfaceParm & SURFACEPARM_LIGHTING)){
-			out->material = rg.defaultLightmapMaterial;
-			continue;
-		}
-
 		// Load the material
 		Str_SPrintf(name, sizeof(name), "textures/%s", in->texture);
 		out->material = R_FindMaterial(name, MT_GENERIC, (surfaceParm_t)surfaceParm);
@@ -462,6 +437,55 @@ static void R_LoadTexInfo (const byte *data, const bspLump_t *lump){
 	for (i = 0, out = rg.worldModel->texInfo; i < rg.worldModel->numTexInfo; i++, out++){
 		for (step = out->next; step && step != out; step = step->next)
 			out->numFrames++;
+	}
+}
+
+/*
+ ==================
+ R_FindSurfaceTriangleWithEdge
+ ==================
+*/
+static int R_FindSurfaceTriangleWithEdge (int numTriangles, surfTriangle_t *triangles, glIndex_t start, glIndex_t end, int ignore){
+
+	surfTriangle_t	*triangle;
+	int				count, match;
+	int				i;
+
+	count = 0;
+	match = -1;
+
+	for (i = 0, triangle = triangles; i < numTriangles; i++, triangle++){
+		if ((triangle->index[0] == start && triangle->index[1] == end) || (triangle->index[1] == start && triangle->index[2] == end) || (triangle->index[2] == start && triangle->index[0] == end)){
+			if (i != ignore)
+				match = i;
+
+			count++;
+		}
+		else if ((triangle->index[1] == start && triangle->index[0] == end) || (triangle->index[2] == start && triangle->index[1] == end) || (triangle->index[0] == start && triangle->index[2] == end))
+			count++;
+	}
+
+	// Detect edges shared by three triangles and make them seams
+	if (count > 2)
+		match = -1;
+
+	return match;
+}
+
+/*
+ ==================
+ R_BuildSurfaceTriangleNeighbors
+ ==================
+*/
+static void R_BuildSurfaceTriangleNeighbors (int numTriangles, surfTriangle_t *triangles){
+
+	surfTriangle_t	*triangle;
+	int				i;
+
+	for (i = 0, triangle = triangles; i < numTriangles; i++, triangle++){
+		triangle->neighbor[0] = R_FindSurfaceTriangleWithEdge(numTriangles, triangles, triangle->index[1], triangle->index[0], i);
+		triangle->neighbor[1] = R_FindSurfaceTriangleWithEdge(numTriangles, triangles, triangle->index[2], triangle->index[1], i);
+		triangle->neighbor[2] = R_FindSurfaceTriangleWithEdge(numTriangles, triangles, triangle->index[0], triangle->index[2], i);
 	}
 }
 
@@ -535,8 +559,6 @@ static void R_CalcSurfaceExtents (surface_t *surface){
 /*
  ==================
  R_BuildSurfacePolygon
-
- TODO: move normal, bionormal and tangent space into here?
  ==================
 */
 static void R_BuildSurfacePolygon (surface_t *surface){
@@ -576,6 +598,16 @@ static void R_BuildSurfacePolygon (surface_t *surface){
 
 		VectorCopy(v->point, vertex->xyz);
 
+		// Normal
+		if (!(surface->flags & SURF_PLANEBACK))
+			VectorCopy(surface->plane->normal, vertex->normal);
+		else
+			VectorNegate(surface->plane->normal, vertex->normal);
+
+		// Tangents
+		VectorNormalize2(texInfo->vecs[0], vertex->tangents[0]);
+		VectorNormalize2(texInfo->vecs[1], vertex->tangents[1]);
+
 		// Texture coordinates
 		s = DotProduct(v->point, texInfo->vecs[0]) + texInfo->vecs[0][3];
 		s /= texInfo->width;
@@ -586,28 +618,17 @@ static void R_BuildSurfacePolygon (surface_t *surface){
 		vertex->st[0] = s;
 		vertex->st[1] = t;
 
-		// Lightmap texture coordinates
-		s = DotProduct(v->point, texInfo->vecs[0]) + texInfo->vecs[0][3] - surface->textureMins[0];
-		s += surface->lmS * 16.0f;
-		s += 8.0f;
-		s /= LIGHTMAP_WIDTH * 16.0f;
-
-		t = DotProduct(v->point, texInfo->vecs[1]) + texInfo->vecs[1][3] - surface->textureMins[1];
-		t += surface->lmT * 16.0f;
-		t += 8.0f;
-		t /= LIGHTMAP_HEIGHT * 16.0f;
-
-		vertex->lightmap[0] = s;
-		vertex->lightmap[1] = t;
-
 		// Vertex color
 		if (texInfo->flags & SURF_TRANS33)
-			MakeRGBA(vertex->color, 255, 255, 255, 255 * 0.33);
+			MakeRGBA(vertex->color, 255, 255, 255, 255 * 0.33f);
 		else if (texInfo->flags & SURF_TRANS66)
-			MakeRGBA(vertex->color, 255, 255, 255, 255 * 0.66);
+			MakeRGBA(vertex->color, 255, 255, 255, 255 * 0.66f);
 		else
 			MakeRGBA(vertex->color, 255, 255, 255, 255);
 	}
+
+	// Build triangle neighbors
+	R_BuildSurfaceTriangleNeighbors(surface->numTriangles, surface->triangles);
 }
 
 /*
@@ -668,7 +689,7 @@ static void R_LoadFaces (const byte *data, const bspLump_t *lump){
 
 	bspFace_t	*in;
 	surface_t 	*out;
-	int			i, lightOffsets;
+	int			i;
 
 	in = (bspFace_t *)(data + lump->offset);
 	if (lump->length % sizeof(bspFace_t))
@@ -678,9 +699,8 @@ static void R_LoadFaces (const byte *data, const bspLump_t *lump){
 	rg.worldModel->surfaces = out = (surface_t *)Mem_ClearedAlloc(rg.worldModel->numSurfaces * sizeof(surface_t), TAG_RENDERER);
 	rg.worldModel->size += rg.worldModel->numSurfaces * sizeof(surface_t);
 
-	R_BeginBuildingLightmaps();
-
 	for (i = 0; i < rg.worldModel->numSurfaces; i++, in++, out++){
+		out->flags = 0;
 		out->firstEdge = LittleLong(in->firstEdge);
 		out->numEdges = LittleShort(in->numEdges);
 
@@ -690,46 +710,13 @@ static void R_LoadFaces (const byte *data, const bspLump_t *lump){
 		out->plane = rg.worldModel->planes + LittleShort(in->planeNum);
 		out->texInfo = rg.worldModel->texInfo + LittleShort(in->texInfo);
 
-		R_CalcSurfaceBounds(out);
-
-		R_CalcSurfaceExtents(out);
-
-		// Tangent vectors
-		VectorCopy(out->texInfo->vecs[0], out->tangent);
-		VectorNegate(out->texInfo->vecs[1], out->binormal);
-
-		if (!(out->flags & SURF_PLANEBACK))
-			VectorCopy(out->plane->normal, out->normal);
-		else
-			VectorNegate(out->plane->normal, out->normal);
-
-		VectorNormalize(out->tangent);
-		VectorNormalize(out->binormal);
-		VectorNormalize(out->normal);
-
-		// Lighting info
-		out->lmWidth = (out->extents[0] >> 4) + 1;
-		out->lmHeight = (out->extents[1] >> 4) + 1;
-
-		if (out->texInfo->flags & (SURF_SKY | SURF_WARP | SURF_NODRAW))
-			lightOffsets = -1;
-		else
-			lightOffsets = LittleLong(in->lightOfs);
-
-		if (rg.worldModel->lightData && lightOffsets != -1)
-			out->lmSamples = rg.worldModel->lightData + lightOffsets;
-
-		while (out->numStyles < MAX_STYLES && in->styles[out->numStyles] != 255){
-			out->styles[out->numStyles] = in->styles[out->numStyles];
-			out->numStyles++;
-		}
-
 		// Clear counters
 		out->worldCount = 0;
 		out->fragmentCount = 0;
 
-		// Create lightmap
-		R_BuildSurfaceLightmap(out);
+		// Find origin and bounds
+		R_CalcSurfaceBounds(out);
+		R_CalcSurfaceExtents(out);
 
 		// Create the polygon
 		R_BuildSurfacePolygon(out);
@@ -737,8 +724,6 @@ static void R_LoadFaces (const byte *data, const bspLump_t *lump){
 		// Fix texture coordinates for clamping
 		R_FixSurfaceTextureCoords(out);
 	}
-
-	R_EndBuildingLightmaps();
 }
 
 /*
@@ -982,70 +967,6 @@ static void R_LoadInlineModels (const byte *data, const bspLump_t *lump){
 
 /*
  ==================
- R_LoadLightgridFile
- ==================
-*/
-static void R_LoadLightgridFile (){
-
-	byte				*data;
-	lightGridHeader_t	*header;
-	lightGrid_t			*in, *out;
-	char				name[MAX_QPATH];
-	int					i;
-
-	// Load the file
-	Str_SPrintf(name, sizeof(name), "%s.lightgrid", rg.worldModel->name);
-	FS_ReadFile(name, (void **)&data);
-	if (!data)
-		return;
-
-	header = (lightGridHeader_t *)data;
-
-	// Byte swap the header fields and sanity check
-	if (LittleLong(header->id) != Q2EL_ID){
-		Com_DPrintf(S_COLOR_RED "R_LoadLightgridFile: wrong file id (%s)\n", name);
-		FS_FreeFile(data);
-		return;
-	}
-
-	if (LittleLong(header->version) != Q2EL_VERSION){
-		Com_DPrintf(S_COLOR_RED "R_LoadLightgridFile: wrong version number (%i should be %i) (%s)\n", name, LittleLong(header->version), Q2EL_VERSION);
-		FS_FreeFile(data);
-		return;
-	}
-
-	// Load into heap
-	rg.worldModel->gridMins[0] = LittleFloat(header->gridMins[0]);
-	rg.worldModel->gridMins[1] = LittleFloat(header->gridMins[1]);
-	rg.worldModel->gridMins[2] = LittleFloat(header->gridMins[2]);
-
-	rg.worldModel->gridSize[0] = LittleFloat(header->gridSize[0]);
-	rg.worldModel->gridSize[1] = LittleFloat(header->gridSize[1]);
-	rg.worldModel->gridSize[2] = LittleFloat(header->gridSize[2]);
-
-	rg.worldModel->gridBounds[0] = LittleLong(header->gridBounds[0]);
-	rg.worldModel->gridBounds[1] = LittleLong(header->gridBounds[1]);
-	rg.worldModel->gridBounds[2] = LittleLong(header->gridBounds[2]);
-	rg.worldModel->gridBounds[3] = LittleLong(header->gridBounds[3]);
-
-	rg.worldModel->gridPoints = LittleLong(header->gridPoints);
-
-	in = (lightGrid_t *)(data + sizeof(lightGridHeader_t));
-
-	rg.worldModel->lightGrid = out = (lightGrid_t *)Mem_ClearedAlloc(rg.worldModel->gridPoints * sizeof(lightGrid_t), TAG_RENDERER);
-	rg.worldModel->size += rg.worldModel->gridPoints * sizeof(lightGrid_t);
-
-	for (i = 0; i < rg.worldModel->gridPoints; i++, in++, out++){
-		out->lightDir[0] = LittleFloat(in->lightDir[0]);
-		out->lightDir[1] = LittleFloat(in->lightDir[1]);
-		out->lightDir[2] = LittleFloat(in->lightDir[2]);
-	}
-
-	FS_FreeFile(data);
-}
-
-/*
- ==================
  R_LoadMap
  ==================
 */
@@ -1094,7 +1015,6 @@ void R_LoadMap (const char *name, const char *skyName, float skyRotate, const ve
 	R_LoadVertices(data, &header->lumps[LUMP_VERTICES]);
 	R_LoadEdges(data, &header->lumps[LUMP_EDGES]);
 	R_LoadSurfEdges(data, &header->lumps[LUMP_SURFEDGES]);
-	R_LoadLighting(data, &header->lumps[LUMP_LIGHTING]);
 	R_LoadPlanes(data, &header->lumps[LUMP_PLANES]);
 	R_LoadTexInfo(data, &header->lumps[LUMP_TEXINFO]);
 	R_LoadFaces(data, &header->lumps[LUMP_FACES]);
@@ -1107,7 +1027,6 @@ void R_LoadMap (const char *name, const char *skyName, float skyRotate, const ve
 	FS_FreeFile(data);
 
 	// Load external files
-	R_LoadLightgridFile();
 
 	// Set the world model
 	rg.worldEntity->model = rg.worldModel;
@@ -1217,6 +1136,41 @@ static void R_CalcTangentVectors (int numTriangles, mdlTriangle_t *triangles, in
 	for (i = 0, xyzNormal = xyzNormals; i < numVertices; i++, xyzNormal++){
 		VectorNormalize(xyzNormal->tangents[0]);
 		VectorNormalize(xyzNormal->tangents[1]);
+	}
+}
+
+/*
+ ==================
+ R_CalcFacePlanes
+ ==================
+*/
+static void R_CalcFacePlanes (int numTriangles, mdlTriangle_t *triangles, mdlFacePlane_t *facePlanes, int numVertices, mdlXyzNormal_t *xyzNormals, int frameNum){
+
+	mdlTriangle_t	*triangle;
+	mdlFacePlane_t	*facePlane;
+	float			*pXyz[3];
+	vec3_t			edge[2];
+	int				i;
+
+	facePlanes += numTriangles * frameNum;
+	xyzNormals += numVertices * frameNum;
+
+	// Calculate face planes
+	for (i = 0, triangle = triangles, facePlane = facePlanes; i < numTriangles; i++, triangle++, facePlane++){
+		pXyz[0] = (float *)(xyzNormals[triangle->index[0]].xyz);
+		pXyz[1] = (float *)(xyzNormals[triangle->index[1]].xyz);
+		pXyz[2] = (float *)(xyzNormals[triangle->index[2]].xyz);
+
+		// Find edges
+		VectorSubtract(pXyz[1], pXyz[0], edge[0]);
+		VectorSubtract(pXyz[2], pXyz[0], edge[1]);
+
+		// Compute normal
+		CrossProduct(edge[1], edge[0], facePlane->normal);
+		VectorNormalize(facePlane->normal);
+
+		// Compute distance
+		facePlane->dist = DotProduct(pXyz[0], facePlane->normal);
 	}
 }
 
@@ -1465,6 +1419,10 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 			outSt->st[1] = LittleFloat(inSt->st[1]);
 		}
 
+		// Allocate space for face planes
+		outSurface->facePlanes = (mdlFacePlane_t *)Mem_ClearedAlloc(outModel->numFrames * outSurface->numTriangles * sizeof(mdlFacePlane_t), TAG_RENDERER);
+		*size += outModel->numFrames * outSurface->numTriangles * sizeof(mdlFacePlane_t);
+
 		// Load XYZ vertices
 		inXyzNormal = (md3XyzNormal_t *)((byte *)inSurface + LittleLong(inSurface->ofsXyzNormals));
 		outSurface->xyzNormals = outXyzNormal = (mdlXyzNormal_t *)Mem_ClearedAlloc(outModel->numFrames * outSurface->numVertices * sizeof(mdlXyzNormal_t), TAG_RENDERER);
@@ -1497,6 +1455,9 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 
 			// Calculate tangent vectors
 			R_CalcTangentVectors(outSurface->numTriangles, outSurface->triangles, outSurface->numVertices, outSurface->xyzNormals, outSurface->st, j);
+
+			// Calculate face planes
+			R_CalcFacePlanes(outSurface->numTriangles, outSurface->triangles, outSurface->facePlanes, outSurface->numVertices, outSurface->xyzNormals, j);
 		}
 
 		// Build triangle neighbors
@@ -1673,6 +1634,10 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 		outSt[indexTable[i]].st[1] = ((float)LittleShort(inSt[tmpStIndices[i]].t) + 0.5f) * skinHeight;
 	}
 
+	// Allocate space for face planes
+	outSurface->facePlanes = (mdlFacePlane_t *)Mem_ClearedAlloc(outModel->numFrames * outSurface->numTriangles * sizeof(mdlFacePlane_t), TAG_RENDERER);
+	*size += outModel->numFrames * outSurface->numTriangles * sizeof(mdlFacePlane_t);
+
 	// Load the frames
 	outModel->frames = outFrame = (mdlFrame_t *)Mem_ClearedAlloc(outModel->numFrames * sizeof(mdlFrame_t), TAG_RENDERER);
 	*size += outModel->numFrames * sizeof(mdlFrame_t);
@@ -1710,6 +1675,9 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 
 		// Calculate tangent vectors
 		R_CalcTangentVectors(outSurface->numTriangles, outSurface->triangles, outSurface->numVertices, outSurface->xyzNormals, outSurface->st, i);
+
+		// Calculate face planes
+		R_CalcFacePlanes(outSurface->numTriangles, outSurface->triangles, outSurface->facePlanes, outSurface->numVertices, outSurface->xyzNormals, i);
 	}
 
 	// Build triangle neighbors
@@ -2023,8 +1991,6 @@ bool R_LerpTag (tag_t *tag, model_t *model, int curFrame, int oldFrame, float ba
 /*
  ==================
  R_WorldMapInfo_f
-
- TODO: add sky/light data?
  ==================
 */
 static void R_WorldMapInfo_f (){

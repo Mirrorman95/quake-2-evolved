@@ -199,6 +199,24 @@ enum {
  =======================================================================
 */
 
+typedef struct {
+	// Called by LaunchEditor to create the window for the active editor.
+	// Should return the handle of the created window, or NULL if an error
+	// occurred.
+	void *					(*createWindow)();
+
+	// Called by CloseEditor to destroy the window for the active editor
+	void					(*destroyWindow)();
+
+	// Called by the client system for left mouse button down events to let the
+	// active editor select an entity for editing.
+	// Should return true if the client system should skip generating game
+	// commands for said event.
+	// This function can be NULL if the active editor doesn't need to select
+	// entities.
+	bool					(*mouseEvent)();
+} editorCallbacks_t;
+
 extern int					com_timeAll;
 extern int					com_timeWaiting;
 extern int					com_timeServer;
@@ -236,7 +254,26 @@ void 		Com_Printf (const char *fmt, ...);
 void 		Com_DPrintf (const char *fmt, ...);
 void 		Com_Error (int code, const char *fmt, ...);
 
-int			Com_ServerState (void);
+// Launches an integrated editor.
+// Note that only one editor can be active at a time.
+bool		Com_LaunchEditor (const char *name, editorCallbacks_t *callbacks);
+
+// Closes the currently active integrated editor
+void		Com_CloseEditor ();
+
+// Returns true if an integrated editor is currently active
+bool		Com_IsEditorActive ();
+
+// Called by the client system for left mouse button down events.
+// Will perform a callback to let the active editor select an entity for
+// editing. The callback function should return true if it wants the client
+// system to skip generating game commands for said event.
+bool		Com_EditorEvent ();
+
+//
+int			Com_ServerState ();
+
+//
 void		Com_SetServerState (int state);
 
 // Checks for "safe" on the command line, which will skip executing config
@@ -283,6 +320,7 @@ void			Key_Shutdown ();
 void			CL_Loading ();
 void			CL_UpdateScreen ();
 void			CL_ForwardCommandToServer ();
+bool			CL_CanLaunchEditor (const char *editor);
 void			CL_ClearMemory ();
 void			CL_Drop ();
 void			CL_MapLoading ();

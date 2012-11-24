@@ -221,7 +221,7 @@ static void CL_RegisterGraphics (){
 		}
 	}
 
-	cl.media.bloodBlendMaterial = R_RegisterMaterial("bloodBlend");
+	cl.media.bloodBlendMaterial = R_RegisterMaterial("bloodBlend", false);
 
 	cl.media.fireScreenMaterial = R_RegisterMaterialNoMip("fireScreen");
 	cl.media.waterBlurMaterial = R_RegisterMaterialNoMip("waterBlur");
@@ -229,62 +229,62 @@ static void CL_RegisterGraphics (){
 	cl.media.underWaterVisionMaterial = R_RegisterMaterialNoMip("underWaterVision");
 	cl.media.irGogglesMaterial = R_RegisterMaterialNoMip("irGoggles");
 
-	cl.media.rocketExplosionMaterial = R_RegisterMaterial("rocketExplosion");
-	cl.media.rocketExplosionWaterMaterial = R_RegisterMaterial("rocketExplosionWater");
-	cl.media.grenadeExplosionMaterial = R_RegisterMaterial("grenadeExplosion");
-	cl.media.grenadeExplosionWaterMaterial = R_RegisterMaterial("grenadeExplosionWater");
-	cl.media.bfgExplosionMaterial = R_RegisterMaterial("bfgExplosion");
-	cl.media.bfgBallMaterial = R_RegisterMaterial("bfgBall");
-	cl.media.plasmaBallMaterial = R_RegisterMaterial("plasmaBall");
-	cl.media.waterPlumeMaterial = R_RegisterMaterial("waterPlume");
-	cl.media.waterSprayMaterial = R_RegisterMaterial("waterSpray");
-	cl.media.waterWakeMaterial = R_RegisterMaterial("waterWake");
-	cl.media.nukeShockwaveMaterial = R_RegisterMaterial("nukeShockwave");
-	cl.media.bloodSplatMaterial[0] = R_RegisterMaterial("bloodSplat");
-	cl.media.bloodSplatMaterial[1] = R_RegisterMaterial("greenBloodSplat");
-	cl.media.bloodCloudMaterial[0] = R_RegisterMaterial("bloodCloud");
-	cl.media.bloodCloudMaterial[1] = R_RegisterMaterial("greenBloodCloud");
+	cl.media.rocketExplosionMaterial = R_RegisterMaterial("rocketExplosion", false);
+	cl.media.rocketExplosionWaterMaterial = R_RegisterMaterial("rocketExplosionWater", false);
+	cl.media.grenadeExplosionMaterial = R_RegisterMaterial("grenadeExplosion", false);
+	cl.media.grenadeExplosionWaterMaterial = R_RegisterMaterial("grenadeExplosionWater", false);
+	cl.media.bfgExplosionMaterial = R_RegisterMaterial("bfgExplosion", false);
+	cl.media.bfgBallMaterial = R_RegisterMaterial("bfgBall", false);
+	cl.media.plasmaBallMaterial = R_RegisterMaterial("plasmaBall", false);
+	cl.media.waterPlumeMaterial = R_RegisterMaterial("waterPlume", false);
+	cl.media.waterSprayMaterial = R_RegisterMaterial("waterSpray", false);
+	cl.media.waterWakeMaterial = R_RegisterMaterial("waterWake", false);
+	cl.media.nukeShockwaveMaterial = R_RegisterMaterial("nukeShockwave", false);
+	cl.media.bloodSplatMaterial[0] = R_RegisterMaterial("bloodSplat", false);
+	cl.media.bloodSplatMaterial[1] = R_RegisterMaterial("greenBloodSplat", false);
+	cl.media.bloodCloudMaterial[0] = R_RegisterMaterial("bloodCloud", false);
+	cl.media.bloodCloudMaterial[1] = R_RegisterMaterial("greenBloodCloud", false);
 
-	cl.media.powerScreenShellMaterial = R_RegisterMaterial("gfx/effects/shells/powerScreen");
-	cl.media.invulnerabilityShellMaterial = R_RegisterMaterial("gfx/effects/shells/invulnerability");
-	cl.media.quadDamageShellMaterial = R_RegisterMaterial("gfx/effects/shells/quadDamage");
-	cl.media.doubleDamageShellMaterial = R_RegisterMaterial("gfx/effects/shells/doubleDamage");
-	cl.media.halfDamageShellMaterial = R_RegisterMaterial("gfx/effects/shells/halfDamage");
-	cl.media.genericShellMaterial = R_RegisterMaterial("gfx/effects/shells/generic");
+	cl.media.powerScreenShellMaterial = R_RegisterMaterial("gfx/effects/shells/powerScreen", false);
+	cl.media.invulnerabilityShellMaterial = R_RegisterMaterial("gfx/effects/shells/invulnerability", false);
+	cl.media.quadDamageShellMaterial = R_RegisterMaterial("gfx/effects/shells/quadDamage", false);
+	cl.media.doubleDamageShellMaterial = R_RegisterMaterial("gfx/effects/shells/doubleDamage", false);
+	cl.media.halfDamageShellMaterial = R_RegisterMaterial("gfx/effects/shells/halfDamage", false);
+	cl.media.genericShellMaterial = R_RegisterMaterial("gfx/effects/shells/generic", false);
 
-	cl.media.laserBeamMaterial = R_RegisterMaterial("gfx/beams/laser");
-	cl.media.grappleBeamMaterial = R_RegisterMaterial("gfx/beams/grapple");
-	cl.media.lightningBeamMaterial = R_RegisterMaterial("gfx/beams/lightning");
-	cl.media.heatBeamMaterial = R_RegisterMaterial("gfx/beams/heat");
+	cl.media.laserBeamMaterial = R_RegisterMaterial("gfx/beams/laser", false);
+	cl.media.grappleBeamMaterial = R_RegisterMaterial("gfx/beams/grapple", false);
+	cl.media.lightningBeamMaterial = R_RegisterMaterial("gfx/beams/lightning", false);
+	cl.media.heatBeamMaterial = R_RegisterMaterial("gfx/beams/heat", false);
 
-	cl.media.energyParticleMaterial = R_RegisterMaterial("gfx/effects/particles/energy");
-	cl.media.glowParticleMaterial = R_RegisterMaterial("gfx/effects/particles/glow");
-	cl.media.flameParticleMaterial = R_RegisterMaterial("gfx/effects/particles/flame");
-	cl.media.smokeParticleMaterial = R_RegisterMaterial("gfx/effects/particles/smoke");
-	cl.media.liteSmokeParticleMaterial = R_RegisterMaterial("gfx/effects/particles/liteSmoke");
-	cl.media.bubbleParticleMaterial = R_RegisterMaterial("gfx/effects/particles/bubble");
-	cl.media.dropletParticleMaterial = R_RegisterMaterial("gfx/effects/particles/droplet");
-	cl.media.steamParticleMaterial = R_RegisterMaterial("gfx/effects/particles/steam");
-	cl.media.sparkParticleMaterial = R_RegisterMaterial("gfx/effects/particles/spark");
-	cl.media.impactSparkParticleMaterial = R_RegisterMaterial("gfx/effects/particles/impactSpark");
-	cl.media.trackerParticleMaterial = R_RegisterMaterial("gfx/effects/particles/tracker");
-	cl.media.flyParticleMaterial = R_RegisterMaterial("gfx/effects/particles/fly");
+	cl.media.energyParticleMaterial = R_RegisterMaterial("gfx/effects/particles/energy", false);
+	cl.media.glowParticleMaterial = R_RegisterMaterial("gfx/effects/particles/glow", false);
+	cl.media.flameParticleMaterial = R_RegisterMaterial("gfx/effects/particles/flame", false);
+	cl.media.smokeParticleMaterial = R_RegisterMaterial("gfx/effects/particles/smoke", false);
+	cl.media.liteSmokeParticleMaterial = R_RegisterMaterial("gfx/effects/particles/liteSmoke", false);
+	cl.media.bubbleParticleMaterial = R_RegisterMaterial("gfx/effects/particles/bubble", false);
+	cl.media.dropletParticleMaterial = R_RegisterMaterial("gfx/effects/particles/droplet", false);
+	cl.media.steamParticleMaterial = R_RegisterMaterial("gfx/effects/particles/steam", false);
+	cl.media.sparkParticleMaterial = R_RegisterMaterial("gfx/effects/particles/spark", false);
+	cl.media.impactSparkParticleMaterial = R_RegisterMaterial("gfx/effects/particles/impactSpark", false);
+	cl.media.trackerParticleMaterial = R_RegisterMaterial("gfx/effects/particles/tracker", false);
+	cl.media.flyParticleMaterial = R_RegisterMaterial("gfx/effects/particles/fly", false);
 
-	cl.media.energyMarkMaterial = R_RegisterMaterial("gfx/decals/energyMark");
-	cl.media.bulletMarkMaterial = R_RegisterMaterial("gfx/decals/bulletMark");
-	cl.media.burnMarkMaterial = R_RegisterMaterial("gfx/decals/burnMark");
-	cl.media.bloodMarkMaterials[0][0] = R_RegisterMaterial("gfx/decals/bloodMark1");
-	cl.media.bloodMarkMaterials[0][1] = R_RegisterMaterial("gfx/decals/bloodMark2");
-	cl.media.bloodMarkMaterials[0][2] = R_RegisterMaterial("gfx/decals/bloodMark3");
-	cl.media.bloodMarkMaterials[0][3] = R_RegisterMaterial("gfx/decals/bloodMark4");
-	cl.media.bloodMarkMaterials[0][4] = R_RegisterMaterial("gfx/decals/bloodMark5");
-	cl.media.bloodMarkMaterials[0][5] = R_RegisterMaterial("gfx/decals/bloodMark6");
-	cl.media.bloodMarkMaterials[1][0] = R_RegisterMaterial("gfx/decals/greenBloodMark1");
-	cl.media.bloodMarkMaterials[1][1] = R_RegisterMaterial("gfx/decals/greenBloodMark2");
-	cl.media.bloodMarkMaterials[1][2] = R_RegisterMaterial("gfx/decals/greenBloodMark3");
-	cl.media.bloodMarkMaterials[1][3] = R_RegisterMaterial("gfx/decals/greenBloodMark4");
-	cl.media.bloodMarkMaterials[1][4] = R_RegisterMaterial("gfx/decals/greenBloodMark5");
-	cl.media.bloodMarkMaterials[1][5] = R_RegisterMaterial("gfx/decals/greenBloodMark6");
+	cl.media.energyMarkMaterial = R_RegisterMaterial("gfx/decals/energyMark", false);
+	cl.media.bulletMarkMaterial = R_RegisterMaterial("gfx/decals/bulletMark", false);
+	cl.media.burnMarkMaterial = R_RegisterMaterial("gfx/decals/burnMark", false);
+	cl.media.bloodMarkMaterials[0][0] = R_RegisterMaterial("gfx/decals/bloodMark1", false);
+	cl.media.bloodMarkMaterials[0][1] = R_RegisterMaterial("gfx/decals/bloodMark2", false);
+	cl.media.bloodMarkMaterials[0][2] = R_RegisterMaterial("gfx/decals/bloodMark3", false);
+	cl.media.bloodMarkMaterials[0][3] = R_RegisterMaterial("gfx/decals/bloodMark4", false);
+	cl.media.bloodMarkMaterials[0][4] = R_RegisterMaterial("gfx/decals/bloodMark5", false);
+	cl.media.bloodMarkMaterials[0][5] = R_RegisterMaterial("gfx/decals/bloodMark6", false);
+	cl.media.bloodMarkMaterials[1][0] = R_RegisterMaterial("gfx/decals/greenBloodMark1", false);
+	cl.media.bloodMarkMaterials[1][1] = R_RegisterMaterial("gfx/decals/greenBloodMark2", false);
+	cl.media.bloodMarkMaterials[1][2] = R_RegisterMaterial("gfx/decals/greenBloodMark3", false);
+	cl.media.bloodMarkMaterials[1][3] = R_RegisterMaterial("gfx/decals/greenBloodMark4", false);
+	cl.media.bloodMarkMaterials[1][4] = R_RegisterMaterial("gfx/decals/greenBloodMark5", false);
+	cl.media.bloodMarkMaterials[1][5] = R_RegisterMaterial("gfx/decals/greenBloodMark6", false);
 
 	R_RegisterMaterialNoMip("pics/w_machinegun");
 	R_RegisterMaterialNoMip("pics/a_bullets");
@@ -387,7 +387,7 @@ void CL_LoadClientInfo (clientInfo_t *clientInfo, const char *string){
 	if (cl_noSkins->integerValue || *string == 0){
 		// No custom skins or bad info string, so just use male/grunt
 		clientInfo->model = R_RegisterModel("players/male/tris.md2");
-		clientInfo->skin = R_RegisterMaterial("players/male/grunt");
+		clientInfo->skin = R_RegisterMaterial("players/male/grunt", true);
 		clientInfo->icon = R_RegisterMaterialNoMip("players/male/grunt_i");
 		clientInfo->weaponModel[0] = R_RegisterModel("players/male/weapon.md2");
 
@@ -452,7 +452,7 @@ void CL_LoadClientInfo (clientInfo_t *clientInfo, const char *string){
 	clientInfo->model = R_RegisterModel(name);
 
 	Str_SPrintf(name, sizeof(name), "players/%s/%s", model, skin);
-	clientInfo->skin = R_RegisterMaterial(name);
+	clientInfo->skin = R_RegisterMaterial(name, true);
 
 	Str_SPrintf(name, sizeof(name), "players/%s/%s_i", model, skin);
 	clientInfo->icon = R_RegisterMaterialNoMip(name);
@@ -500,21 +500,21 @@ void CL_LoadGameMedia (){
 	Str_Copy(cls.loadingInfo.name, cl.configStrings[CS_NAME], sizeof(cls.loadingInfo.name));
 
 	// Check if a levelshot for this map exists
-	Str_SPrintf(checkTGA, sizeof(checkTGA), "ui/levelshots/%s.tga", cls.loadingInfo.map);
+	Str_SPrintf(checkTGA, sizeof(checkTGA), "ui/assets/levelshots/%s.tga", cls.loadingInfo.map);
 	if (!FS_FileExists(checkTGA))
-		Str_SPrintf(levelshot, sizeof(levelshot), "ui/levelshots/unknownmap");
+		Str_SPrintf(levelshot, sizeof(levelshot), "ui/assets/levelshots/unknownmap");
 	else
-		Str_SPrintf(levelshot, sizeof(levelshot), "ui/levelshots/%s", cls.loadingInfo.map);
+		Str_SPrintf(levelshot, sizeof(levelshot), "ui/assets/levelshots/%s", cls.loadingInfo.map);
 
 	// Load a few needed shaders for the loading screen
 	cl.media.levelshot = R_RegisterMaterialNoMip(levelshot);
-	cl.media.levelshotDetail = R_RegisterMaterialNoMip("ui/loading/loading_detail");
-	cl.media.loadingLogo = R_RegisterMaterialNoMip("ui/title_screen/q2e_logo");
-	cl.media.loadingDetail[0] = R_RegisterMaterialNoMip("ui/loading/load_main2");
-	cl.media.loadingDetail[1] = R_RegisterMaterialNoMip("ui/loading/load_main");
+	cl.media.levelshotDetail = R_RegisterMaterialNoMip("ui/assets/loading/loading_detail");
+	cl.media.loadingLogo = R_RegisterMaterialNoMip("ui/assets/title_screen/q2e_logo");
+	cl.media.loadingDetail[0] = R_RegisterMaterialNoMip("ui/assets/loading/load_main2");
+	cl.media.loadingDetail[1] = R_RegisterMaterialNoMip("ui/assets/loading/load_main");
 
 	for (i = 0, n = 5; i < 20; i++, n += 5)
-		cl.media.loadingPercent[i] = R_RegisterMaterialNoMip(Str_VarArgs("ui/loading/percent/load_%i", n));
+		cl.media.loadingPercent[i] = R_RegisterMaterialNoMip(Str_VarArgs("ui/assets/loading/percent/load_%i", n));
 
 	// Register all the files for this level
 	CL_RegisterCollisionMap();

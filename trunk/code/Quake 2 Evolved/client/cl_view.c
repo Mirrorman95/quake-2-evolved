@@ -103,7 +103,7 @@ void CL_TestSprite_f (){
 
 	cl.testSprite.renderEntity.spriteRotation = 0.0f;
 
-	cl.testSprite.renderEntity.material = R_RegisterMaterial(Cmd_Argv(1));
+	cl.testSprite.renderEntity.material = R_RegisterMaterial(Cmd_Argv(1), false);
 
 	cl.testSprite.renderEntity.materialParms[MATERIALPARM_RED] = 1.0f;
 	cl.testSprite.renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
@@ -224,7 +224,7 @@ void CL_TestBeam_f (){
 			cl.testBeam.renderEntity.beamLength = length / segments;
 	}
 
-	cl.testBeam.renderEntity.material = R_RegisterMaterial(Cmd_Argv(1));
+	cl.testBeam.renderEntity.material = R_RegisterMaterial(Cmd_Argv(1), false);
 
 	cl.testBeam.renderEntity.materialParms[MATERIALPARM_RED] = 1.0f;
 	cl.testBeam.renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
@@ -325,7 +325,7 @@ void CL_TestDecal_f (){
 	}
 
 	// Load the material
-	material = R_RegisterMaterial(Cmd_Argv(1));
+	material = R_RegisterMaterial(Cmd_Argv(1), false);
 
 	// Get the radius
 	if (Cmd_Argc() < 3)
@@ -459,7 +459,7 @@ void CL_TestMaterial_f (){
 		return;
 
 	// Load the material
-	cl.testModel.renderEntity.material = R_RegisterMaterial(Cmd_Argv(1));
+	cl.testModel.renderEntity.material = R_RegisterMaterial(Cmd_Argv(1), false);
 }
 
 /*

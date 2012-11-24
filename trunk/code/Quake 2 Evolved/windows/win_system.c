@@ -63,7 +63,7 @@ unsigned					sys_frameTime;
  ==============================================================================
 */
 
-#define MAX_LIST_FILES				65536
+#define MAX_LIST_FILES				32768
 
 
 /*
@@ -816,6 +816,16 @@ bool Sys_IsWindowFullscreen (){
 		return false;
 
 	return true;
+}
+
+/*
+ ==================
+ Sys_SetEditorWindow
+ ==================
+*/
+void Sys_SetEditorWindow (void *wndHandle){
+
+	sys.hWndEditor = (HWND)wndHandle;
 }
 
 /*

@@ -46,6 +46,8 @@
 #define GL_VERTEX_TEXCOORD(ptr)		((const byte *)(ptr) + 48)
 #define GL_VERTEX_COLOR(ptr)		((const byte *)(ptr) + 56)
 
+#define GL_VERTEX_XYZW(ptr)			((const byte *)(ptr) + 0)
+
 typedef unsigned int		glIndex_t;
 
 typedef struct {
@@ -55,6 +57,10 @@ typedef struct {
 	vec4_t					st;
 	color_t					color;
 } glVertex_t;
+
+typedef struct {
+	vec4_t					xyzw;
+} glShadowVertex_t;
 
 /*
  ==============================================================================
@@ -82,6 +88,7 @@ typedef enum {
 	TF_BUMP							= BIT(5),
 	TF_DIFFUSE						= BIT(6),
 	TF_SPECULAR						= BIT(7),
+	TF_LIGHT						= BIT(8)
 } textureFlags_t;
 
 typedef enum {
@@ -134,6 +141,8 @@ typedef struct texture_s {
 
 	struct texture_s *		nextHash;
 } texture_t;
+
+texture_t *		R_LoadTexture (const char *name, byte *image, int width, int height, int flags, textureFormat_t format, textureFilter_t filter, textureWrap_t wrap, bool uncompressed);
 
 texture_t *		R_FindTexture (const char *name, int flags, textureFilter_t filter, textureWrap_t wrap);
 texture_t *		R_FindCubeTexture (const char *name, int flags, textureFilter_t filter, bool cameraSpace);
@@ -312,6 +321,7 @@ typedef enum {
 typedef enum {
 	MT_NONE							= -1,
 	MT_GENERIC,
+	MT_LIGHT,
 	MT_NOMIP
 } materialType_t;
 
@@ -322,11 +332,15 @@ typedef enum {
 	MF_NOOVERLAYS					= BIT(3),
 	MF_FORCESHADOWS					= BIT(4),
 	MF_NOSHADOWS					= BIT(5),
-	MF_UPDATECURRENTCOLOR			= BIT(6),
-	MF_NEEDCURRENTCOLOR				= BIT(7),
-	MF_UPDATECURRENTDEPTH			= BIT(8),
-	MF_NEEDCURRENTDEPTH				= BIT(9),
-	MF_POLYGONOFFSET				= BIT(10)
+	MF_NOINTERACTIONS				= BIT(6),
+	MF_NOAMBIENT					= BIT(7),
+	MF_NOBLEND						= BIT(8),
+	MF_NOFOG						= BIT(9),
+	MF_UPDATECURRENTCOLOR			= BIT(10),
+	MF_NEEDCURRENTCOLOR				= BIT(11),
+	MF_UPDATECURRENTDEPTH			= BIT(12),
+	MF_NEEDCURRENTDEPTH				= BIT(13),
+	MF_POLYGONOFFSET				= BIT(14)
 } materialFlags_t;
 
 typedef enum {
@@ -339,7 +353,7 @@ typedef enum {
 	SORT_BAD,
 	SORT_OPAQUE,
 	SORT_DECAL,
-	SORT_GLARE,
+	SORT_GLARE,		// TODO: unused, remove?
 	SORT_REFRACTABLE,
 	SORT_REFRACTIVE,
 	SORT_FARTHEST,
@@ -351,6 +365,13 @@ typedef enum {
 	SORT_NEAREST,
 	SORT_POST_PROCESS
 } sort_t;
+
+typedef enum {
+	LT_GENERIC,
+	LT_AMBIENT,
+	LT_BLEND,
+	LT_FOG
+} lightType_t;
 
 typedef enum {
 	ST_NONE,
@@ -562,6 +583,12 @@ typedef struct material_s {
 
 	sort_t					sort;
 
+	lightType_t				lightType;
+	texture_t *				lightFalloffImage;
+	texture_t *				lightCubeImage;
+
+	int						spectrum;
+
 	subviewType_t			subviewType;
 	texture_t *				subviewTexture;
 	int						subviewWidth;
@@ -592,8 +619,9 @@ typedef struct material_s {
 } material_t;
 
 material_t *	R_FindMaterial (const char *name, materialType_t type, surfaceParm_t surfaceParm);
-material_t *	R_RegisterMaterial (const char *name, surfaceParm_t surfaceParm);
-material_t *	R_RegisterMaterialNoMip (const char *name, surfaceParm_t surfaceParm);
+material_t *	R_RegisterMaterial (const char *name, bool lightingDefault);
+material_t *	R_RegisterMaterialLight (const char *name);
+material_t *	R_RegisterMaterialNoMip (const char *name);
 
 void			R_InitMaterials ();
 void			R_ShutdownMaterials ();
@@ -685,13 +713,15 @@ typedef struct texInfo_s {
 
 typedef struct {
 	glIndex_t				index[3];
+	int						neighbor[3];
 } surfTriangle_t;
 
 typedef struct {
 	vec3_t					xyz;
+	vec3_t					normal;
+	vec3_t					tangents[2];
 	vec2_t					st;
-	vec2_t					lightmap;
-	color_t					color;
+	byte					color[4];
 } surfVertex_t;
 
 typedef struct {
@@ -708,10 +738,6 @@ typedef struct {
 	short					textureMins[2];
 	short					extents[2];
 
-	vec3_t					tangent;
-	vec3_t					binormal;
-	vec3_t					normal;
-
 	texInfo_t *				texInfo;
 
 	int						numTriangles;
@@ -724,21 +750,6 @@ typedef struct {
 	int						viewCount;
 	int						worldCount;
 	int						fragmentCount;
-
-	// Lighting info
-	int						dlightFrame;
-	int						dlightBits;
-
-	int						lmWidth;
-	int						lmHeight;
-	int						lmS;
-	int						lmT;
-	int						lmNum;
-	byte *					lmSamples;
-
-	int						numStyles;
-	byte					styles[MAX_STYLES];
-	float					cachedLight[MAX_STYLES];	// Values currently used in lightmap
 } surface_t;
 
 typedef struct node_s {
@@ -818,6 +829,11 @@ typedef struct {
 } mdlTriangle_t;
 
 typedef struct {
+	vec3_t					normal;
+	float					dist;
+} mdlFacePlane_t;
+
+typedef struct {
 	vec3_t					xyz;
 	vec3_t					normal;
 	vec3_t					tangents[2];
@@ -851,6 +867,7 @@ typedef struct {
 	int						numMaterials;
 
 	mdlTriangle_t *			triangles;
+	mdlFacePlane_t			*facePlanes;
 	mdlXyzNormal_t *		xyzNormals;
 	mdlSt_t *				st;
 	mdlMaterial_t *			materials;
@@ -937,14 +954,6 @@ typedef struct model_s {
 	sky_t *					sky;
 
 	vis_t *					vis;
-
-	byte *					lightData;
-
-	vec3_t					gridMins;
-	vec3_t					gridSize;
-	int						gridBounds[4];
-	int						gridPoints;
-	lightGrid_t *			lightGrid;
 
 	// Alias model
 	mdl_t *					alias;
@@ -1467,6 +1476,18 @@ void			RB_ShutdownBackEnd ();
 /*
  ==============================================================================
 
+ DRAW LIGHTS
+
+ ==============================================================================
+*/
+
+void			R_AllocDrawLights ();
+void			R_GenerateDrawLights ();
+void			R_ClearDrawLights ();
+
+/*
+ ==============================================================================
+
  FRONT-END
 
  ==============================================================================
@@ -1581,6 +1602,8 @@ typedef struct {
 
 	int						meshes;
 
+	int						dynamicLights;
+
 	int						deformIndices;
 	int						deformVertices;
 	int						deformExpand;
@@ -1664,7 +1687,13 @@ typedef struct {
 	texture_t *				whiteTexture;
 	texture_t *				blackTexture;
 	texture_t *				flatTexture;
-	texture_t *				lightmapTextures[MAX_LIGHTMAPS];
+	texture_t *				attenuationTexture;
+	texture_t *				noAttenuationTexture;
+	texture_t *				falloffTexture;
+	texture_t *				noFalloffTexture;
+	texture_t *				cubicFilterTexture;
+	texture_t *				fogTexture;
+	texture_t *				fogEnterTexture;
 	texture_t *				cinematicTextures[MAX_CINEMATICS];
 	texture_t *				skyTexture;
 	texture_t *				mirrorTexture;
@@ -1673,7 +1702,8 @@ typedef struct {
 	texture_t *				currentDepthTexture;
 
 	material_t *			defaultMaterial;
-	material_t *			defaultLightmapMaterial;
+	material_t *			defaultLightMaterial;
+	material_t *			defaultProjectedLightMaterial;
 	material_t *			noDrawMaterial;
 	material_t *			waterCausticsMaterial;
 	material_t *			slimeCausticsMaterial;
@@ -1708,7 +1738,6 @@ extern cvar_t *				r_writeImagePrograms;
 extern cvar_t *				r_colorMipLevels;
 extern cvar_t *				r_singleMaterial;
 extern cvar_t *				r_singleEntity;
-extern cvar_t *				r_singleLightmap;
 extern cvar_t *				r_showCluster;
 extern cvar_t *				r_showCull;
 extern cvar_t *				r_showScene;
@@ -1766,6 +1795,7 @@ extern cvar_t *				r_shaderQuality;
 extern cvar_t *				r_shadows;
 extern cvar_t *				r_playerShadow;
 extern cvar_t *				r_dynamicLights;
+extern cvar_t *				r_modulate;
 extern cvar_t *				r_caustics;
 extern cvar_t *				r_depthClamp;
 extern cvar_t *				r_seamlessCubeMaps;
@@ -1786,15 +1816,6 @@ extern cvar_t *				r_textureAnisotropy;
 void			R_AddAliasModel (renderEntity_t *entity);
 
 void			R_AddEntityShadows ();
-
-void			R_MarkLights ();
-void			R_LightDirection (const vec3_t origin, vec3_t lightDir);
-void			R_LightingAmbient ();
-void			R_LightingDiffuse ();
-void			R_BeginBuildingLightmaps ();
-void			R_EndBuildingLightmaps ();
-void			R_BuildSurfaceLightmap (surface_t *surface);
-void			R_UpdateSurfaceLightmap (surface_t *surface);
 
 bool			R_CullBox (const vec3_t mins, const vec3_t maxs, int clipFlags);
 bool			R_CullSphere (const vec3_t origin, float radius, int clipFlags);

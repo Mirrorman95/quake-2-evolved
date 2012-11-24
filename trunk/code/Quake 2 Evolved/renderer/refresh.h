@@ -66,6 +66,14 @@ typedef enum {
 	RE_BEAM
 } reType_t;
 
+// Render light types
+typedef enum {
+	RL_POINT,
+	RL_CUBIC,
+	RL_PROJECTED,
+	RL_DIRECTIONAL
+} rlType_t;
+
 // View types for per-view allow/suppress
 typedef enum {
 	VIEW_NONE						= 0,
@@ -182,9 +190,40 @@ typedef struct {
 } renderEntity_t;
 
 typedef struct {
+	rlType_t				type;
+
+	int						lightNum;
+
+	// Transformation matrix
 	vec3_t					origin;
-	vec3_t					color;	// TODO: don't need this anymore?
-	float					intensity;	// TODO: don't need this anymore?
+	vec3_t					center;				// Offset relative to origin (also gives the direction to the light for directional lights)
+	vec3_t					axis[3];
+
+	// Bounding volume for point, cubic, and directional lights
+	vec3_t					radius;
+
+	// Frustum definition for projected lights
+	float					xMin;
+	float					xMax;
+
+	float					yMin;
+	float					yMax;
+
+	float					zNear;
+	float					zFar;
+
+	// Shadowing parameters
+	bool					noShadows;			// Used to override material settings
+
+	// Fogging parameters
+	float					fogDistance;
+	float					fogHeight;
+
+	// Light attributes
+	int						detailLevel;
+	int						style;
+
+	int						allowInView;		// For per-view allow/suppress
 
 	// Material
 	material_t *			material;
@@ -302,7 +341,8 @@ void			R_LoadMap (const char *name, const char *skyName, float skyRotate, const 
 model_t *		R_RegisterModel (const char *name);
 
 // Loads and registers the given material
-material_t *	R_RegisterMaterial (const char *name);
+material_t *	R_RegisterMaterial (const char *name, bool lightingDefault);
+material_t *	R_RegisterMaterialLight (const char *name);
 material_t *	R_RegisterMaterialNoMip (const char *name);
 
 // Loads and registers the given font
@@ -381,9 +421,6 @@ void			R_UnCropRenderSize ();
 // A frame can consist of 2D drawing and potentially multiple 3D scenes
 void			R_BeginFrame (int time);
 void			R_EndFrame ();
-
-//
-void			R_LightForPoint (const vec3_t point, vec3_t ambientLight);
 
 // Returns the number of frames that the model has
 int				R_ModelFrames (model_t *model);

@@ -136,24 +136,10 @@ static void CL_ClampPitch (){
 */
 static byte CL_GetLightLevel (){
 
-	vec3_t	ambientLight;
-	float	max;
-
 	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic)
 		return 0;
-	
-	// HACK: get light value for server to look at
-	R_LightForPoint(cl.renderView.origin, ambientLight);
 
-	// Pick the greatest component, which should be the same as the mono
-	// value returned by software
-	max = ambientLight[0];
-	if (max < ambientLight[1])
-		max = ambientLight[1];
-	if (max < ambientLight[2])
-		max = ambientLight[2];
-
-	return ((byte)150 * max);
+	return 150;
 }
 
 /*
@@ -192,7 +178,6 @@ static void CL_FinishMove (usercmd_t *userCmd){
 	userCmd->impulse = in_impulse;
 	in_impulse = 0;
 
-	// Send the ambient light level at the player's current position
 	userCmd->lightlevel = CL_GetLightLevel();
 }
 

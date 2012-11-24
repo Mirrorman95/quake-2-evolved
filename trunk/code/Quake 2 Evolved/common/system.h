@@ -126,6 +126,9 @@ bool			Sys_IsWindowActive ();
 // Returns true if the main window is fullscreen
 bool			Sys_IsWindowFullscreen ();
 
+// Sets the window handle of the currently active integrated editor
+void			Sys_SetEditorWindow (void *wndHandle);
+
 // Returns the handle to the application instance
 void *			Sys_GetInstanceHandle ();
 

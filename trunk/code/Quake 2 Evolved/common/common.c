@@ -39,6 +39,10 @@
 static int					com_argc;
 static const char *			com_argv[MAX_ARGS];
 
+static bool					com_editorActive;
+static char					com_editorName[64];
+static editorCallbacks_t	com_editorCallbacks;
+
 static int					com_redirectTarget;
 static char *				com_redirectBuffer;
 static int					com_redirectSize;
@@ -340,6 +344,110 @@ void Com_Error (int code, const char *fmt, ...){
 
 	Sys_Error("%s", com_errorMessage);
 }
+
+
+/*
+ ==============================================================================
+
+ INTEGRATED EDITORS INTERFACE
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ Com_LaunchEditor
+ ==================
+*/
+bool Com_LaunchEditor (const char *name, editorCallbacks_t *callbacks){
+
+	void	*wndHandle;
+
+	if (com_editorActive){
+		if (!Str_ICompare(com_editorName, name)){
+			Com_Printf("The %s editor is already active\n", com_editorName);
+			return false;
+		}
+
+		Com_Printf("You must close the %s editor to launch the %s editor\n", com_editorName, name);
+
+		return false;
+	}
+
+	if (!CL_CanLaunchEditor(name))
+		return false;
+
+	Com_Printf("Launching %s editor...\n", name);
+
+	// Set the editor state
+	com_editorActive = true;
+	Str_Copy(com_editorName, name, sizeof(com_editorName));
+	Mem_Copy(&com_editorCallbacks, callbacks, sizeof(com_editorCallbacks));
+
+	// Create the editor window
+	wndHandle = com_editorCallbacks.createWindow();
+	if (!wndHandle){
+		Com_CloseEditor();
+		return false;
+	}
+
+	Sys_SetEditorWindow(wndHandle);
+
+	return true;
+}
+
+/*
+ ==================
+ Com_CloseEditor
+ ==================
+*/
+void Com_CloseEditor (){
+
+	if (!com_editorActive)
+		return;
+
+	Com_Printf("Closing %s editor...\n", com_editorName);
+
+	// Destroy the editor window
+	Sys_SetEditorWindow(NULL);
+
+	com_editorCallbacks.destroyWindow();
+
+	// Clear the editor state
+	com_editorActive = false;
+}
+
+/*
+ ==================
+ Com_IsEditorActive
+ ==================
+*/
+bool Com_IsEditorActive (){
+
+	return com_editorActive;
+}
+
+/*
+ ==================
+ Com_EditorEvent
+ ==================
+*/
+bool Com_EditorEvent (){
+
+	if (!com_editorActive)
+		return false;
+
+	// Perform a callback if possible
+	if (!com_editorCallbacks.mouseEvent)
+		return false;
+
+	return com_editorCallbacks.mouseEvent();
+}
+
+
+// ============================================================================
+
 
 /*
  ==================

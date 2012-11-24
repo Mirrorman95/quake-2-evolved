@@ -22,49 +22,9 @@
 
 
 //
-// r_light.c - Light management
+// win_edtior.c - Editors used by varius modules
 //
 
 
-#include "r_local.h"
-
-
-/*
- ==================
- 
- ==================
-*/
-static void R_AddLights (){
-
-}
-
-
-// ============================================================================
-
-
-/*
- ==================
- 
- ==================
-*/
-void R_AllocDrawLights (){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-void R_GenerateDrawLights (){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-void R_ClearDrawLights (){
-
-}
+#include "../common/common.h"
+#include "win_local.h"

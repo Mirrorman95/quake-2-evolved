@@ -54,6 +54,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <DisableSpecificWarnings>4996</DisableSpecificWarnings>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -235,6 +236,7 @@
     <ClCompile Include="ui\ui_video.c" />
     <ClCompile Include="windows\win_al.c" />
     <ClCompile Include="windows\win_console.c" />
+    <ClCompile Include="windows\win_editor.c" />
     <ClCompile Include="windows\win_gl.c" />
     <ClCompile Include="windows\win_input.c" />
     <ClCompile Include="windows\win_network.c" />
@@ -248,6 +250,13 @@
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="windows\q2.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
