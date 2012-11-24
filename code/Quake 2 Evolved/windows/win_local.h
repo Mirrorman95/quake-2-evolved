@@ -66,6 +66,7 @@ typedef struct {
 	HICON					hIcon;
 
 	HWND					hWndMain;
+	HWND					hWndEditor;
 
 	bool					isActive;
 	bool					isMinimized;

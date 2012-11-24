@@ -25,6 +25,15 @@
 // r_main.c - Primary renderer file
 //
 
+// TODO:
+// - Real-time per-pixel lightning with volumeric stencil shadows
+//	 - requiers shaders
+//	 - a rewritten light system
+//	 - new batch functions for shadows
+//   - needs some changes in the client for lights
+//	 - needs some rendering passes
+//	 - needs editor stuff
+
 
 #include "r_local.h"
 
@@ -91,7 +100,6 @@ cvar_t *					r_writeImagePrograms;
 cvar_t *					r_colorMipLevels;
 cvar_t *					r_singleMaterial;
 cvar_t *					r_singleEntity;
-cvar_t *					r_singleLightmap;
 cvar_t *					r_showCluster;
 cvar_t *					r_showCull;
 cvar_t *					r_showScene;
@@ -107,7 +115,7 @@ cvar_t *					r_showNormals;
 cvar_t *					r_showTextureVectors;
 cvar_t *					r_showBatchSize;
 cvar_t *					r_showModelBounds;
-cvar_t *					r_skipLightning;
+cvar_t *					r_skipLightning;	// TODO: remove?
 cvar_t *					r_skipVisibility;
 cvar_t *					r_skipCulling;
 cvar_t *					r_skipEntityCulling;
@@ -150,6 +158,7 @@ cvar_t *					r_shaderQuality;
 cvar_t *					r_shadows;
 cvar_t *					r_playerShadow;
 cvar_t *					r_dynamicLights;
+cvar_t *					r_modulate;
 cvar_t *					r_caustics;
 cvar_t *					r_depthClamp;
 cvar_t *					r_seamlessCubeMaps;
@@ -464,7 +473,6 @@ static void R_Register (){
 	r_colorMipLevels = CVar_Register("r_colorMipLevels", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_LATCH, "Color mip levels for testing mipmap usage", 0, 0);
 	r_singleMaterial = CVar_Register("r_singleMaterial", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_LATCH, "Use a single default material on every surface", 0, 0);
 	r_singleEntity = CVar_Register("r_singleEntity", "-1", CVAR_INTEGER, CVAR_CHEAT, "Only draw the specified entity", -1, MAX_RENDER_ENTITIES - 1);
-	r_singleLightmap = CVar_Register("r_singleLightmap", "1", CVAR_BOOL, CVAR_CHEAT | CVAR_LATCH, "Use a single default lightmap on every surface", 0, 0);
 	r_showCluster = CVar_Register("r_showCluster", "0", CVAR_BOOL, CVAR_CHEAT, "Show the current view cluster", 0, 0);
 	r_showCull = CVar_Register("r_showCull", "0", CVAR_BOOL, CVAR_CHEAT, "Show culling statistics", 0, 0);
 	r_showScene = CVar_Register("r_showScene", "0", CVAR_BOOL, CVAR_CHEAT, "Show number of entities, lights, particles, and decals in view", 0, 0);
@@ -522,6 +530,7 @@ static void R_Register (){
 	r_shadows = CVar_Register("r_shadows", "1", CVAR_BOOL, CVAR_ARCHIVE, "Render stencil shadows", 0, 0);
 	r_playerShadow = CVar_Register("r_playerShadow", "0", CVAR_BOOL, CVAR_ARCHIVE, "Render stencil shadows for the player", 0, 0);
 	r_dynamicLights = CVar_Register("r_dynamicLights", "1", CVAR_BOOL, CVAR_ARCHIVE, "Render dynamic lights", 0, 0);	
+	r_modulate = CVar_Register("r_modulate", "1.0", CVAR_FLOAT, CVAR_ARCHIVE | CVAR_LATCH, "Modulates lightmap colors", 0.0f, 1.0f);
 	r_caustics = CVar_Register("r_caustics", "1", CVAR_BOOL, CVAR_ARCHIVE, "Render underwater caustics", 0, 0);
 	r_depthClamp = CVar_Register("r_depthClamp", "0", CVAR_BOOL, CVAR_ARCHIVE, "Clamp depth values to the depth range", 0, 0);
 	r_seamlessCubeMaps = CVar_Register("r_seamlessCubeMaps", "0", CVAR_BOOL, CVAR_ARCHIVE, "Sample multiple faces from cube map textures", 0, 0);

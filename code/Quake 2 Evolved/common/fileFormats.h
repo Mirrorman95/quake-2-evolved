@@ -623,25 +623,5 @@ typedef struct {
 	int						firstAreaPortal;
 } bspArea_t;
 
-/*
- ==============================================================================
-
- LIGHTGRID files are used for light optimizations
-
- ==============================================================================
-*/
-
-#define Q2EL_ID						(('L' << 24) + ('E' << 16) + ('2' << 8) + 'Q')
-#define Q2EL_VERSION				1
-
-typedef struct {
-	int						id;
-	int						version;
-	vec3_t					gridMins;
-	vec3_t					gridSize;
-	int						gridBounds[4];
-	int						gridPoints;
-} lightGridHeader_t;
-
 
 #endif	// __FILEFORMATS_H__

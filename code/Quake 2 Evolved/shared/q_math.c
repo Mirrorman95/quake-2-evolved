@@ -27,6 +27,11 @@ vec3_t	byteDirs[NUM_VERTEX_NORMALS] = {
 };
 
 
+float Sqrt (float x){
+
+	return sqrtf(x);
+}
+
 float Tan (float x){
 
 	return tanf(x);
@@ -35,6 +40,17 @@ float Tan (float x){
 float ATan (float y, float x){
 
 	return atan2f(y, x);
+}
+
+float ClampFloat (float value, float min, float max){
+
+	if (value < min)
+		return min;
+
+	if (value > max)
+		return max;
+
+	return value;
 }
 
 /*

@@ -29,7 +29,6 @@
 // - R_ParseGlobalSort might need some more sort flags
 // - R_ParseGlobalDecalInfo might be wrong
 // - add Quake 3 sky effects stuff?
-// - add lightning diffuse/ambient keywords
 
 
 #include "r_local.h"
@@ -778,6 +777,42 @@ static bool R_ParseGlobalNoShadows (script_t *script, material_t *material){
 
 /*
  ==================
+ R_ParseGlobalNoAmbient
+ ==================
+*/
+static bool R_ParseGlobalNoAmbient (script_t *script, material_t *material){
+
+	material->flags |= MF_NOAMBIENT;
+
+	return true;
+}
+
+/*
+ ==================
+ R_ParseGlobalNoBlend
+ ==================
+*/
+static bool R_ParseGlobalNoBlend (script_t *script, material_t *material){
+
+	material->flags |= MF_NOBLEND;
+
+	return true;
+}
+
+/*
+ ==================
+ R_ParseGlobalNoFog
+ ==================
+*/
+static bool R_ParseGlobalNoFog (script_t *script, material_t *material){
+
+	material->flags |= MF_NOFOG;
+
+	return true;
+}
+
+/*
+ ==================
  R_ParseGlobalUpdateCurrentColor
  ==================
 */
@@ -842,6 +877,152 @@ static bool R_ParseGlobalSort (script_t *script, material_t *material){
 		material->sort = SORT_POST_PROCESS;
 	else {
 		Com_Printf(S_COLOR_YELLOW "WARNING: unknown 'sort' parameter '%s' in material '%s'\n", token.string, material->name);
+		return false;
+	}
+
+	return true;
+}
+
+/*
+ ==================
+ R_ParseGlobalAmbientLight
+ ==================
+*/
+static bool R_ParseGlobalAmbientLight (script_t *script, material_t *material){
+
+	material->lightType = LT_AMBIENT;
+
+	return true;
+}
+
+/*
+ ==================
+ R_ParseGlobalBlendLight
+ ==================
+*/
+static bool R_ParseGlobalBlendLight (script_t *script, material_t *material){
+
+	material->lightType = LT_BLEND;
+
+	return true;
+}
+
+/*
+ ==================
+ R_ParseGlobalFogLight
+ ==================
+*/
+static bool R_ParseGlobalFogLight (script_t *script, material_t *material){
+
+	material->lightType = LT_FOG;
+
+	return true;
+}
+
+/*
+ ==================
+ R_ParseGlobalLightFalloffImage
+ ==================
+*/
+static bool R_ParseGlobalLightFalloffImage (script_t *script, material_t *material){
+
+	token_t			token;
+	char			name[MAX_PATH_LENGTH];
+	int				flags = TF_NOPICMIP | TF_LIGHT;
+	textureFilter_t	filter = TF_LINEAR;
+
+	if (material->type != MT_LIGHT){
+		Com_Printf(S_COLOR_YELLOW "WARNING: 'lightFalloffImage' not allowed in material '%s'\n", material->name);
+		return false;
+	}
+
+	while (1){
+		if (!PS_ReadToken(script, &token)){
+			Com_Printf(S_COLOR_YELLOW "WARNING: missing parameter for 'lightFalloffImage' in material '%s'\n", material->name);
+			return false;
+		}
+
+		if (!Str_ICompare(token.string, "uncompressed"))
+			flags |= TF_UNCOMPRESSED;
+		else if (!Str_ICompare(token.string, "nearest"))
+			filter = TF_NEAREST;
+		else if (!Str_ICompare(token.string, "linear"))
+			filter = TF_LINEAR;
+		else {
+			PS_UnreadToken(script, &token);
+			break;
+		}
+	}
+
+	if (!R_ParseImageProgram(script, material, name, sizeof(name))){
+		Com_Printf(S_COLOR_YELLOW "WARNING: missing parameter for 'lightFalloffImage' in material '%s'\n", material->name);
+		return false;
+	}
+
+	material->lightFalloffImage = R_FindTexture(name, flags, filter, TW_CLAMP);
+	if (!material->lightFalloffImage){
+		Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture '%s' for material '%s'\n", name, material->name);
+		return false;
+	}
+
+	return true;
+}
+
+/*
+ ==================
+ R_ParseGlobalLightCubeImage
+ ==================
+*/
+static bool R_ParseGlobalLightCubeImage (script_t *script, material_t *material){
+
+	token_t			token;
+	int				flags = TF_NOPICMIP | TF_LIGHT;
+	textureFilter_t	filter = TF_DEFAULT;
+
+	if (material->type != MT_LIGHT){
+		Com_Printf(S_COLOR_YELLOW "WARNING: 'lightCubeImage' not allowed in material '%s'\n", material->name);
+		return false;
+	}
+
+	while (1){
+		if (!PS_ReadToken(script, &token)){
+			Com_Printf(S_COLOR_YELLOW "WARNING: missing parameter for 'lightCubeImage' in material '%s'\n", material->name);
+			return false;
+		}
+
+		if (!Str_ICompare(token.string, "uncompressed"))
+			flags |= TF_UNCOMPRESSED;
+		else if (!Str_ICompare(token.string, "nearest"))
+			filter = TF_NEAREST;
+		else if (!Str_ICompare(token.string, "linear"))
+			filter = TF_LINEAR;
+		else
+			break;
+	}
+
+	material->lightCubeImage = R_FindCubeTexture(token.string, flags, filter, false);
+	if (!material->lightCubeImage){
+		Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture '%s' for material '%s'\n", token.string, material->name);
+		return false;
+	}
+
+	return true;
+}
+
+/*
+ ==================
+ R_ParseGlobalSpectrum
+ ==================
+*/
+static bool R_ParseGlobalSpectrum (script_t *script, material_t *material){
+
+	if (!PS_ReadInteger(script, &material->spectrum)){
+		Com_Printf(S_COLOR_YELLOW "WARNING: missing parameter for 'spectrum' in material '%s'\n", material->name);
+		return false;
+	}
+
+	if (material->spectrum < 1){
+		Com_Printf(S_COLOR_YELLOW "WARNING: invalid value of %i for 'spectrum' in material '%s'\n", material->spectrum, material->name);
 		return false;
 	}
 
@@ -1371,6 +1552,9 @@ static bool R_ParseStageMap (script_t *script, material_t *material, stage_t *st
 		return false;
 	}
 
+	if (material->type == MT_LIGHT)
+		textureStage->flags |= (TF_NOPICMIP | TF_LIGHT);
+
 	if (material->type == MT_NOMIP){
 		textureStage->flags |= TF_NOPICMIP;
 
@@ -1602,6 +1786,9 @@ static bool R_ParseStageVideoMap (script_t *script, material_t *material, stage_
 		Str_Copy(name, token.string, sizeof(name));
 		Str_StripFileExtension(name);
 
+		if (material->type == MT_LIGHT)
+			textureStage->flags |= (TF_NOPICMIP | TF_LIGHT);
+
 		textureStage->texture = R_FindTexture(name, textureStage->flags, textureStage->filter, TW_CLAMP_TO_ZERO);
 		if (!textureStage->texture){
 			Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture '%s' for material '%s'\n", name, material->name);
@@ -1609,6 +1796,58 @@ static bool R_ParseStageVideoMap (script_t *script, material_t *material, stage_
 		}
 	}
 		
+	return true;
+}
+
+/*
+ ==================
+ R_ParseStageSkyRenderMap
+ ==================
+*/
+static bool R_ParseStageSkyRenderMap (script_t *script, material_t *material, stage_t *stage){
+
+	textureStage_t	*textureStage = &stage->textureStage;
+
+	if (material->type != MT_GENERIC){
+		Com_Printf(S_COLOR_YELLOW "WARNING: 'skyRenderMap' not allowed in material '%s'\n", material->name);
+		return false;
+	}
+
+	if (textureStage->texture){
+		Com_Printf(S_COLOR_YELLOW "WARNING: multiple textures for a stage in material '%s'\n", material->name);
+		return false;
+	}
+
+	if (material->subviewType != ST_NONE && material->subviewType != ST_SKY){
+		Com_Printf(S_COLOR_YELLOW "WARNING: multiple subview types in material '%s'\n", material->name);
+		return false;
+	}
+
+	material->subviewType = ST_SKY;
+	material->subviewTexture = rg.skyTexture;
+
+	if (!PS_ReadInteger(script, &material->subviewWidth)){
+		Com_Printf(S_COLOR_YELLOW "WARNING: missing parameters for 'skyRenderMap' in material '%s'\n", material->name);
+		return false;
+	}
+
+	if (material->subviewWidth < 1 || material->subviewWidth > SCREEN_WIDTH){
+		Com_Printf(S_COLOR_YELLOW "WARNING: invalid width value of %i for 'skyRenderMap' in material '%s'\n", material->subviewWidth, material->name);
+		return false;
+	}
+
+	if (!PS_ReadInteger(script, &material->subviewHeight)){
+		Com_Printf(S_COLOR_YELLOW "WARNING: missing parameters for 'skyRenderMap' in material '%s'\n", material->name);
+		return false;
+	}
+
+	if (material->subviewHeight < 1 || material->subviewHeight > SCREEN_HEIGHT){
+		Com_Printf(S_COLOR_YELLOW "WARNING: invalid height value of %i for 'skyRenderMap' in material '%s'\n", material->subviewHeight, material->name);
+		return false;
+	}
+
+	textureStage->texture = rg.skyTexture;
+
 	return true;
 }
 
@@ -2880,9 +3119,18 @@ static materialGlobalKeyword_t	r_materialGlobalKeywords[] = {
 	{"noOverlays",					R_ParseGlobalNoOverlays},
 	{"forceShadows",				R_ParseGlobalForceShadows},
 	{"noShadows",					R_ParseGlobalNoShadows},
+	{"noAmbient",					R_ParseGlobalNoAmbient},
+	{"noBlend",						R_ParseGlobalNoBlend},
+	{"noFog",						R_ParseGlobalNoFog},
 	{"updateCurrentColor",			R_ParseGlobalUpdateCurrentColor},
 	{"updateCurrentDepth",			R_ParseGlobalUpdateCurrentDepth},
 	{"sort",						R_ParseGlobalSort},
+	{"ambientLight",				R_ParseGlobalAmbientLight},
+	{"blendLight",					R_ParseGlobalBlendLight},
+	{"fogLight",					R_ParseGlobalFogLight},
+	{"lightFalloffImage",			R_ParseGlobalLightFalloffImage},
+	{"lightCubeImage",				R_ParseGlobalLightCubeImage},
+	{"spectrum",					R_ParseGlobalSpectrum},
 	{"backSided",					R_ParseGlobalBackSided},
 	{"twoSided",					R_ParseGlobalTwoSided},
 	{"polygonOffset",				R_ParseGlobalPolygonOffset},
@@ -2914,6 +3162,7 @@ static materialStageKeyword_t	r_materialStageKeywords[] = {
 	{"cubeMap",						R_ParseStageCubeMap},
 	{"cameraCubeMap",				R_ParseStageCameraCubeMap},
 	{"videoMap",					R_ParseStageVideoMap},
+	{"skyRenderMap",				R_ParseStageSkyRenderMap},
 	{"mirrorRenderMap",				R_ParseStageMirrorRenderMap},
 	{"remoteRenderMap",				R_ParseStageRemoteRenderMap},
 	{"texGen",						R_ParseStageTexGen},
@@ -3148,8 +3397,8 @@ static void R_ParseMaterialFile (script_t *script){
 
 			Str_Copy(materialDef->text, text, length + 1);
 
-			materialDef->type = MT_NONE;
-			materialDef->surfaceParm = SURFACEPARM_NONE;
+//			materialDef->type = MT_NONE;
+//			materialDef->surfaceParm = SURFACEPARM_NONE;
 
 			continue;
 		}
@@ -3269,7 +3518,10 @@ static material_t *R_CreateDefaultMaterial (const char *name, materialType_t typ
 	material->surfaceParm = surfaceParm;
 	material->numRegisters = EXP_REGISTER_NUM_PREDEFINED;
 
-	material->stages->textureStage.texture = rg.defaultTexture;
+	if (type == MT_LIGHT)
+		material->stages->textureStage.texture = rg.attenuationTexture;
+	else
+		material->stages->textureStage.texture = rg.defaultTexture;
 
 	material->numStages++;
 
@@ -3278,14 +3530,14 @@ static material_t *R_CreateDefaultMaterial (const char *name, materialType_t typ
 
 /*
  ==================
- 
- TODO: utilize surfaceParm
+ R_CreateMaterial
  ==================
 */
 static material_t *R_CreateMaterial (const char *name, materialType_t type, surfaceParm_t surfaceParm, materialDef_t *materialDef){
 
 	material_t	*material;
 	script_t	*script;
+	int			i;
 
 	// Create a new material
 	material = R_NewMaterial();
@@ -3325,29 +3577,117 @@ static material_t *R_CreateMaterial (const char *name, materialType_t type, surf
 	// Otherwise create an implicit material
 	switch (material->type){
 	case MT_GENERIC:
-		material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s_local", material->name), TF_BUMP, TF_DEFAULT, TW_REPEAT);
+		if (material->surfaceParm & SURFACEPARM_LIGHTING){
+			material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s_local", material->name), TF_BUMP, TF_DEFAULT, TW_REPEAT);
+			if (!material->stages[material->numStages].textureStage.texture){
+				Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
+
+				material->stages[material->numStages].textureStage.texture = rg.flatTexture;
+			}
+			material->stages[material->numStages++].lighting = SL_BUMP;
+
+			material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s_d", material->name), TF_DIFFUSE, TF_DEFAULT, TW_REPEAT);
+			if (!material->stages[material->numStages].textureStage.texture){
+				material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s", material->name), TF_DIFFUSE, TF_DEFAULT, TW_REPEAT);
+				if (!material->stages[material->numStages].textureStage.texture){
+					Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
+
+					material->stages[material->numStages].textureStage.texture = rg.whiteTexture;
+				}
+			}
+			material->stages[material->numStages++].lighting = SL_DIFFUSE;
+
+			material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s_s", material->name), TF_SPECULAR, TF_DEFAULT, TW_REPEAT);
+			if (!material->stages[material->numStages].textureStage.texture){
+				Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
+
+				material->stages[material->numStages].textureStage.texture = rg.blackTexture;
+			}
+			material->stages[material->numStages++].lighting = SL_SPECULAR;
+
+			// Add flowing if needed
+			if (material->surfaceParm & SURFACEPARM_FLOWING){
+				for (i = 0; i < material->numStages; i++){
+					material->stages[i].textureStage.texMods[0] = TM_TRANSLATE;
+					material->stages[i].textureStage.texModsRegisters[0][0] = EXP_REGISTER_PARM5;
+					material->stages[i].textureStage.texModsRegisters[0][1] = EXP_REGISTER_CONSTANT_ZERO;
+					material->stages[i].textureStage.numTexMods++;
+				}
+			}
+		}
+		else if (material->surfaceParm & SURFACEPARM_SKY){
+			material->flags = MF_NOOVERLAYS | MF_NOSHADOWS;
+
+			material->stages[material->numStages].textureStage.texture = R_FindCubeTexture(Str_VarArgs("%s", material->name), TF_NOPICMIP | TF_UNCOMPRESSED, TF_LINEAR, false);
+			if (!material->stages[material->numStages].textureStage.texture){
+				Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
+
+				material->stages[material->numStages].textureStage.texture = rg.defaultTexture;
+			}
+			else
+				material->stages[material->numStages].textureStage.texGen = TG_SKYBOX;
+
+			material->numStages++;
+		}
+		else {
+			material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s", material->name), TF_NOPICMIP | TF_UNCOMPRESSED, TF_DEFAULT, TW_REPEAT);
+			if (!material->stages[material->numStages].textureStage.texture){
+				Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
+
+				material->stages[material->numStages].textureStage.texture = rg.defaultTexture;
+			}
+
+			// Make it translucent if needed
+			if (material->surfaceParm & (SURFACEPARM_TRANS33 | SURFACEPARM_TRANS66)){
+				material->flags = MF_NOOVERLAYS | MF_NOSHADOWS;
+
+				material->stages[material->numStages].drawState = DS_BLEND | DS_IGNOREALPHATEST;
+				material->stages[material->numStages].blendSrc = GL_SRC_ALPHA;
+				material->stages[material->numStages].blendDst = GL_ONE_MINUS_SRC_ALPHA;
+				material->stages[material->numStages].blendMode = GL_FUNC_ADD;
+				material->stages[material->numStages].colorStage.vertexColor = VC_MODULATE;
+			}
+
+			// Make it warped if needed
+			if (material->surfaceParm & SURFACEPARM_WARP){
+				material->flags = MF_NOOVERLAYS | MF_NOSHADOWS;
+
+				// Add flowing if needed
+				if (material->surfaceParm & SURFACEPARM_FLOWING){
+					material->stages[material->numStages].textureStage.texMods[0] = TM_TRANSLATE;
+					material->stages[material->numStages].textureStage.texModsRegisters[0][0] = EXP_REGISTER_PARM4;
+					material->stages[material->numStages].textureStage.texModsRegisters[0][1] = EXP_REGISTER_CONSTANT_ZERO;
+					material->stages[material->numStages].textureStage.numTexMods++;
+				}
+			}
+			else {
+				// Add flowing if needed
+				if (material->surfaceParm & SURFACEPARM_FLOWING){
+					material->stages[material->numStages].textureStage.texMods[0] = TM_TRANSLATE;
+					material->stages[material->numStages].textureStage.texModsRegisters[0][0] = EXP_REGISTER_PARM5;
+					material->stages[material->numStages].textureStage.texModsRegisters[0][1] = EXP_REGISTER_CONSTANT_ZERO;
+					material->stages[material->numStages].textureStage.numTexMods++;
+				}
+			}
+
+			material->numStages++;
+		}
+
+		break;
+	case MT_LIGHT:
+		material->stages[material->numStages].textureStage.texture = R_FindTexture(material->name, TF_NOPICMIP | TF_LIGHT, TF_DEFAULT, TW_CLAMP_TO_ZERO);
 		if (!material->stages[material->numStages].textureStage.texture){
 			Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
 
-			material->stages[material->numStages].textureStage.texture = rg.flatTexture;
+			material->stages[material->numStages].textureStage.texture = rg.attenuationTexture;
 		}
-		material->stages[material->numStages++].lighting = SL_BUMP;
 
-		material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s_d", material->name), TF_DIFFUSE, TF_DEFAULT, TW_REPEAT);
-		if (!material->stages[material->numStages].textureStage.texture){
-			Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
+		material->stages[material->numStages].colorStage.registers[0] = EXP_REGISTER_PARM0;
+		material->stages[material->numStages].colorStage.registers[1] = EXP_REGISTER_PARM1;
+		material->stages[material->numStages].colorStage.registers[2] = EXP_REGISTER_PARM2;
+		material->stages[material->numStages].colorStage.registers[3] = EXP_REGISTER_PARM3;
 
-			material->stages[material->numStages].textureStage.texture = rg.whiteTexture;
-		}
-		material->stages[material->numStages++].lighting = SL_DIFFUSE;
-
-		material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s_s", material->name), TF_SPECULAR, TF_DEFAULT, TW_REPEAT);
-		if (!material->stages[material->numStages].textureStage.texture){
-			Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
-
-			material->stages[material->numStages].textureStage.texture = rg.blackTexture;
-		}
-		material->stages[material->numStages++].lighting = SL_SPECULAR;
+		material->numStages++;
 
 		break;
 	case MT_NOMIP:
@@ -3390,9 +3730,27 @@ static void R_FinishMaterial (material_t *material){
 	if (material->deform != DFRM_NONE)
 		material->flags |= MF_NOOVERLAYS;
 
+	// Force 'noShadows' if it has 'ambientLight', 'blendLight', or 'fogLight'
+	if (material->lightType != LT_GENERIC)
+		material->flags |= MF_NOSHADOWS;
+
 	// Force 'updateCurrentColor' and 'updateCurrentDepth' for 2D materials
 	if (material->type == MT_NOMIP)
 		material->flags |= (MF_UPDATECURRENTCOLOR | MF_UPDATECURRENTDEPTH);
+
+	// Make sure it has a 'lightFalloffImage'
+	if (!material->lightFalloffImage){
+		if (material->lightType == LT_FOG)
+			material->lightFalloffImage = rg.fogEnterTexture;
+		else if (material->lightType == LT_AMBIENT)
+			material->lightFalloffImage = rg.noFalloffTexture;
+		else
+			material->lightFalloffImage = rg.falloffTexture;
+	}
+
+	// Make sure it has a 'lightCubeImage'
+	if (!material->lightCubeImage)
+		material->lightCubeImage = rg.cubicFilterTexture;
 
 	// Check stages
 	for (i = 0, stage = material->stages; i < material->numStages; i++, stage++){
@@ -3438,7 +3796,16 @@ static void R_FinishMaterial (material_t *material){
 			if (!stage->textureStage.texture){
 				Com_Printf(S_COLOR_YELLOW "WARNING: material '%s' has a stage with no texture!\n", material->name);
 
-				stage->textureStage.texture = rg.defaultTexture;
+				if (material->type != MT_LIGHT)
+					stage->textureStage.texture = rg.defaultTexture;
+				else {
+					if (material->lightType == LT_FOG)
+						stage->textureStage.texture = rg.fogTexture;
+					else if (material->lightType == LT_AMBIENT)
+						stage->textureStage.texture = rg.noAttenuationTexture;
+					else
+						stage->textureStage.texture = rg.attenuationTexture;
+				}
 			}
 
 			// Determine if the color is identity
@@ -3501,6 +3868,11 @@ static void R_FinishMaterial (material_t *material){
 			material->numAmbientStages++;
 	}
 
+	// Force 'noInteractions' and 'noAmbient' if it doesn't have non-ambient
+	// stages
+	if (material->numStages == material->numAmbientStages)
+		material->flags |= (MF_NOINTERACTIONS | MF_NOAMBIENT);
+
 	// Set 'sort' if unset
 	if (material->sort == SORT_BAD){
 		if (material->flags & MF_NEEDCURRENTCOLOR)
@@ -3535,6 +3907,9 @@ static void R_FinishMaterial (material_t *material){
 		// Force 'noShadows' unless it has 'forceShadows'
 		if (!(material->flags & MF_FORCESHADOWS))
 			material->flags |= MF_NOSHADOWS;
+
+		// Force 'noBlend' and 'noFog'
+		material->flags |= (MF_NOBLEND | MF_NOFOG);
 
 		// Force 'ignoreAlphaTest' for all the stages
 		for (i = 0, stage = material->stages; i < material->numStages; i++, stage++)
@@ -3745,9 +4120,22 @@ material_t *R_FindMaterial (const char *name, materialType_t type, surfaceParm_t
  R_RegisterMaterial
  ==================
 */
-material_t *R_RegisterMaterial (const char *name, surfaceParm_t surfaceParm){
+material_t *R_RegisterMaterial (const char *name, bool lightingDefault){
 
-	return R_FindMaterial(name, MT_GENERIC, surfaceParm);
+	if (lightingDefault)
+		return R_FindMaterial(name, MT_GENERIC, SURFACEPARM_LIGHTING);
+	else
+		return R_FindMaterial(name, MT_GENERIC, SURFACEPARM_NONE);
+}
+
+/*
+ ==================
+ R_RegisterMaterialLight
+ ==================
+*/
+material_t *R_RegisterMaterialLight (const char *name){
+
+	return R_FindMaterial(name, MT_LIGHT, SURFACEPARM_NONE);
 }
 
 /*
@@ -3755,9 +4143,9 @@ material_t *R_RegisterMaterial (const char *name, surfaceParm_t surfaceParm){
  R_RegisterMaterialNoMip
  ==================
 */
-material_t *R_RegisterMaterialNoMip (const char *name, surfaceParm_t surfaceParm){
+material_t *R_RegisterMaterialNoMip (const char *name){
 
-	return R_FindMaterial(name, MT_NOMIP, surfaceParm);
+	return R_FindMaterial(name, MT_NOMIP, SURFACEPARM_NONE);
 }
 
 
@@ -3832,6 +4220,9 @@ static void R_ListMaterials_f (){
 		switch (material->type){
 		case MT_GENERIC:
 			Com_Printf("GENERIC ");
+			break;
+		case MT_LIGHT:
+			Com_Printf("LIGHT   ");
 			break;
 		case MT_NOMIP:
 			Com_Printf("NOMIP   ");
@@ -3946,7 +4337,7 @@ static void R_CreateDefaultMaterials (){
 	Str_Copy(material->name, "_default", sizeof(material->name));
 	material->index = r_numMaterials;
 	material->type = MT_GENERIC;
-	material->flags = MF_NOOVERLAYS | MF_NOSHADOWS;
+	material->flags = MF_NOOVERLAYS | MF_NOSHADOWS | MF_NOBLEND | MF_NOFOG;
 	material->numRegisters = EXP_REGISTER_NUM_PREDEFINED;
 	material->stages->textureStage.texture = rg.defaultTexture;
 	material->stages->colorStage.vertexColor = VC_MODULATE;
@@ -3954,17 +4345,43 @@ static void R_CreateDefaultMaterials (){
 
 	rg.defaultMaterial = R_LoadMaterial(material);
 
-	// Default lightmap material
+	// Default light material
 	material = R_NewMaterial();
 
-	Str_Copy(material->name, "_defaultLightmap", sizeof(material->name));
+	Str_Copy(material->name, "_defaultLight", sizeof(material->name));
 	material->index = r_numMaterials;
-	material->type = MT_GENERIC;
+	material->type = MT_LIGHT;
 	material->flags = 0;
 	material->numRegisters = EXP_REGISTER_NUM_PREDEFINED;
+	material->lightType = LT_GENERIC;
+	material->lightFalloffImage = rg.falloffTexture;
+	material->stages->textureStage.texture = rg.attenuationTexture;
+	material->stages->colorStage.registers[0] = EXP_REGISTER_PARM0;
+	material->stages->colorStage.registers[1] = EXP_REGISTER_PARM1;
+	material->stages->colorStage.registers[2] = EXP_REGISTER_PARM2;
+	material->stages->colorStage.registers[3] = EXP_REGISTER_PARM3;
 	material->numStages++;
 
-	rg.defaultLightmapMaterial = R_LoadMaterial(material);
+	rg.defaultLightMaterial = R_LoadMaterial(material);
+
+	// Default projected light material
+	material = R_NewMaterial();
+
+	Str_Copy(material->name, "_defaultProjectedLight", sizeof(material->name));
+	material->index = r_numMaterials;
+	material->type = MT_LIGHT;
+	material->flags = 0;
+	material->numRegisters = EXP_REGISTER_NUM_PREDEFINED;
+	material->lightType = LT_GENERIC;
+	material->lightFalloffImage = rg.noFalloffTexture;
+	material->stages->textureStage.texture = rg.attenuationTexture;
+	material->stages->colorStage.registers[0] = EXP_REGISTER_PARM0;
+	material->stages->colorStage.registers[1] = EXP_REGISTER_PARM1;
+	material->stages->colorStage.registers[2] = EXP_REGISTER_PARM2;
+	material->stages->colorStage.registers[3] = EXP_REGISTER_PARM3;
+	material->numStages++;
+
+	rg.defaultProjectedLightMaterial = R_LoadMaterial(material);
 
 	// No-draw material
 	material = R_NewMaterial();
@@ -4053,7 +4470,7 @@ void R_ShutdownMaterials (){
 	Cmd_RemoveCommand("listMaterials");
 	Cmd_RemoveCommand("listMaterialDefs");
 	Cmd_RemoveCommand("printMaterialDef");
-
+#if 0
 	// Stop all the cinematics
 	for (i = 0; i < r_numMaterials; i++){
 		material = r_materials[i];
@@ -4072,7 +4489,7 @@ void R_ShutdownMaterials (){
 			}
 		}
 	}
-
+#endif
 	// Clear material definition and material lists
 	Mem_Fill(r_materialDefsHashTable, 0, sizeof(r_materialDefsHashTable));
 

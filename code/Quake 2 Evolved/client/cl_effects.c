@@ -194,6 +194,8 @@ void CL_ClearDynamicLights (){
 /*
  ==================
  CL_AddDynamicLights
+
+ TODO!!!
  ==================
 */
 void CL_AddDynamicLights (){
@@ -241,6 +243,8 @@ void CL_AddDynamicLights (){
 /*
  ==================
  CL_DynamicLight
+
+ TODO!!!
  ==================
 */
 void CL_DynamicLight (const vec3_t origin, float intensity, float r, float g, float b, bool fade, int duration){

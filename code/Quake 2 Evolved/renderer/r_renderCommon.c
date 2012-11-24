@@ -408,7 +408,7 @@ void RB_RenderMaterialPasses (int numMeshes, mesh_t *meshes, ambientPass_t pass)
 /*
  ==============================================================================
 
- SHADOW RENDERING
+ SHADOW & INTERACTION RENDERING
 
  ==============================================================================
 */
@@ -433,6 +433,15 @@ void RB_RenderShadows (int numMeshes, mesh_t *meshes){
 	if (!numMeshes)
 		return;
 }
+
+
+/*
+ ==============================================================================
+
+ FOG LIGHT INTERACTION RENDERING
+
+ ==============================================================================
+*/
 
 
 /*

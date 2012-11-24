@@ -37,36 +37,46 @@
 
 /*
  ==================
- 
+ R_CullSurface
  ==================
 */
-static bool R_CullSurface (surface_t *surf, const vec3_t origin, int clipFlags){
+static bool R_CullSurface (surface_t *surface, const vec3_t origin, int clipFlags){
 
-	cplane_t	*plane;
-	float		dist;
+	material_t	*material = surface->texInfo->material;
+	int			side;
 
 	if (r_skipCulling->integerValue)
 		return false;
 
-	// Find which side of the node we are on
-	plane = surf->plane;
-	if (plane->type < 3)
-		dist = origin[plane->type] - plane->dist;
-	else
-		dist = DotProduct(origin, plane->normal) - plane->dist;
+	// Cull face
+	if (material->cullType != CT_TWO_SIDED){
+		side = PointOnPlaneSide(origin, 0.0f, surface->plane);
 
-	if (!(surf->flags & SURF_PLANEBACK)){
-		if (dist <= BACKFACE_EPSILON)
-			return true;	// Wrong side
-	}
-	else {
-		if (dist >= -BACKFACE_EPSILON)
-			return true;	// Wrong side
+		if (material->cullType == CT_BACK_SIDED){
+			if (!(surface->flags & SURF_PLANEBACK)){
+				if (side != PLANESIDE_BACK)
+					return true;
+			}
+			else {
+				if (side != PLANESIDE_FRONT)
+					return true;
+			}
+		}
+		else {
+			if (!(surface->flags & SURF_PLANEBACK)){
+				if (side != PLANESIDE_FRONT)
+					return true;
+			}
+			else {
+				if (side != PLANESIDE_BACK)
+					return true;
+			}
+		}
 	}
 
-	// Cull
+	// Cull bounds
 	if (clipFlags){
-		if (R_CullBox(surf->mins, surf->maxs, clipFlags))
+		if (R_CullBox(surface->mins, surface->maxs, clipFlags))
 			return true;
 	}
 
@@ -75,45 +85,28 @@ static bool R_CullSurface (surface_t *surf, const vec3_t origin, int clipFlags){
 
 /*
  ==================
- 
+ R_AddSurfaceToList
  ==================
 */
 static void R_AddSurfaceToList (surface_t *surface, renderEntity_t *entity){
 
-	texInfo_t	*tex = surface->texInfo;
+	texInfo_t	*texInfo = surface->texInfo;
 	material_t	*material;
-	int			c, map, lmNum;
+	int			count;
 
-	if (tex->flags & SURF_NODRAW)
-		return;
+	// Mark as visible for this view
+	surface->viewCount = rg.viewCount;
 
-	// Select shader
-	if (tex->next){
-		c = entity->frame % tex->numFrames;
-		while (c){
-			tex = tex->next;
-			c--;
+	// Select the material
+	if (texInfo->next){
+		count = entity->frame % texInfo->numFrames;
+		while (count){
+			texInfo = texInfo->next;
+			count--;
 		}
 	}
 
-	material = tex->material;
-
-	// Select lightmap
-	lmNum = surface->lmNum;
-
-	// Check for lightmap modification
-	if (r_dynamicLights->integerValue /*&& (material->flags & MF_HASLIGHTMAP)*/){
-		if (surface->dlightFrame == rg.frameCount)
-			lmNum = 255;
-		else {
-			for (map = 0; map < surface->numStyles; map++){
-				if (surface->cachedLight[map] != rg.lightStyles[surface->styles[map]].white){
-					lmNum = 255;
-					break;
-				}
-			}
-		}
-	}
+	material = texInfo->material;
 
 	// Add it
 	R_AddMeshToList(MESH_SURFACE, surface, entity, material);
@@ -141,29 +134,28 @@ static void R_AddSurfaceToList (surface_t *surface, renderEntity_t *entity){
 
 /*
  ==================
- 
+ R_AddInlineModel
  ==================
 */
 void R_AddInlineModel (renderEntity_t *entity){
 
-	model_t			*model = entity->model;
-	surface_t		*surface;
-	renderLight_t	*dl;
-	vec3_t			origin, tmp;
-	vec3_t			mins, maxs;
-	int				i, l;
+	model_t		*model = entity->model;
+	surface_t	*surface;
+	vec3_t		origin, tmp;
+	vec3_t		mins, maxs;
+	int			i;
 
 	if (!model->numModelSurfaces)
 		return;
 
-	// Cull
+	// Cull bounds
 	if (!Matrix3_Compare(entity->axis, mat3_identity)){
 		for (i = 0; i < 3; i++){
 			mins[i] = entity->origin[i] - model->radius;
 			maxs[i] = entity->origin[i] + model->radius;
 		}
 
-		if (R_CullSphere(entity->origin, model->radius, 15))
+		if (R_CullSphere(entity->origin, model->radius, 31))
 			return;
 
 		VectorSubtract(rg.renderView.origin, entity->origin, tmp);
@@ -173,34 +165,24 @@ void R_AddInlineModel (renderEntity_t *entity){
 		VectorAdd(entity->origin, model->mins, mins);
 		VectorAdd(entity->origin, model->maxs, maxs);
 
-		if (R_CullBox(mins, maxs, 15))
+		if (R_CullBox(mins, maxs, 31))
 			return;
 
 		VectorSubtract(rg.renderView.origin, entity->origin, origin);
 	}
 
-	// Calculate dynamic lighting
-	if (r_dynamicLights->integerValue){
-		for (l = 0, dl = rg.scene.lights; l < rg.scene.numLights; l++, dl++){
-			if (!BoundsAndSphereIntersect(mins, maxs, dl->origin, dl->intensity))
-				continue;
-
-			surface = model->surfaces + model->firstModelSurface;
-			for (i = 0; i < model->numModelSurfaces; i++, surface++){
-				if (surface->dlightFrame != rg.frameCount){
-					surface->dlightFrame = rg.frameCount;
-					surface->dlightBits = (1 << l);
-				}
-				else
-					surface->dlightBits |= (1 << l);
-			}
-		}
-	}
+	rg.pc.entities++;
 
 	// Add all the surfaces
 	surface = model->surfaces + model->firstModelSurface;
 	for (i = 0; i < model->numModelSurfaces; i++, surface++){
-		// Cull
+		if (surface->texInfo->flags & SURF_SKY)
+			continue;		// Don't bother drawing
+
+		if (!surface->texInfo->material->numStages)
+			continue;		// Don't bother drawing
+
+		// Cull surface bounds
 		if (R_CullSurface(surface, origin, 0))
 			continue;
 
@@ -318,7 +300,7 @@ static void R_MarkLeaves (){
 
 /*
  ==================
- 
+ R_RecursiveWorldNode
  ==================
 */
 static void R_RecursiveWorldNode (node_t *node, int clipFlags){
@@ -340,7 +322,7 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 	// Cull
 	if (clipFlags){
 		for (i = 0, plane = rg.viewParms.frustum; i < 4; i++, plane++){
-			if (!(clipFlags & (1 << i)))
+			if (!(clipFlags & BIT(i)))
 				continue;
 
 			clipped = BoxOnPlaneSide(node->mins, node->maxs, plane);
@@ -348,7 +330,7 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 				return;
 
 			if (clipped == 1)
-				clipFlags &= ~(1 << i);
+				clipFlags &= ~BIT(i);
 		}
 	}
 
@@ -413,9 +395,8 @@ void R_AddWorldSurfaces (){
 	// Clear world mins/maxs
 	ClearBounds(rg.viewParms.worldMins, rg.viewParms.worldMaxs);
 
-	// Mark leaves and lights
+	// Mark leaves
 	R_MarkLeaves();
-	R_MarkLights();
 
 	// Recurse down the BSP tree
 	if (r_skipCulling->integerValue)

@@ -2789,10 +2789,7 @@ void CL_AddParticles (){
 		}
 
 		if (p->flags & PARTICLE_VERTEXLIGHT){
-			// Vertex lit particle
-			R_LightForPoint(org, ambientLight);
 
-			VectorMultiply(color, ambientLight, color);
 		}
 
 		// Clamp color and alpha and convert to byte

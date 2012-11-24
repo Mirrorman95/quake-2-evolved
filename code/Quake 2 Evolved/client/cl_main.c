@@ -113,7 +113,7 @@ cvar_t *					cl_itemBob;
  CL_LoadAssets
  ==================
 */
-void CL_LoadAssets (){
+static void CL_LoadAssets (){
 
 	// Get information about the OpenGL / OpenAL subsystems
 	cls.glConfig = R_GetGLConfig();
@@ -172,6 +172,36 @@ static void CL_FullRestart (){
 
 	// Fully initialized
 	cls.fullyInitialized = true;
+}
+
+/*
+ ==================
+ CL_CanLaunchEditor
+ ==================
+*/
+bool CL_CanLaunchEditor (const char *editor){
+
+	if (cls.state != CA_ACTIVE || cls.demoFile){
+		Com_Printf("You must be in a level to launch the %s editor\n", editor);
+		return false;
+	}
+
+	if (!CVar_AllowCheats()){
+		Com_Printf("You must enable cheats to launch the %s editor\n", editor);
+		return false;
+	}
+
+	if (Sys_IsWindowFullscreen()){
+		Com_Printf("You must be running the game in windowed mode to launch the %s editor\n", editor);
+		return false;
+	}
+
+	if (!NET_IsLocalAddress(cls.netChan.remoteAddress)){
+		Com_Printf("You must be running a local server to launch the %s editor\n", editor);
+		return false;
+	}
+
+	return true;
 }
 
 

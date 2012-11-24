@@ -998,11 +998,11 @@ void CL_AddPacketEntities (){
 
 			if (state->renderfx & RF_USE_DISGUISE){
 				if (!Str_ICompareChars(clientInfo->info, "male", 4))
-					entity.material = R_RegisterMaterial("players/male/disguise");
+					entity.material = R_RegisterMaterial("players/male/disguise", true);
 				else if (!Str_ICompareChars(clientInfo->info, "female", 6))
-					entity.material = R_RegisterMaterial("players/female/disguise");
+					entity.material = R_RegisterMaterial("players/female/disguise", true);
 				else if (!Str_ICompareChars(clientInfo->info, "cyborg", 6))
-					entity.material = R_RegisterMaterial("players/cyborg/disguise");
+					entity.material = R_RegisterMaterial("players/cyborg/disguise", true);
 			}
 		}
 		else {
