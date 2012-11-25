@@ -26,7 +26,7 @@
 //
 
 // TODO:
-// - add testSound
+// - add testSound and testLight
 // - model testing and 3rd person view
 // - view blends
 
@@ -582,6 +582,50 @@ static void CL_UpdateTestModel (){
 }
 
 
+/*
+ ==============================================================================
+
+ LIGHT TESTING
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ CL_ClearTestLight
+ ==================
+*/
+static void CL_ClearTestLight (){
+
+	// Clear the test light
+	Mem_Fill(&cl.testLight, 0, sizeof(testLight_t));
+}
+
+/*
+ ==================
+
+ ==================
+*/
+static void CL_TestLight_f (){
+
+}
+
+/*
+ ==================
+ CL_UpdateTestLight
+ ==================
+*/
+static void CL_UpdateTestLight (){
+
+	if (!cl.testLight.active)
+		return;
+
+	// Add or update the render entity
+	R_AddLightToScene(&cl.testLight.renderLight);
+}
+
+
 // ============================================================================
 
 
@@ -596,6 +640,7 @@ static void CL_UpdateTestTools (){
 	CL_UpdateTestSprite();
 	CL_UpdateTestBeam();
 	CL_UpdateTestSound();
+	CL_UpdateTestLight();
 }
 
 

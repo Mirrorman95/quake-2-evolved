@@ -788,8 +788,9 @@ void R_BeginFrame (int time){
 	// Clear primary view
 	rg.primaryViewAvailable = false;
 
-	// Clear mesh lists
-	R_ClearMeshLists();
+	// Clear mesh and light lists
+	R_ClearMeshes();
+	R_ClearLights();
 
 	// Clear scene render lists
 	rg.scene.numEntities = rg.scene.firstEntity = 1;

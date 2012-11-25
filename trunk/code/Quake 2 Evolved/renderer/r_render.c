@@ -745,9 +745,25 @@ void RB_EntityState (renderEntity_t *entity){
 
 /*
  ==================
- RB_DrawElements
 
- TODO: this would probably need some more work later on for shadows
+ ==================
+*/
+void RB_TransformLightForEntity (renderLight_t *light, renderEntity_t *entity){
+
+}
+
+/*
+ ==================
+
+ ==================
+*/
+void RB_ComputeLightMatrix (renderLight_t *light, renderEntity_t *entity, material_t *material, textureStage_t *textureStage){
+
+}
+
+/*
+ ==================
+
  ==================
 */
 void RB_DrawElements (){
@@ -760,4 +776,22 @@ void RB_DrawElements (){
 	rg.pc.totalVertices += backEnd.numVertices;
 
 	qglDrawElements(GL_TRIANGLES, backEnd.numIndices, GL_INDEX_TYPE, backEnd.indices);
+}
+
+/*
+ ==================
+
+ ==================
+*/
+void RB_DrawElementsWithCounters (int *totalIndices, int *totalVertices){
+
+}
+
+/*
+ ==================
+
+ ==================
+*/
+void RB_DrawElementsStaticIndices (int numVertices, int numIndices, const void *indices){
+
 }

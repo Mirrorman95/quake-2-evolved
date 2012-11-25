@@ -56,6 +56,7 @@ cvar_t *					sv_enforceTime;
 cvar_t *					sv_allowDownload;
 cvar_t *					sv_publicServer;
 cvar_t *					sv_rconPassword;
+cvar_t *					sv_loadGame;
 
 
 /*
@@ -1048,12 +1049,13 @@ void SV_Init (){
 	sv_zombieTimeOut = CVar_Register("sv_zombieTimeOut", "2.0", CVAR_FLOAT, 0, "Zombie time-out time in seconds", 1.0f, 300.0f);
 	sv_reconnectLimit = CVar_Register("sv_reconnectLimit", "3.0", CVAR_FLOAT, 0, "Time in seconds before a client is allowed to reconnect", 1.0f, 300.0f);
 	sv_rconPassword = CVar_Register("rconPassword", "", CVAR_STRING, 0, "Remote console password", 0, 0);
+	sv_loadGame = CVar_Register("sv_loadGame", "0", CVAR_BOOL, 0, "Loads the extended Quake 2 Evolved game DLL", 0, 0);
 
 	// Add commands
 	Cmd_AddCommand("loadgame", SV_LoadGame_f, NULL, NULL);
 	Cmd_AddCommand("savegame", SV_SaveGame_f, NULL, NULL);
 	Cmd_AddCommand("gamemap", SV_GameMap_f, NULL, NULL);
-	Cmd_AddCommand("map", SV_Map_f, "Loads a map", NULL);
+	Cmd_AddCommand("map", SV_Map_f, "Loads a map", Cmd_ArgCompletion_MapName);
 	Cmd_AddCommand("demo", SV_Demo_f, NULL, NULL);
 	Cmd_AddCommand("kick", SV_Kick_f, NULL, NULL);
 	Cmd_AddCommand("status", SV_Status_f, "Shows server status", NULL);

@@ -513,7 +513,7 @@ void SV_Map_f (){
 	char	checkName[MAX_QPATH];
 
 	if (Cmd_Argc() != 2){
-		Com_Printf("Usage: map <mapName>\n");
+		Com_Printf("Usage: map <name>\n");
 		return;
 	}
 

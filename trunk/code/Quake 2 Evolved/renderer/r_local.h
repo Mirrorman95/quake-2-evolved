@@ -1167,7 +1167,443 @@ void			R_SortMeshes (int numMeshes, mesh_t *meshes);
 
 void			R_AllocMeshes ();
 void			R_GenerateMeshes ();
-void			R_ClearMeshLists ();
+void			R_ClearMeshes ();
+
+/*
+ ==============================================================================
+
+ LIGHTS
+
+ ==============================================================================
+*/
+
+#define MAX_LIGHTS					1024
+
+typedef struct light_s {
+	renderLight_t *			light;
+	material_t *			material;
+} light_t;
+
+void			R_AllocLights ();
+void			R_GenerateLights ();
+void			R_ClearLights ();
+
+void			R_InitLights ();
+void			R_ShutdownLights ();
+
+/*
+ ==============================================================================
+
+ FRONT-END
+
+ ==============================================================================
+*/
+
+#define MAX_RENDER_CROPS			8
+
+#define MAX_LIGHTMAPS				128
+
+typedef enum {
+	ASPECT_NORMAL,
+	ASPECT_WIDE,
+	ASPECT_HIGH
+} aspectRatio_t;
+
+typedef enum {
+	FRUSTUM_LEFT,
+	FRUSTUM_RIGHT,
+	FRUSTUM_TOP,
+	FRUSTUM_BOTTOM,
+	FRUSTUM_NEAR,
+	FRUSTUM_USER,
+	NUM_FRUSTUM_PLANES
+} frustum_t;
+
+typedef enum {
+	INTERACTION_GENERIC,
+	NUM_INTERACTION_TYPES
+} interactionType_t;
+
+typedef enum {
+	AMBIENT_GENERIC,
+	NUM_AMBIENT_TYPES
+} ambientType_t;
+
+typedef struct {
+	int						x;
+	int						y;
+	int						width;
+	int						height;
+} viewport_t;
+
+typedef struct {
+	int						x;
+	int						y;
+	int						width;
+	int						height;
+} scissor_t;
+
+typedef struct {
+	bool					primaryView;
+	int						viewType;
+
+	viewport_t				viewport;
+	scissor_t				scissor;
+
+	float					fovX;
+	float					fovY;
+	float					fovScale;
+
+	cplane_t				frustum[4];
+
+	vec3_t					worldMins;
+	vec3_t					worldMaxs;
+
+	mat4_t					projectionMatrix;
+	mat4_t					modelviewMatrix;
+	mat4_t					modelviewProjectionMatrix;
+	mat4_t					skyBoxMatrix;
+
+	// Mesh and light data
+	int						numMeshes[4];
+	mesh_t *				meshes[4];
+
+	int						numLights[4];
+	light_t *				lights[4];
+
+	// Scene render lists
+	renderEntity_t *		renderEntities;
+	int						numRenderEntities;
+
+	renderLight_t *			renderLights;
+	int						numRenderLights;
+
+	renderParticle_t *		renderParticles;
+	int						numRenderParticles;
+} viewParms_t;
+
+typedef struct {
+	int 					x;
+	int 					y;
+	int 					width;
+	int						height;
+} cropRect_t;
+
+typedef struct {
+	int						width;
+	int						height;
+
+	cropRect_t				rect;
+
+	float					xScale;
+	float					yScale;
+
+	aspectRatio_t			aspectRatio;
+	float					aspectScale;
+	float					aspectBias;
+} renderCrop_t;
+
+typedef struct {
+	renderEntity_t			entities[MAX_RENDER_ENTITIES];
+	int						numEntities;
+	int						firstEntity;
+
+	renderLight_t			lights[MAX_RENDER_LIGHTS];
+	int						numLights;
+	int						firstLight;
+
+	renderParticle_t		particles[MAX_RENDER_PARTICLES];
+	int						numParticles;
+	int						firstParticle;
+} scene_t;
+
+typedef struct {
+	int						numEntities;
+	int						firstEntity;
+
+	int						numLights;
+	int						firstLight;
+
+	int						numParticles;
+	int						firstParticle;
+
+	renderView_t			renderView;
+} primaryView_t;
+
+typedef struct {
+	int						cullBoundsIn;
+	int						cullBoundsOut;
+	int						cullSphereIn;
+	int						cullSphereOut;
+
+	int						entities;
+	int						lights;
+	int						particles;
+	int						decals;
+
+	int						leafs;
+
+	int						meshes;
+
+	int						dynamicLights;
+
+	int						deformIndices;
+	int						deformVertices;
+	int						deformExpand;
+	int						deformMove;
+	int						deformSprite;
+	int						deformTube;
+	int						deformBeam;
+
+	int						views;
+	int						draws;
+	int						totalIndices;
+	int						interactionIndices;
+	int						totalVertices;
+	int						interactionVertices;
+
+	int						vertexBuffers[2];
+	int						vertexBufferBytes[2];
+
+	int						textures;
+	int						textureBytes;
+
+	int						captureTextures;
+	int						captureTexturePixels;
+	int						updateTextures;
+	int						updateTexturePixels;
+} performanceCounters_t;
+
+typedef struct {
+	int						time;
+
+	// Frame counters
+	int						frameCount;
+	int						viewCount;
+	int						visCount;
+	int						fragmentCount;
+
+	// View cluster and area
+	int						viewCluster, viewCluster2;
+	int						oldViewCluster, oldViewCluster2;
+
+	// Light styles
+	lightStyle_t			lightStyles[MAX_LIGHTSTYLES];
+
+	// Current view parms
+	viewParms_t				viewParms;
+
+	// Current render view
+	renderView_t			renderView;
+
+	// Meshes
+	int						numMeshes[4];
+	int						maxMeshes[4];
+	int						firstMesh[4];
+	mesh_t *				meshes[4];
+
+	// Lights
+	int						numLights[4];
+	int						maxLights[4];
+	int						firstLight[4];
+	light_t *				lights[4];
+
+	// Scene
+	scene_t					scene;
+
+	// Render crops
+	renderCrop_t			renderCrops[MAX_RENDER_CROPS];
+	int						currentRenderCrop;
+
+	// World map
+	model_t *				worldModel;
+	renderEntity_t *		worldEntity;
+
+	// Environment shot rendering
+	bool					envShotRendering;
+	int						envShotSize;
+
+	// Copy of the primary view needed by some functions
+	bool					primaryViewAvailable;
+	primaryView_t			primaryView;
+
+	// Development tools
+	texture_t *				testTexture;
+
+	// Performance counters
+	performanceCounters_t	pc;
+
+	// Internal assets
+	texture_t *				defaultTexture;
+	texture_t *				whiteTexture;
+	texture_t *				blackTexture;
+	texture_t *				flatTexture;
+	texture_t *				attenuationTexture;
+	texture_t *				noAttenuationTexture;
+	texture_t *				falloffTexture;
+	texture_t *				noFalloffTexture;
+	texture_t *				cubicFilterTexture;
+	texture_t *				fogTexture;
+	texture_t *				fogEnterTexture;
+	texture_t *				cinematicTextures[MAX_CINEMATICS];
+	texture_t *				skyTexture;
+	texture_t *				mirrorTexture;
+	texture_t *				remoteTexture;
+	texture_t *				currentColorTexture;
+	texture_t *				currentDepthTexture;
+
+	program_t *				interactionPrograms[NUM_INTERACTION_TYPES][4];
+	program_t *				ambientLightPrograms[NUM_AMBIENT_TYPES];
+	program_t *				blendLightProgram;
+	program_t *				fogLightProgram;
+
+	material_t *			defaultMaterial;
+	material_t *			defaultLightMaterial;
+	material_t *			defaultProjectedLightMaterial;
+	material_t *			noDrawMaterial;
+	material_t *			waterCausticsMaterial;
+	material_t *			slimeCausticsMaterial;
+	material_t *			lavaCausticsMaterial;
+
+	font_t *				defaultFont;
+
+	model_t *				defaultModel;
+
+	// Tables
+	byte					gammaTable[256];
+} reGlobals_t;
+
+extern reGlobals_t			rg;
+
+extern glConfig_t			glConfig;
+
+extern cvar_t *				r_logFile;
+extern cvar_t *				r_ignoreGLErrors;
+extern cvar_t *				r_clear;
+extern cvar_t *				r_clearColor;
+extern cvar_t *				r_frontBuffer;
+extern cvar_t *				r_screenFraction;
+extern cvar_t *				r_subviewOnly;
+extern cvar_t *				r_lockVisibility;
+extern cvar_t *				r_zNear;
+extern cvar_t *				r_zFar;
+extern cvar_t *				r_offsetFactor;
+extern cvar_t *				r_offsetUnits;
+extern cvar_t *				r_forceImagePrograms;
+extern cvar_t *				r_writeImagePrograms;
+extern cvar_t *				r_colorMipLevels;
+extern cvar_t *				r_singleMaterial;
+extern cvar_t *				r_singleEntity;
+extern cvar_t *				r_singleLight;
+extern cvar_t *				r_showCluster;
+extern cvar_t *				r_showCull;
+extern cvar_t *				r_showScene;
+extern cvar_t *				r_showDeforms;
+extern cvar_t *				r_showTextureUsage;
+extern cvar_t *				r_showTextures;
+extern cvar_t *				r_showDepth;
+extern cvar_t *				r_showVertexColors;
+extern cvar_t *				r_showTextureCoords;
+extern cvar_t *				r_showTangentSpace;
+extern cvar_t *				r_showTris;
+extern cvar_t *				r_showNormals;
+extern cvar_t *				r_showTextureVectors;
+extern cvar_t *				r_showBatchSize;
+extern cvar_t *				r_showModelBounds;
+extern cvar_t *				r_skipVisibility;
+extern cvar_t *				r_skipCulling;
+extern cvar_t *				r_skipEntityCulling;
+extern cvar_t *				r_skipScissors;
+extern cvar_t *				r_skipSorting;
+extern cvar_t *				r_skipEntities;
+extern cvar_t *				r_skipLights;
+extern cvar_t *				r_skipParticles;
+extern cvar_t *				r_skipDecals;
+extern cvar_t *				r_skipExpressions;
+extern cvar_t *				r_skipConstantExpressions;
+extern cvar_t *				r_skipDeforms;
+extern cvar_t *				r_skipAmbient;
+extern cvar_t *				r_skipBump;
+extern cvar_t *				r_skipDiffuse;
+extern cvar_t *				r_skipSpecular;
+extern cvar_t *				r_skipShadows;
+extern cvar_t *				r_skipInteractions;
+extern cvar_t *				r_skipAmbientLights;
+extern cvar_t *				r_skipBlendLights;
+extern cvar_t *				r_skipFogLights;
+extern cvar_t *				r_skipTranslucent;
+extern cvar_t *				r_skipPostProcess;
+extern cvar_t *				r_skipShaders;
+extern cvar_t *				r_skipCopyToTextures;
+extern cvar_t *				r_skipDynamicTextures;
+extern cvar_t *				r_skipDrawElements;
+extern cvar_t *				r_skipRender;
+extern cvar_t *				r_skipRenderContext;
+extern cvar_t *				r_skipFrontEnd;
+extern cvar_t *				r_skipBackEnd;
+extern cvar_t *				r_glDriver;
+extern cvar_t *				r_mode;
+extern cvar_t *				r_fullscreen;
+extern cvar_t *				r_customWidth;
+extern cvar_t *				r_customHeight;
+extern cvar_t *				r_displayRefresh;
+extern cvar_t *				r_multiSamples;
+extern cvar_t *				r_alphaToCoverage;
+extern cvar_t *				r_swapInterval;
+extern cvar_t *				r_finish;
+extern cvar_t *				r_gamma;
+extern cvar_t *				r_contrast;
+extern cvar_t *				r_brightness;
+extern cvar_t *				r_vertexBuffers;
+extern cvar_t *				r_shaderQuality;
+extern cvar_t *				r_shadows;
+extern cvar_t *				r_playerShadow;
+extern cvar_t *				r_dynamicLights;
+extern cvar_t *				r_modulate;
+extern cvar_t *				r_caustics;
+extern cvar_t *				r_depthClamp;
+extern cvar_t *				r_seamlessCubeMaps;
+extern cvar_t *				r_inGameVideos;
+extern cvar_t *				r_precompressedImages;
+extern cvar_t *				r_roundImagesDown;
+extern cvar_t *				r_mipLevel;
+extern cvar_t *				r_mipLevelBump;
+extern cvar_t *				r_mipLevelDiffuse;
+extern cvar_t *				r_mipLevelSpecular;
+extern cvar_t *				r_maxTextureSize;
+extern cvar_t *				r_compressTextures;
+extern cvar_t *				r_compressNormalTextures;
+extern cvar_t *				r_textureFilter;
+extern cvar_t *				r_textureLODBias;
+extern cvar_t *				r_textureAnisotropy;
+
+void			R_AddAliasModel (renderEntity_t *entity);
+
+void			R_AddEntityShadows ();
+
+bool			R_CullBox (const vec3_t mins, const vec3_t maxs, int clipFlags);
+bool			R_CullSphere (const vec3_t origin, float radius, int clipFlags);
+
+void			R_AdjustHorzCoords (horzAdjust_t adjust, float percent, float xIn, float wIn, float *xOut, float *wOut);
+void			R_AdjustVertCoords (vertAdjust_t adjust, float percent, float yIn, float hIn, float *yOut, float *hOut);
+
+void			R_AdjustHorzCoordsInt (horzAdjust_t adjust, float percent, int xIn, int wIn, int *xOut, int *wOut);
+void			R_AdjustVertCoordsInt (vertAdjust_t adjust, float percent, int yIn, int hIn, int *yOut, int *hOut);
+
+void			R_SetGamma ();
+
+bool			R_GetVideoModeInfo (int mode, int *width, int *height);
+
+bool			R_RenderSubview ();
+
+void			R_RenderView (bool primaryView, int viewType);
+
+void			R_AddRenderViewCommand ();
+
+void			R_RenderShadows ();
+
+void			R_AddInlineModel (renderEntity_t *entity);
+void			R_AddWorldSurfaces ();
 
 /*
  ==============================================================================
@@ -1185,14 +1621,13 @@ void			R_ClearMeshLists ();
 #define MAX_DYNAMIC_VERTICES		(MAX_VERTICES << 3)
 
 typedef enum {
-	FRUSTUM_LEFT,
-	FRUSTUM_RIGHT,
-	FRUSTUM_TOP,
-	FRUSTUM_BOTTOM,
-	FRUSTUM_NEAR,
-	FRUSTUM_USER,
-	NUM_FRUSTUM_PLANES
-} frustum_t;
+	TMU_BUMP,
+	TMU_DIFFUSE,
+	TMU_SPECULAR,
+	TMU_LIGHTPROJECTION,
+	TMU_LIGHTFALLOFF,
+	TMU_LIGHTCUBE
+} tmu_t;
 
 typedef enum {
 	AP_OPAQUE,
@@ -1221,20 +1656,6 @@ typedef struct {
 } commandBuffer_t;
 
 typedef struct {
-	int						x;
-	int						y;
-	int						width;
-	int						height;
-} viewport_t;
-
-typedef struct {
-	int						x;
-	int						y;
-	int						width;
-	int						height;
-} scissor_t;
-
-typedef struct {
 	bool					primaryView;
 	int						viewType;
 
@@ -1251,11 +1672,21 @@ typedef struct {
 
 	int						numMeshes[4];
 	mesh_t *				meshes[4];
+
+	int						numLights[4];
+	light_t *				lights[4];
 } renderViewParms_t;
 
 typedef struct {
 	vec3_t					viewOrigin;
+	mat3_t					viewAxis;
 	mat4_t					viewMatrix;
+
+	vec3_t					lightOrigin;
+	vec3_t					lightDirection;
+	mat3_t					lightAxis;
+	vec4_t					lightPlane;
+	mat4_t					lightMatrix;
 } renderLocalParms_t;
 
 typedef struct {
@@ -1358,6 +1789,64 @@ typedef struct {
 } swapBuffersCommand_t;
 
 typedef struct {
+	uniform_t *				viewOrigin;
+	uniform_t *				lightOrigin;
+	uniform_t *				lightDirection;
+	uniform_t *				lightAxis;
+	uniform_t *				bumpMatrix;
+	uniform_t *				diffuseMatrix;
+	uniform_t *				specularMatrix;
+	uniform_t *				lightMatrix;
+	uniform_t *				colorScaleAndBias;
+	uniform_t *				diffuseColor;
+	uniform_t *				specularColor;
+	uniform_t *				specularParms;
+	uniform_t *				lightColor;
+	uniform_t *				lightPlane;
+} interactionParms_t;
+
+typedef struct {
+	uniform_t *				viewOrigin;
+	uniform_t *				bumpMatrix;
+	uniform_t *				diffuseMatrix;
+	uniform_t *				lightMatrix;
+	uniform_t *				colorScaleAndBias;
+	uniform_t *				diffuseColor;
+	uniform_t *				lightColor;
+} ambientLightParms_t;
+
+typedef struct {
+	uniform_t *				lightMatrix;
+	uniform_t *				lightColor;
+} blendLightParms_t;
+
+typedef struct {
+	uniform_t *				lightMatrix;
+	uniform_t *				lightColor;
+} fogLightParms_t;
+
+typedef struct {
+	vec2_t					colorScaleAndBias;
+
+	vec3_t					diffuseColor;
+	vec3_t					specularColor;
+	vec3_t					lightColor;
+
+	vec2_t					specularParms;
+
+	mat4_t					bumpMatrix;
+	mat4_t					diffuseMatrix;
+	mat4_t					specularMatrix;
+
+	texture_t *				bumpTexture;
+	texture_t *				diffuseTexture;
+	texture_t *				specularTexture;
+	texture_t *				lightProjectionTexture;
+	texture_t *				lightFalloffTexture;
+	texture_t *				lightCubeTexture;
+} interaction_t;
+
+typedef struct {
 	// General state
 	bool					projection2D;
 	color_t					color2D;
@@ -1367,6 +1856,7 @@ typedef struct {
 	float					floatTime;
 
 	viewport_t				viewport;
+	scissor_t				scissor;
 
 	vec2_t					coordScale;
 	vec2_t					coordBias;
@@ -1383,11 +1873,21 @@ typedef struct {
 	// Render commands
 	commandBuffer_t			commandBuffer;
 
+	// Program uniforms
+	interactionParms_t		interactionParms[NUM_INTERACTION_TYPES][4];
+	ambientLightParms_t		ambientLightParms[NUM_AMBIENT_TYPES];
+	blendLightParms_t		blendLightParms;
+	fogLightParms_t			fogLightParms;
+
 	// View parms
 	renderViewParms_t		viewParms;
 
 	// Local parms
 	renderLocalParms_t		localParms;
+
+	// Light state
+	renderLight_t *			light;
+	material_t *			lightMaterial;
 
 	// Batch state
 	material_t *			material;
@@ -1452,16 +1952,27 @@ void			RB_CleanupShaderStage (material_t *material, shaderStage_t *shaderStage);
 // Rendering setup & utilities
 void			RB_EntityState (renderEntity_t *entity);
 
+void			RB_TransformLightForEntity (renderLight_t *light, renderEntity_t *entity);
+
+void			RB_ComputeLightMatrix (renderLight_t *light, renderEntity_t *entity, material_t *material, textureStage_t *textureStage);
+
 void			RB_DrawElements ();
+void			RB_DrawElementsWithCounters (int *totalIndices, int *totalVertices);
+void			RB_DrawElementsStaticIndices (int numVertices, int numIndices, const void *indices);
 
 // Generic rendering
 void			RB_FillDepthBuffer (int numMeshes, mesh_t *meshes);
 
 void			RB_RenderMaterialPasses (int numMeshes, mesh_t *meshes, ambientPass_t pass);
 
-void			RB_RenderShadows (int numMeshes, mesh_t *meshes);
+void			RB_RenderLights (int numLights, light_t *lights);
+void			RB_RenderBlendLights (int numLights, light_t *lights);
+void			RB_RenderFogLights (int numLights, light_t *lights);
 
 void			RB_DrawMaterial2D ();
+
+// Interaction rendering
+void			RB_DrawInteraction (interaction_t *i);
 
 // Debug tools rendering
 void			RB_RenderDebugTools ();
@@ -1472,374 +1983,6 @@ void			RB_ExecuteRenderCommands (const void *data);
 
 void			RB_InitBackEnd ();
 void			RB_ShutdownBackEnd ();
-
-/*
- ==============================================================================
-
- DRAW LIGHTS
-
- ==============================================================================
-*/
-
-void			R_AllocDrawLights ();
-void			R_GenerateDrawLights ();
-void			R_ClearDrawLights ();
-
-/*
- ==============================================================================
-
- FRONT-END
-
- ==============================================================================
-*/
-
-#define MAX_RENDER_CROPS			8
-
-#define MAX_LIGHTMAPS				128
-
-typedef enum {
-	ASPECT_NORMAL,
-	ASPECT_WIDE,
-	ASPECT_HIGH
-} aspectRatio_t;
-
-typedef struct {
-	bool					primaryView;
-	int						viewType;
-
-	viewport_t				viewport;
-	scissor_t				scissor;
-
-	float					fovX;
-	float					fovY;
-	float					fovScale;
-
-	cplane_t				frustum[4];
-
-	vec3_t					worldMins;
-	vec3_t					worldMaxs;
-
-	mat4_t					projectionMatrix;
-	mat4_t					modelviewMatrix;
-	mat4_t					modelviewProjectionMatrix;
-	mat4_t					skyBoxMatrix;
-
-	// Mesh data
-	int						numMeshes[4];
-	mesh_t *				meshes[4];
-
-	// Scene render lists
-	renderEntity_t *		renderEntities;
-	int						numRenderEntities;
-
-	renderLight_t *			renderLights;
-	int						numRenderLights;
-
-	renderParticle_t *		renderParticles;
-	int						numRenderParticles;
-} viewParms_t;
-
-typedef struct {
-	int 					x;
-	int 					y;
-	int 					width;
-	int						height;
-} cropRect_t;
-
-typedef struct {
-	int						width;
-	int						height;
-
-	cropRect_t				rect;
-
-	float					xScale;
-	float					yScale;
-
-	aspectRatio_t			aspectRatio;
-	float					aspectScale;
-	float					aspectBias;
-} renderCrop_t;
-
-typedef struct {
-	renderEntity_t			entities[MAX_RENDER_ENTITIES];
-	int						numEntities;
-	int						firstEntity;
-
-	renderLight_t			lights[MAX_RENDER_LIGHTS];
-	int						numLights;
-	int						firstLight;
-
-	renderParticle_t		particles[MAX_RENDER_PARTICLES];
-	int						numParticles;
-	int						firstParticle;
-} scene_t;
-
-typedef struct {
-	int						numEntities;
-	int						firstEntity;
-
-	int						numLights;
-	int						firstLight;
-
-	int						numParticles;
-	int						firstParticle;
-
-	renderView_t			renderView;
-} primaryView_t;
-
-typedef struct {
-	int						cullBoundsIn;
-	int						cullBoundsOut;
-	int						cullSphereIn;
-	int						cullSphereOut;
-
-	int						entities;
-	int						lights;
-	int						particles;
-	int						decals;
-
-	int						leafs;
-
-	int						meshes;
-
-	int						dynamicLights;
-
-	int						deformIndices;
-	int						deformVertices;
-	int						deformExpand;
-	int						deformMove;
-	int						deformSprite;
-	int						deformTube;
-	int						deformBeam;
-
-	int						views;
-	int						draws;
-	int						totalIndices;
-	int						totalVertices;
-
-	int						vertexBuffers[2];
-	int						vertexBufferBytes[2];
-
-	int						textures;
-	int						textureBytes;
-
-	int						captureTextures;
-	int						captureTexturePixels;
-	int						updateTextures;
-	int						updateTexturePixels;
-} performanceCounters_t;
-
-typedef struct {
-	int						time;
-
-	// Frame counters
-	int						frameCount;
-	int						viewCount;
-	int						visCount;
-	int						fragmentCount;
-
-	// View cluster and area
-	int						viewCluster, viewCluster2;
-	int						oldViewCluster, oldViewCluster2;
-
-	// Light styles
-	lightStyle_t			lightStyles[MAX_LIGHTSTYLES];
-
-	// Current view parms
-	viewParms_t				viewParms;
-
-	// Current render view
-	renderView_t			renderView;
-
-	// Meshes
-	int						numMeshes[4];
-	int						maxMeshes[4];
-	int						firstMesh[4];
-	mesh_t *				meshes[4];
-
-	// Scene
-	scene_t					scene;
-
-	// Render crops
-	renderCrop_t			renderCrops[MAX_RENDER_CROPS];
-	int						currentRenderCrop;
-
-	// World map
-	model_t *				worldModel;
-	renderEntity_t *		worldEntity;
-
-	// Environment shot rendering
-	bool					envShotRendering;
-	int						envShotSize;
-
-	// Copy of the primary view needed by some functions
-	bool					primaryViewAvailable;
-	primaryView_t			primaryView;
-
-	// Development tools
-	texture_t *				testTexture;
-
-	// Performance counters
-	performanceCounters_t	pc;
-
-	// Internal assets
-	texture_t *				defaultTexture;
-	texture_t *				whiteTexture;
-	texture_t *				blackTexture;
-	texture_t *				flatTexture;
-	texture_t *				attenuationTexture;
-	texture_t *				noAttenuationTexture;
-	texture_t *				falloffTexture;
-	texture_t *				noFalloffTexture;
-	texture_t *				cubicFilterTexture;
-	texture_t *				fogTexture;
-	texture_t *				fogEnterTexture;
-	texture_t *				cinematicTextures[MAX_CINEMATICS];
-	texture_t *				skyTexture;
-	texture_t *				mirrorTexture;
-	texture_t *				remoteTexture;
-	texture_t *				currentColorTexture;
-	texture_t *				currentDepthTexture;
-
-	material_t *			defaultMaterial;
-	material_t *			defaultLightMaterial;
-	material_t *			defaultProjectedLightMaterial;
-	material_t *			noDrawMaterial;
-	material_t *			waterCausticsMaterial;
-	material_t *			slimeCausticsMaterial;
-	material_t *			lavaCausticsMaterial;
-
-	font_t *				defaultFont;
-
-	model_t *				defaultModel;
-
-	// Tables
-	byte					gammaTable[256];
-} reGlobals_t;
-
-extern reGlobals_t			rg;
-
-extern glConfig_t			glConfig;
-
-extern cvar_t *				r_logFile;
-extern cvar_t *				r_ignoreGLErrors;
-extern cvar_t *				r_clear;
-extern cvar_t *				r_clearColor;
-extern cvar_t *				r_frontBuffer;
-extern cvar_t *				r_screenFraction;
-extern cvar_t *				r_subviewOnly;
-extern cvar_t *				r_lockVisibility;
-extern cvar_t *				r_zNear;
-extern cvar_t *				r_zFar;
-extern cvar_t *				r_offsetFactor;
-extern cvar_t *				r_offsetUnits;
-extern cvar_t *				r_forceImagePrograms;
-extern cvar_t *				r_writeImagePrograms;
-extern cvar_t *				r_colorMipLevels;
-extern cvar_t *				r_singleMaterial;
-extern cvar_t *				r_singleEntity;
-extern cvar_t *				r_showCluster;
-extern cvar_t *				r_showCull;
-extern cvar_t *				r_showScene;
-extern cvar_t *				r_showDeforms;
-extern cvar_t *				r_showTextureUsage;
-extern cvar_t *				r_showTextures;
-extern cvar_t *				r_showDepth;
-extern cvar_t *				r_showVertexColors;
-extern cvar_t *				r_showTextureCoords;
-extern cvar_t *				r_showTangentSpace;
-extern cvar_t *				r_showTris;
-extern cvar_t *				r_showNormals;
-extern cvar_t *				r_showTextureVectors;
-extern cvar_t *				r_showBatchSize;
-extern cvar_t *				r_showModelBounds;
-extern cvar_t *				r_skipLightning;
-extern cvar_t *				r_skipVisibility;
-extern cvar_t *				r_skipCulling;
-extern cvar_t *				r_skipEntityCulling;
-extern cvar_t *				r_skipScissors;
-extern cvar_t *				r_skipSorting;
-extern cvar_t *				r_skipEntities;
-extern cvar_t *				r_skipParticles;
-extern cvar_t *				r_skipDecals;
-extern cvar_t *				r_skipExpressions;
-extern cvar_t *				r_skipConstantExpressions;
-extern cvar_t *				r_skipDeforms;
-extern cvar_t *				r_skipAmbient;
-extern cvar_t *				r_skipShadows;
-extern cvar_t *				r_skipTranslucent;
-extern cvar_t *				r_skipPostProcess;
-extern cvar_t *				r_skipShaders;
-extern cvar_t *				r_skipCopyToTextures;
-extern cvar_t *				r_skipDynamicTextures;
-extern cvar_t *				r_skipDrawElements;
-extern cvar_t *				r_skipRender;
-extern cvar_t *				r_skipRenderContext;
-extern cvar_t *				r_skipFrontEnd;
-extern cvar_t *				r_skipBackEnd;
-extern cvar_t *				r_glDriver;
-extern cvar_t *				r_mode;
-extern cvar_t *				r_fullscreen;
-extern cvar_t *				r_customWidth;
-extern cvar_t *				r_customHeight;
-extern cvar_t *				r_displayRefresh;
-extern cvar_t *				r_multiSamples;
-extern cvar_t *				r_alphaToCoverage;
-extern cvar_t *				r_swapInterval;
-extern cvar_t *				r_finish;
-extern cvar_t *				r_gamma;
-extern cvar_t *				r_contrast;
-extern cvar_t *				r_brightness;
-extern cvar_t *				r_vertexBuffers;
-extern cvar_t *				r_shaderQuality;
-extern cvar_t *				r_shadows;
-extern cvar_t *				r_playerShadow;
-extern cvar_t *				r_dynamicLights;
-extern cvar_t *				r_modulate;
-extern cvar_t *				r_caustics;
-extern cvar_t *				r_depthClamp;
-extern cvar_t *				r_seamlessCubeMaps;
-extern cvar_t *				r_inGameVideos;
-extern cvar_t *				r_precompressedImages;
-extern cvar_t *				r_roundImagesDown;
-extern cvar_t *				r_mipLevel;
-extern cvar_t *				r_mipLevelBump;
-extern cvar_t *				r_mipLevelDiffuse;
-extern cvar_t *				r_mipLevelSpecular;
-extern cvar_t *				r_maxTextureSize;
-extern cvar_t *				r_compressTextures;
-extern cvar_t *				r_compressNormalTextures;
-extern cvar_t *				r_textureFilter;
-extern cvar_t *				r_textureLODBias;
-extern cvar_t *				r_textureAnisotropy;
-
-void			R_AddAliasModel (renderEntity_t *entity);
-
-void			R_AddEntityShadows ();
-
-bool			R_CullBox (const vec3_t mins, const vec3_t maxs, int clipFlags);
-bool			R_CullSphere (const vec3_t origin, float radius, int clipFlags);
-
-void			R_AdjustHorzCoords (horzAdjust_t adjust, float percent, float xIn, float wIn, float *xOut, float *wOut);
-void			R_AdjustVertCoords (vertAdjust_t adjust, float percent, float yIn, float hIn, float *yOut, float *hOut);
-
-void			R_AdjustHorzCoordsInt (horzAdjust_t adjust, float percent, int xIn, int wIn, int *xOut, int *wOut);
-void			R_AdjustVertCoordsInt (vertAdjust_t adjust, float percent, int yIn, int hIn, int *yOut, int *hOut);
-
-void			R_SetGamma ();
-
-bool			R_GetVideoModeInfo (int mode, int *width, int *height);
-
-bool			R_RenderSubview ();
-
-void			R_RenderView (bool primaryView, int viewType);
-
-void			R_AddRenderViewCommand ();
-
-void			R_RenderShadows ();
-
-void			R_AddInlineModel (renderEntity_t *entity);
-void			R_AddWorldSurfaces ();
 
 /*
  ==============================================================================

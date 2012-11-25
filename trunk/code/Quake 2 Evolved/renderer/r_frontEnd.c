@@ -660,8 +660,9 @@ void R_RenderView (bool primaryView, int viewType){
 	R_SetupFrustum();
 	R_SetupMatrices();
 
-	// Generate mesh lists
+	// Generate mesh and light lists
 	R_GenerateMeshes();
+	R_GenerateLights();
 
 	// Render a subview if needed
 	if (R_RenderSubview()){

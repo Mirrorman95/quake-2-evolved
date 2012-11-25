@@ -428,9 +428,269 @@ static void RB_DrawShadow (){
  
  ==================
 */
-void RB_RenderShadows (int numMeshes, mesh_t *meshes){
+static void RB_RenderStencilShadows (int numMeshes, mesh_t *meshes){
 
 	if (!numMeshes)
+		return;
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_DrawInteractions (){
+
+}
+
+/*
+ ==================
+ RB_InteractionPass
+ ==================
+*/
+static void RB_InteractionPass (int numMeshes, mesh_t *meshes){
+
+	mesh_t	*mesh;
+	uint	sort;
+	bool	skip;
+	int		i;
+
+	if (!numMeshes)
+		return;
+
+	QGL_LogPrintf("---------- RB_InteractionPass ----------\n");
+
+	// Set the GL state
+	GL_PolygonMode(GL_FILL);
+
+	GL_Enable(GL_BLEND);
+	GL_BlendFunc(GL_ONE, GL_ONE);
+	GL_BlendEquation(GL_FUNC_ADD);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Enable(GL_DEPTH_TEST);
+
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	// Enable the arrays
+	qglEnableVertexAttribArray(GL_ATTRIB_NORMAL);
+	qglEnableVertexAttribArray(GL_ATTRIB_TANGENT1);
+	qglEnableVertexAttribArray(GL_ATTRIB_TANGENT2);
+	qglEnableVertexAttribArray(GL_ATTRIB_TEXCOORD);
+	qglEnableVertexAttribArray(GL_ATTRIB_COLOR);
+
+	// Clear the batch state
+	backEnd.entity = NULL;
+	backEnd.material = NULL;
+
+	sort = 0;
+
+	// Run through meshes
+	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
+		// Check if the state changed
+		if (mesh->sort != sort){
+			sort = mesh->sort;
+
+			// Draw the last batch
+			RB_RenderBatch();
+
+			// Development tool
+			if (r_skipTranslucent->integerValue && mesh->material->coverage == MC_TRANSLUCENT){
+				skip = true;
+				continue;
+			}
+
+			// Evaluate registers if needed
+			if (mesh->entity != backEnd.entity || mesh->material != backEnd.material)
+				RB_EvaluateRegisters(mesh->material, backEnd.floatTime, mesh->entity->materialParms);
+
+			// Skip if condition evaluated to false
+			if (!mesh->material->expressionRegisters[mesh->material->conditionRegister]){
+				skip = true;
+				continue;
+			}
+
+			// Set the entity state if needed
+			if (mesh->entity != backEnd.entity){
+				RB_EntityState(mesh->entity);
+
+				// Transform the light for this entity
+				RB_TransformLightForEntity(backEnd.light, mesh->entity);
+			}
+
+			// Set the GL state
+			if (mesh->material->coverage != MC_TRANSLUCENT)
+				GL_DepthFunc(GL_EQUAL);
+			else
+				GL_DepthFunc(GL_LEQUAL);
+
+			// Create a new batch
+			RB_SetupBatch(mesh->entity, mesh->material, RB_DrawInteractions);
+
+			skip = false;
+		}
+
+		if (skip)
+			continue;
+
+		// Batch the surface geometry
+		RB_BatchGeometry(mesh->type, mesh->data);
+	}
+
+	// Draw the last batch
+	RB_RenderBatch();
+
+	// Restore the GL state
+	GL_SelectTexture(0);
+
+	// Unbind the program
+	GL_BindProgram(NULL);
+
+	// Disable the arrays
+	qglDisableVertexAttribArray(GL_ATTRIB_COLOR);
+	qglDisableVertexAttribArray(GL_ATTRIB_TEXCOORD);
+	qglDisableVertexAttribArray(GL_ATTRIB_TANGENT2);
+	qglDisableVertexAttribArray(GL_ATTRIB_TANGENT1);
+	qglDisableVertexAttribArray(GL_ATTRIB_NORMAL);
+
+	QGL_LogPrintf("--------------------\n");
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void RB_RenderLights (int numLights, light_t *lights){
+
+	if (!numLights)
+		return;
+}
+
+
+/*
+ ==============================================================================
+
+ BLEND LIGHT INTERACTION RENDERING
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_DrawBlendLight (){
+
+}
+
+/*
+ ==================
+ RB_BlendLightPass
+ ==================
+*/
+static void RB_BlendLightPass (int numMeshes, mesh_t *meshes){
+
+	mesh_t	*mesh;
+	uint	sort;
+	bool	skip;
+	int		i;
+
+	if (!numMeshes)
+		return;
+
+	QGL_LogPrintf("---------- RB_BlendLightPass ----------\n");
+
+	// Set the GL state
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Enable(GL_DEPTH_TEST);
+	GL_DepthFunc(GL_EQUAL);
+
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	// Bind the program
+	GL_BindProgram(rg.blendLightProgram);
+
+	// Clear the batch state
+	backEnd.entity = NULL;
+	backEnd.material = NULL;
+
+	sort = 0;
+
+	// Run through meshes
+	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
+		// Check if the state changed
+		if (mesh->sort != sort){
+			sort = mesh->sort;
+
+			// Draw the last batch
+			RB_RenderBatch();
+
+			// Evaluate registers if needed
+			if (mesh->entity != backEnd.entity || mesh->material != backEnd.material)
+				RB_EvaluateRegisters(mesh->material, backEnd.floatTime, mesh->entity->materialParms);
+
+			// Skip if condition evaluated to false
+			if (!mesh->material->expressionRegisters[mesh->material->conditionRegister]){
+				skip = true;
+				continue;
+			}
+
+			// Set the entity state if needed
+			if (mesh->entity != backEnd.entity){
+				RB_EntityState(mesh->entity);
+
+				// Transform the light for this entity
+				RB_TransformLightForEntity(backEnd.light, mesh->entity);
+			}
+
+			// Create a new batch
+			RB_SetupBatch(mesh->entity, mesh->material, RB_DrawBlendLight);
+
+			skip = false;
+		}
+
+		if (skip)
+			continue;
+
+		// Batch the surface geometry
+		RB_BatchGeometry(mesh->type, mesh->data);
+	}
+
+	// Draw the last batch
+	RB_RenderBatch();
+
+	// Restore the GL state
+	GL_SelectTexture(0);
+
+	// Unbind the program
+	GL_BindProgram(NULL);
+
+	QGL_LogPrintf("--------------------\n");
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void RB_RenderBlendLights (int numLights, light_t *lights){
+
+	if (!numLights)
 		return;
 }
 
@@ -442,6 +702,141 @@ void RB_RenderShadows (int numMeshes, mesh_t *meshes){
 
  ==============================================================================
 */
+
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_DrawFogLight (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_DrawFogLightPlane (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_DrawFogLightVolume (){
+
+}
+
+/*
+ ==================
+ RB_FogLightPass
+ ==================
+*/
+static void RB_FogLightPass (int numMeshes, mesh_t *meshes){
+
+	mesh_t	*mesh;
+	uint	sort;
+	bool	skip;
+	int		i;
+
+	if (!numMeshes)
+		return;
+
+	QGL_LogPrintf("---------- RB_FogLightPass ----------\n");
+
+	// Set the GL state
+	GL_PolygonMode(GL_FILL);
+
+	GL_Enable(GL_BLEND);
+	GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GL_BlendEquation(GL_FUNC_ADD);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Enable(GL_DEPTH_TEST);
+	GL_DepthFunc(GL_EQUAL);
+
+	GL_Enable(GL_STENCIL_TEST);
+	GL_StencilFunc(GL_LESS, 128, 255);
+	GL_StencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	// Bind the program
+	GL_BindProgram(rg.fogLightProgram);
+
+	// Clear the batch state
+	backEnd.entity = NULL;
+	backEnd.material = NULL;
+
+	sort = 0;
+
+	// Run through meshes
+	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
+		// Check if the state changed
+		if (mesh->sort != sort){
+			sort = mesh->sort;
+
+			// Draw the last batch
+			RB_RenderBatch();
+
+			// Evaluate registers if needed
+			if (mesh->entity != backEnd.entity || mesh->material != backEnd.material)
+				RB_EvaluateRegisters(mesh->material, backEnd.floatTime, mesh->entity->materialParms);
+
+			// Skip if condition evaluated to false
+			if (!mesh->material->expressionRegisters[mesh->material->conditionRegister]){
+				skip = true;
+				continue;
+			}
+
+			// Set the entity state if needed
+			if (mesh->entity != backEnd.entity){
+				RB_EntityState(mesh->entity);
+
+				// Transform the light for this entity
+				RB_TransformLightForEntity(backEnd.light, mesh->entity);
+			}
+
+			// Create a new batch
+			RB_SetupBatch(mesh->entity, mesh->material, RB_DrawFogLight);
+
+			skip = false;
+		}
+
+		if (skip)
+			continue;
+
+		// Batch the surface geometry
+		RB_BatchGeometry(mesh->type, mesh->data);
+	}
+
+	// Draw the last batch
+	RB_RenderBatch();
+
+	// Restore the GL state
+	GL_SelectTexture(0);
+
+	// Unbind the program
+	GL_BindProgram(NULL);
+
+	QGL_LogPrintf("--------------------\n");
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void RB_RenderFogLights (int numLights, light_t *lights){
+
+}
 
 
 /*

@@ -463,10 +463,10 @@ void R_GenerateMeshes (){
 
 /*
  ==================
- R_ClearMeshLists
+ R_ClearMeshes
  ==================
 */
-void R_ClearMeshLists (){
+void R_ClearMeshes (){
 
 	rg.numMeshes[0] = rg.firstMesh[0] = 0;
 	rg.numMeshes[1] = rg.firstMesh[1] = 0;

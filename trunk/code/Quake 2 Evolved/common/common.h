@@ -47,6 +47,7 @@
 #include "table.h"
 #include "parser.h"
 #include "system.h"
+#include "editor.h"
 
 #include "../collision/cm_public.h"
 

@@ -393,7 +393,7 @@ static void SG_DebugGraph (float value, int color){
  numbers
  ==================
 */
-static void SG_ClearedAlloc (int size, int tag){
+static void *SG_ClearedAlloc (int size, int tag){
 
 	if (tag == 765 || tag == 766)
 		tag = TAG_SERVER;
@@ -433,7 +433,7 @@ static void SG_FreeAll (int tag){
  ==================
  SG_SetupFramework
 
- TODO: Fix the errors and clean the loading formation?
+ TODO: Fix the errors and clean the pointer loading order?
  ==================
 */
 static void SG_SetupFramework (){
@@ -509,7 +509,7 @@ void SG_Init (){
 	SG_SetupFramework();
 
 	// Extract the game module from a pack file
-	if (!FS_ExtractLibrary("q2e_game", path)){
+	if (!sv_loadGame->integerValue && !FS_ExtractLibrary("q2e_game", path)){
 		if (!FS_ExtractLibrary("game", path))
 			Com_Error(ERR_FATAL, "Could not extract server game module");
 	}

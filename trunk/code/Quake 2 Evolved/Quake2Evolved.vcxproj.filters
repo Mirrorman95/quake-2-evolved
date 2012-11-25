@@ -73,6 +73,21 @@
     <Filter Include="Header Files\collision">
       <UniqueIdentifier>{fa0550aa-ba80-4544-8937-36d977c4e56b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\renderer\shaders">
+      <UniqueIdentifier>{5182faa1-31fa-499d-a294-e5dbe4b1d37d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\renderer\shaders\ambientLight">
+      <UniqueIdentifier>{865ff995-c388-4241-892e-847bda74c181}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\renderer\shaders\fogLight">
+      <UniqueIdentifier>{56352b76-f2ea-4432-a7d3-258b6eca2ddd}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\renderer\shaders\blendLight">
+      <UniqueIdentifier>{e1b14d02-feed-4922-8956-8ad4773f014d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\renderer\shaders\interaction">
+      <UniqueIdentifier>{c3c1d536-c15b-4351-9f51-6396dfc6af57}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="client\cinematic.h">
@@ -194,6 +209,9 @@
     </ClInclude>
     <ClInclude Include="renderer\refresh.h">
       <Filter>Header Files\renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="common\editor.h">
+      <Filter>Header Files\common</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -563,10 +581,55 @@
     <ClCompile Include="windows\win_editor.c">
       <Filter>Source Files\windows</Filter>
     </ClCompile>
+    <ClCompile Include="renderer\r_renderInteraction.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="windows\q2.ico">
       <Filter>Resource Files</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\ambientLight\generic.fs">
+      <Filter>Source Files\renderer\shaders\ambientLight</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\ambientLight\generic.vs">
+      <Filter>Source Files\renderer\shaders\ambientLight</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\fogLight\generic.fs">
+      <Filter>Source Files\renderer\shaders\fogLight</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\fogLight\generic.vs">
+      <Filter>Source Files\renderer\shaders\fogLight</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\blendLight\generic.fs">
+      <Filter>Source Files\renderer\shaders\blendLight</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\blendLight\generic.vs">
+      <Filter>Source Files\renderer\shaders\blendLight</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\interaction\cubicGeneric.fs">
+      <Filter>Source Files\renderer\shaders\interaction</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\interaction\cubicGeneric.vs">
+      <Filter>Source Files\renderer\shaders\interaction</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\interaction\directionalGeneric.fs">
+      <Filter>Source Files\renderer\shaders\interaction</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\interaction\directionalGeneric.vs">
+      <Filter>Source Files\renderer\shaders\interaction</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\interaction\pointGeneric.fs">
+      <Filter>Source Files\renderer\shaders\interaction</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\interaction\pointGeneric.vs">
+      <Filter>Source Files\renderer\shaders\interaction</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\interaction\projectedGeneric.fs">
+      <Filter>Source Files\renderer\shaders\interaction</Filter>
+    </None>
+    <None Include="..\..\baseq2\shaders\interaction\projectedGeneric.vs">
+      <Filter>Source Files\renderer\shaders\interaction</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>

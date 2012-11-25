@@ -337,6 +337,9 @@ typedef struct {
 // Loads and prepares the given map for rendering
 void			R_LoadMap (const char *name, const char *skyName, float skyRotate, const vec3_t skyAxis);
 
+// Loads and prepares lights for the given map
+void			R_LoadLights (const char *name);
+
 // Loads and registers the given model
 model_t *		R_RegisterModel (const char *name);
 

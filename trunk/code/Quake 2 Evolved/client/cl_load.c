@@ -26,6 +26,7 @@
 //
 
 // TODO:
+// - rewrite most of the mess
 // - Replace Com_StripExtension
 
 
@@ -76,7 +77,7 @@ static void CL_RegisterCollisionMap (){
 
 	CL_UpdateLoading("COLLISION MAP");
 
-	CM_LoadMap(cl.configStrings[CS_MODELS+1], true, &checkCount);
+	CM_LoadMap(cl.configStrings[CS_MODELS + 1], true, &checkCount);
 
 	if (checkCount != Str_ToInteger(cl.configStrings[CS_MAPCHECKSUM]))
 		Com_Error(ERR_DROP, "Local map version differs from server: %i != %s", checkCount, cl.configStrings[CS_MAPCHECKSUM]);
@@ -496,7 +497,7 @@ void CL_LoadGameMedia (){
 	CL_ClearParticles();
 
 	// Get map name
-	Com_StripExtension(cl.configStrings[CS_MODELS+1] + 5, cls.loadingInfo.map, sizeof(cls.loadingInfo.map));
+	Com_StripExtension(cl.configStrings[CS_MODELS + 1] + 5, cls.loadingInfo.map, sizeof(cls.loadingInfo.map));
 	Str_Copy(cls.loadingInfo.name, cl.configStrings[CS_NAME], sizeof(cls.loadingInfo.name));
 
 	// Check if a levelshot for this map exists
@@ -533,7 +534,7 @@ void CL_LoadGameMedia (){
 	CL_UpdateLoading("");
 
 	// Touch all the memory used for this level
-//	Mem_TouchMemory();
+	Mem_TouchMemory();
 
 	// Force menu and console off
 	UI_SetActiveMenu(UI_CLOSEMENU);
