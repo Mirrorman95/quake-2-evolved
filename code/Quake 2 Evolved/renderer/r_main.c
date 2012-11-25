@@ -26,6 +26,7 @@
 //
 
 // TODO:
+// - something has happend with map loading, game some how removes the full map name
 // - Real-time per-pixel lightning with volumeric stencil shadows
 //	 - requiers shaders
 //	 - a rewritten light system
@@ -33,6 +34,9 @@
 //   - needs some changes in the client for lights
 //	 - needs some rendering passes
 //	 - needs editor stuff
+//	 - needs some new qgl functions and RB_DrawElement changes
+//	 - how should we load static lights?
+//	   - parse light files on the client and precache them in cl_load, then send them to the renderer
 
 
 #include "r_local.h"
@@ -100,6 +104,7 @@ cvar_t *					r_writeImagePrograms;
 cvar_t *					r_colorMipLevels;
 cvar_t *					r_singleMaterial;
 cvar_t *					r_singleEntity;
+cvar_t *					r_singleLight;
 cvar_t *					r_showCluster;
 cvar_t *					r_showCull;
 cvar_t *					r_showScene;
@@ -115,20 +120,27 @@ cvar_t *					r_showNormals;
 cvar_t *					r_showTextureVectors;
 cvar_t *					r_showBatchSize;
 cvar_t *					r_showModelBounds;
-cvar_t *					r_skipLightning;	// TODO: remove?
 cvar_t *					r_skipVisibility;
 cvar_t *					r_skipCulling;
 cvar_t *					r_skipEntityCulling;
 cvar_t *					r_skipScissors;
 cvar_t *					r_skipSorting;
 cvar_t *					r_skipEntities;
+cvar_t *					r_skipLights;
 cvar_t *					r_skipParticles;
 cvar_t *					r_skipDecals;
 cvar_t *					r_skipExpressions;
 cvar_t *					r_skipConstantExpressions;
 cvar_t *					r_skipDeforms;
 cvar_t *					r_skipAmbient;
+cvar_t *					r_skipBump;
+cvar_t *					r_skipDiffuse;
+cvar_t *					r_skipSpecular;
 cvar_t *					r_skipShadows;
+cvar_t *					r_skipInteractions;
+cvar_t *					r_skipAmbientLights;
+cvar_t *					r_skipBlendLights;
+cvar_t *					r_skipFogLights;
 cvar_t *					r_skipTranslucent;
 cvar_t *					r_skipPostProcess;
 cvar_t *					r_skipShaders;
@@ -473,6 +485,7 @@ static void R_Register (){
 	r_colorMipLevels = CVar_Register("r_colorMipLevels", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_LATCH, "Color mip levels for testing mipmap usage", 0, 0);
 	r_singleMaterial = CVar_Register("r_singleMaterial", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_LATCH, "Use a single default material on every surface", 0, 0);
 	r_singleEntity = CVar_Register("r_singleEntity", "-1", CVAR_INTEGER, CVAR_CHEAT, "Only draw the specified entity", -1, MAX_RENDER_ENTITIES - 1);
+	r_singleLight = CVar_Register("r_singleLight", "-1", CVAR_INTEGER, CVAR_CHEAT, "Only draw the specified light", -1, MAX_RENDER_LIGHTS - 1);
 	r_showCluster = CVar_Register("r_showCluster", "0", CVAR_BOOL, CVAR_CHEAT, "Show the current view cluster", 0, 0);
 	r_showCull = CVar_Register("r_showCull", "0", CVAR_BOOL, CVAR_CHEAT, "Show culling statistics", 0, 0);
 	r_showScene = CVar_Register("r_showScene", "0", CVAR_BOOL, CVAR_CHEAT, "Show number of entities, lights, particles, and decals in view", 0, 0);
@@ -488,20 +501,27 @@ static void R_Register (){
 	r_showTextureVectors = CVar_Register("r_showTextureVectors", "0.0", CVAR_FLOAT, CVAR_CHEAT, "Draw texture (tangent) vectors", 0.0f, 10.0f);
 	r_showBatchSize = CVar_Register("r_showBatchSize", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw triangles colored by batch size (1 = draw visible ones, 2 = draw everything through walls)", 0, 2);
 	r_showModelBounds = CVar_Register("r_showModelBounds", "0", CVAR_BOOL, CVAR_CHEAT, "Draw model bounds", 0, 0);
-	r_skipLightning = CVar_Register("r_skipLightning", "0", CVAR_BOOL, CVAR_CHEAT, "Skip loading lightning", 0, 0);
 	r_skipVisibility = CVar_Register("r_skipVisibility", "0", CVAR_BOOL, CVAR_CHEAT, "Skip visibility determination tests", 0, 0);
 	r_skipCulling = CVar_Register("r_skipCulling", "0", CVAR_BOOL, CVAR_CHEAT, "Skip culling", 0, 0);
 	r_skipEntityCulling = CVar_Register("r_skipEntityCulling", "0", CVAR_BOOL, CVAR_CHEAT, "Skip entity culling", 0, 0);
 	r_skipScissors = CVar_Register("r_skipScissors", "0", CVAR_BOOL, CVAR_CHEAT, "Skip scissor testing", 0, 0);
 	r_skipSorting = CVar_Register("r_skipSorting", "0", CVAR_BOOL, CVAR_CHEAT, "Skip surface sorting", 0, 0);
 	r_skipEntities = CVar_Register("r_skipEntities", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering entities", 0, 0);
+	r_skipLights = CVar_Register("r_skipLights", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering lights", 0, 0);
 	r_skipParticles = CVar_Register("r_skipParticles", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering particles", 0, 0);
 	r_skipDecals = CVar_Register("r_skipDecals", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering decals", 0, 0);
 	r_skipExpressions = CVar_Register("r_skipExpressions", "0", CVAR_BOOL, CVAR_CHEAT, "Skip expression evaluation in materials, making everything static", 0, 0);
 	r_skipConstantExpressions = CVar_Register("r_skipConstantExpressions", "0", CVAR_BOOL, CVAR_CHEAT, "Skip constant expressions in materials, re-evaluating everything each frame", 0, 0);	
 	r_skipDeforms = CVar_Register("r_skipDeforms", "0", CVAR_BOOL, CVAR_CHEAT, "Skip material deforms", 0, 0);
 	r_skipAmbient = CVar_Register("r_skipAmbient", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering ambient stages", 0, 0);
+	r_skipBump = CVar_Register("r_skipBump", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering bump stages", 0, 0);
+	r_skipDiffuse = CVar_Register("r_skipDiffuse", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering diffuse stages", 0, 0);
+	r_skipSpecular = CVar_Register("r_skipSpecular", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering specular stages", 0, 0);	
 	r_skipShadows = CVar_Register("r_skipShadows", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering shadows", 0, 0);
+	r_skipInteractions = CVar_Register("r_skipInteractions", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering light-surface interactions", 0, 0);
+	r_skipAmbientLights = CVar_Register("r_skipAmbientLights", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering ambient lights", 0, 0);
+	r_skipBlendLights = CVar_Register("r_skipBlendLights", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering blend lights", 0, 0);
+	r_skipFogLights = CVar_Register("r_skipFogLights", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering fog lights", 0, 0);	
 	r_skipTranslucent = CVar_Register("r_skipTranslucent", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering translucent materials", 0, 0);
 	r_skipPostProcess = CVar_Register("r_skipPostProcess", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering post-process materials", 0, 0);	
 	r_skipShaders = CVar_Register("r_skipShaders", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering custom shaders", 0, 0);
@@ -601,8 +621,9 @@ void R_Init (bool all){
 	// Build gamma table and set device gamma ramp
 	R_SetGamma();
 
-	// Allocate mesehes
+	// Allocate mesh and light lists
 	R_AllocMeshes();
+	R_AllocLights();
 
 	// Initialize all the renderer modules
 	R_InitImages();
@@ -613,6 +634,7 @@ void R_Init (bool all){
 	R_InitFonts();
 	R_InitArrayBuffers();
 	R_InitModels();
+	R_InitLights();
 
 	RB_InitBackEnd();
 
@@ -635,6 +657,7 @@ void R_Shutdown (bool all){
 	// Shutdown all the renderer modules
 	RB_ShutdownBackEnd();
 
+	R_ShutdownLights();
 	R_ShutdownModels();
 	R_ShutdownArrayBuffers();
 	R_ShutdownFonts();

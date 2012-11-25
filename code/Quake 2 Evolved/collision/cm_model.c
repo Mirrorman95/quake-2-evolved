@@ -411,23 +411,23 @@ static void CM_LoadEntityString (const byte *data, const bspLump_t *lump){
  
  ==================
 */
-clipInlineModel_t *CM_LoadMap (const char *map, bool clientLoad, uint *checkCount){
+clipInlineModel_t *CM_LoadMap (const char *name, bool clientLoad, uint *checkCount){
 
 	bspHeader_t	*header;
 	byte		*data;
 	int			i, length;
 
 	// Cinematic servers won't have anything at all
-	if (!map){
+	if (!name){
 		CM_FreeMap();
 
 		*checkCount = 0;
 		return &cm.nullModel;
 	}
 
-	Com_DPrintf("CM_LoadMap( %s, %i )\n", map, clientLoad);
+	Com_DPrintf("CM_LoadMap( %s, %i )\n", name, clientLoad);
 
-	if (!Str_ICompare(cm.name, map) && clientLoad && Com_ServerState()){
+	if (!Str_ICompare(cm.name, name) && clientLoad && Com_ServerState()){
 		// Still have the right version
 		*checkCount = cm.checkCount;
 		return &cm.models[0];
@@ -437,14 +437,14 @@ clipInlineModel_t *CM_LoadMap (const char *map, bool clientLoad, uint *checkCoun
 	CM_FreeMap();
 
 	// Load the file
-	length = FS_ReadFile(map, (void **)&data);
+	length = FS_ReadFile(name, (void **)&data);
 	if (!data)
-		Com_Error(ERR_DROP, "CM_LoadMap: '%s' not found", map);
+		Com_Error(ERR_DROP, "CM_LoadMap: '%s' not found", name);
 
 	// Fill it in
 	cm.loaded = true;
 
-	Str_Copy(cm.name, map, sizeof(cm.name));
+	Str_Copy(cm.name, name, sizeof(cm.name));
 	cm.size = 0;
 
 	cm.checkCount = LittleLong(MD4_BlockChecksum(data, length));

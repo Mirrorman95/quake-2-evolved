@@ -256,11 +256,11 @@ static void SV_SpawnServer (const char *levelName, const char *spawnPoint, bool 
 	}
 
 	if (serverState == SS_GAME){
-		Str_SPrintf(sv.configStrings[CS_MODELS+1], sizeof(sv.configStrings[CS_MODELS+1]), "maps/%s.bsp", levelName);
-		sv.models[1] = CM_LoadMap(sv.configStrings[CS_MODELS+1], false, &checksum);
+		Str_SPrintf(sv.configStrings[CS_MODELS + 1], sizeof(sv.configStrings[CS_MODELS + 1]), "maps/%s.bsp", levelName);
+		sv.models[1] = CM_LoadMap(sv.configStrings[CS_MODELS + 1], false, &checksum);
 	}
 	else {
-		Str_SPrintf(sv.configStrings[CS_MODELS+1], sizeof(sv.configStrings[CS_MODELS+1]), "%s", levelName);
+		Str_SPrintf(sv.configStrings[CS_MODELS + 1], sizeof(sv.configStrings[CS_MODELS + 1]), "%s", levelName);
 		sv.models[1] = CM_LoadMap(NULL, false, &checksum);	// No real map
 	}
 	Str_SPrintf(sv.configStrings[CS_MAPCHECKSUM], sizeof(sv.configStrings[CS_MAPCHECKSUM]), "%i", checksum);
@@ -269,8 +269,8 @@ static void SV_SpawnServer (const char *levelName, const char *spawnPoint, bool 
 	SV_ClearWorld();
 
 	for (i = 1; i < CM_NumInlineModels(); i++){
-		Str_SPrintf(sv.configStrings[CS_MODELS+1+i], sizeof(sv.configStrings[CS_MODELS+1+i]), "*%i", i);
-		sv.models[i+1] = CM_InlineModel(sv.configStrings[CS_MODELS+1+i]);
+		Str_SPrintf(sv.configStrings[CS_MODELS + 1 + i], sizeof(sv.configStrings[CS_MODELS + 1 + i]), "*%i", i);
+		sv.models[i+1] = CM_InlineModel(sv.configStrings[CS_MODELS + 1 + i]);
 	}
 
 	// Spawn the rest of the entities on the map
@@ -361,7 +361,7 @@ void SV_InitGame (){
 			CVar_SetVariableInteger("deathmatch", 1, true);
 	}
 
-	// Clamp max clients
+	// Clamp max clients to the appropriate game mode
 	if (CVar_GetVariableBool("deathmatch")){
 		if (sv_maxClients->integerValue <= 1)
 			CVar_SetVariableInteger("maxclients", 8, true);
@@ -386,7 +386,7 @@ void SV_InitGame (){
 	svs.clients = (client_t *)Mem_ClearedAlloc(sv_maxClients->integerValue * sizeof(client_t), TAG_COMMON);
 
 	// Allocate the client entity slots
-	svs.numClientEntities = sv_maxClients->integerValue * UPDATE_BACKUP*64;
+	svs.numClientEntities = sv_maxClients->integerValue * UPDATE_BACKUP * 64;
 	svs.clientEntities = (entity_state_t*)Mem_ClearedAlloc(svs.numClientEntities * sizeof(entity_state_t), TAG_COMMON);
 
 	// Send a heartbeat immediately

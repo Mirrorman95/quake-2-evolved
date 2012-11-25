@@ -294,17 +294,26 @@ static const void *RB_RenderView (const void *data){
 	// Z-Fill pass
 	RB_FillDepthBuffer(cmd->viewParms.numMeshes[0], cmd->viewParms.meshes[0]);
 
-	// Shadow pass
-	RB_RenderShadows(cmd->viewParms.numMeshes[0], cmd->viewParms.meshes[0]);
+	// Shadow and interaction pass
+	RB_RenderLights(cmd->viewParms.numLights[0], cmd->viewParms.lights[0]);
 
 	// Ambient pass (opaque)
 	RB_RenderMaterialPasses(cmd->viewParms.numMeshes[0], cmd->viewParms.meshes[0], AP_OPAQUE);
 
+	// Blend light pass
+	RB_RenderBlendLights(cmd->viewParms.numLights[1], cmd->viewParms.lights[1]);
+
 	// Ambient pass (translucent)
 	RB_RenderMaterialPasses(cmd->viewParms.numMeshes[1], cmd->viewParms.meshes[1], AP_TRANSLUCENT);
 
+	// Fog light pass (view outside volume)
+	RB_RenderFogLights(cmd->viewParms.numLights[2], cmd->viewParms.lights[2]);
+
 	// Ambient pass (translucent)
 	RB_RenderMaterialPasses(cmd->viewParms.numMeshes[2], cmd->viewParms.meshes[2], AP_TRANSLUCENT);
+
+	// Fog light pass (view inside volume)
+	RB_RenderFogLights(cmd->viewParms.numLights[3], cmd->viewParms.lights[3]);
 
 	// Ambient pass (post-process)
 	RB_RenderMaterialPasses(cmd->viewParms.numMeshes[3], cmd->viewParms.meshes[3], AP_POST_PROCESS);
@@ -806,6 +815,103 @@ void RB_ExecuteRenderCommands (const void *data){
 /*
  ==============================================================================
 
+ SHADERS AND PROGRAMS SETUP
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_SetupInteractionShaders (){
+
+}
+
+/*
+ ==================
+ RB_SetupAmbientLightShaders
+ ==================
+*/
+static void RB_SetupAmbientLightShaders (){
+
+	shader_t	*vertexShader, *fragmentShader;
+
+	// Load generic
+	vertexShader = R_FindShader("ambientLight/generic", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("ambientLight/generic", GL_FRAGMENT_SHADER);
+
+	rg.ambientLightPrograms[AMBIENT_GENERIC] = R_FindProgram("ambientLight/generic", vertexShader, fragmentShader);
+	if (!rg.ambientLightPrograms[AMBIENT_GENERIC])
+		Com_Error(ERR_FATAL, "RB_SetupAmbientLightShaders: invalid program '%s'", "ambientLight/generic");
+
+	backEnd.ambientLightParms[AMBIENT_GENERIC].bumpMatrix = R_GetProgramUniformExplicit(rg.ambientLightPrograms[AMBIENT_GENERIC], "u_BumpMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.ambientLightParms[AMBIENT_GENERIC].diffuseMatrix = R_GetProgramUniformExplicit(rg.ambientLightPrograms[AMBIENT_GENERIC], "u_DiffuseMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.ambientLightParms[AMBIENT_GENERIC].lightMatrix = R_GetProgramUniformExplicit(rg.ambientLightPrograms[AMBIENT_GENERIC], "u_LightMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.ambientLightParms[AMBIENT_GENERIC].colorScaleAndBias = R_GetProgramUniformExplicit(rg.ambientLightPrograms[AMBIENT_GENERIC], "u_ColorScaleAndBias", 1, GL_FLOAT_VEC2);
+	backEnd.ambientLightParms[AMBIENT_GENERIC].diffuseColor = R_GetProgramUniformExplicit(rg.ambientLightPrograms[AMBIENT_GENERIC], "u_DiffuseColor", 1, GL_FLOAT_VEC3);
+	backEnd.ambientLightParms[AMBIENT_GENERIC].lightColor = R_GetProgramUniformExplicit(rg.ambientLightPrograms[AMBIENT_GENERIC], "u_LightColor", 1, GL_FLOAT_VEC3);
+
+	R_SetProgramSamplerExplicit(rg.ambientLightPrograms[AMBIENT_GENERIC], "u_BumpMap", 1, GL_SAMPLER_2D, TMU_BUMP);
+	R_SetProgramSamplerExplicit(rg.ambientLightPrograms[AMBIENT_GENERIC], "u_DiffuseMap", 1, GL_SAMPLER_2D, TMU_DIFFUSE);
+	R_SetProgramSamplerExplicit(rg.ambientLightPrograms[AMBIENT_GENERIC], "u_LightProjectionMap", 1, GL_SAMPLER_2D, TMU_LIGHTPROJECTION);
+	R_SetProgramSamplerExplicit(rg.ambientLightPrograms[AMBIENT_GENERIC], "u_LightFalloffMap", 1, GL_SAMPLER_2D, TMU_LIGHTFALLOFF);
+}
+
+/*
+ ==================
+ RB_SetupBlendLightShaders
+ ==================
+*/
+static void RB_SetupBlendLightShaders (){
+
+	shader_t	*vertexShader, *fragmentShader;
+
+	// Load generic
+	vertexShader = R_FindShader("blendLight/generic", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("blendLight/generic", GL_FRAGMENT_SHADER);
+
+	rg.blendLightProgram = R_FindProgram("blendLight/generic", vertexShader, fragmentShader);
+	if (!rg.blendLightProgram)
+		Com_Error(ERR_FATAL, "RB_SetupBlendLightShaders: invalid program '%s'", "blendLight/generic");
+
+	backEnd.blendLightParms.lightMatrix = R_GetProgramUniformExplicit(rg.blendLightProgram, "u_LightMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.blendLightParms.lightColor = R_GetProgramUniformExplicit(rg.blendLightProgram, "u_LightColor", 1, GL_FLOAT_VEC4);
+
+	R_SetProgramSamplerExplicit(rg.blendLightProgram, "u_LightProjectionMap", 1, GL_SAMPLER_2D, TMU_LIGHTPROJECTION);
+	R_SetProgramSamplerExplicit(rg.blendLightProgram, "u_LightFalloffMap", 1, GL_SAMPLER_2D, TMU_LIGHTFALLOFF);
+}
+
+/*
+ ==================
+ RB_SetupFogLightShaders
+ ==================
+*/
+static void RB_SetupFogLightShaders (){
+
+	shader_t	*vertexShader, *fragmentShader;
+
+	// Load generic
+	vertexShader = R_FindShader("fogLight/generic", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("fogLight/generic", GL_FRAGMENT_SHADER);
+
+	rg.fogLightProgram = R_FindProgram("fogLight/generic", vertexShader, fragmentShader);
+	if (!rg.fogLightProgram)
+		Com_Error(ERR_FATAL, "RB_SetupFogLightShaders: invalid program '%s'", "fogLight/generic");
+
+	backEnd.fogLightParms.lightMatrix = R_GetProgramUniformExplicit(rg.fogLightProgram, "u_LightMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.fogLightParms.lightColor = R_GetProgramUniformExplicit(rg.fogLightProgram, "u_LightColor", 1, GL_FLOAT_VEC4);
+
+	R_SetProgramSamplerExplicit(rg.fogLightProgram, "u_LightProjectionMap", 1, GL_SAMPLER_2D, TMU_LIGHTPROJECTION);
+	R_SetProgramSamplerExplicit(rg.fogLightProgram, "u_LightFalloffMap", 1, GL_SAMPLER_2D, TMU_LIGHTFALLOFF);
+}
+
+
+/*
+ ==============================================================================
+
  INITIALIZATION AND SHUTDOWN
 
  ==============================================================================
@@ -831,6 +937,12 @@ void RB_InitBackEnd (){
 
 	// Allocate dynamic vertex buffer
 	backEnd.vertexBuffer = R_AllocVertexBuffer("streamBuffer1", true, MAX_DYNAMIC_VERTICES * sizeof(arrayBuffer_t));
+
+	// Set up shaders
+	RB_SetupInteractionShaders();
+	RB_SetupAmbientLightShaders();
+	RB_SetupBlendLightShaders();
+	RB_SetupFogLightShaders();
 }
 
 /*

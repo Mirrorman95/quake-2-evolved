@@ -88,6 +88,7 @@
     <ClInclude Include="common\cmdSystem.h" />
     <ClInclude Include="common\common.h" />
     <ClInclude Include="common\cvarSystem.h" />
+    <ClInclude Include="common\editor.h" />
     <ClInclude Include="common\fileFormats.h" />
     <ClInclude Include="common\fileSystem.h" />
     <ClInclude Include="common\memory.h" />
@@ -180,6 +181,7 @@
     <ClCompile Include="renderer\r_program.c" />
     <ClCompile Include="renderer\r_render.c" />
     <ClCompile Include="renderer\r_renderCommon.c" />
+    <ClCompile Include="renderer\r_renderInteraction.c" />
     <ClCompile Include="renderer\r_scene.c" />
     <ClCompile Include="renderer\r_shader.c" />
     <ClCompile Include="renderer\r_shadow.c" />
@@ -246,6 +248,20 @@
     <ClCompile Include="windows\win_wndProc.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\baseq2\shaders\ambientLight\generic.fs" />
+    <None Include="..\..\baseq2\shaders\ambientLight\generic.vs" />
+    <None Include="..\..\baseq2\shaders\blendLight\generic.fs" />
+    <None Include="..\..\baseq2\shaders\blendLight\generic.vs" />
+    <None Include="..\..\baseq2\shaders\fogLight\generic.fs" />
+    <None Include="..\..\baseq2\shaders\fogLight\generic.vs" />
+    <None Include="..\..\baseq2\shaders\interaction\cubicGeneric.fs" />
+    <None Include="..\..\baseq2\shaders\interaction\cubicGeneric.vs" />
+    <None Include="..\..\baseq2\shaders\interaction\directionalGeneric.fs" />
+    <None Include="..\..\baseq2\shaders\interaction\directionalGeneric.vs" />
+    <None Include="..\..\baseq2\shaders\interaction\pointGeneric.fs" />
+    <None Include="..\..\baseq2\shaders\interaction\pointGeneric.vs" />
+    <None Include="..\..\baseq2\shaders\interaction\projectedGeneric.fs" />
+    <None Include="..\..\baseq2\shaders\interaction\projectedGeneric.vs" />
     <None Include="windows\q2.ico" />
   </ItemGroup>
   <ItemGroup>

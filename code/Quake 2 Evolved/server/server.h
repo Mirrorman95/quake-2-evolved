@@ -212,6 +212,7 @@ extern cvar_t *				sv_enforceTime;
 extern cvar_t *				sv_allowDownload;
 extern cvar_t *				sv_publicServer;
 extern cvar_t *				sv_rconPassword;
+extern cvar_t *				sv_loadGame;
 
 int				SV_ModelIndex (const char *name);
 int				SV_SoundIndex (const char *name);

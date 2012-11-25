@@ -213,6 +213,12 @@ typedef struct {
 	renderEntity_t			renderEntity;
 } testModel_t;
 
+typedef struct {
+	bool					active;
+
+	renderLight_t			renderLight;
+} testLight_t;
+
 // The clientState_t structure is wiped completely at every server map
 // change
 typedef struct {
@@ -271,6 +277,7 @@ typedef struct {
 	testSprite_t			testSprite;
 	testBeam_t				testBeam;
 	testModel_t				testModel;
+	testLight_t				testLight;
 
 	lagometer_t				lagometer;
 
@@ -387,15 +394,6 @@ typedef struct {
 } clientStatic_t;
 
 // =====================================================================
-
-// Flags for string drawing functions
-#define DSF_FORCECOLOR				1
-#define DSF_DROPSHADOW				2
-#define DSF_LEFT					4
-#define DSF_CENTER					8
-#define DSF_RIGHT					16
-#define DSF_LOWERCASE				32
-#define DSF_UPPERCASE				64
 
 typedef struct {
 	int						down[2];			// Key nums holding it down
