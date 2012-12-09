@@ -9,6 +9,13 @@ void main (){
 	// Position invariant
 	gl_Position = ftransform();
 
+#ifndef GLSL_ATI
+
+	// Support clipping planes
+	gl_ClipVertex = gl_ModelViewMatrix * gl_Vertex;
+
+#endif
+
 	// Compute the light projection/falloff map texture coord
 	v_LightTexCoord.s = dot(gl_Vertex, u_LightMatrix[0]);
 	v_LightTexCoord.t = dot(gl_Vertex, u_LightMatrix[1]);

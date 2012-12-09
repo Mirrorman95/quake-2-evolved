@@ -46,7 +46,7 @@ gfx/effects/particles/liteSmoke
 
 gfx/effects/particles/bubble
 {
-	sort 	underwater
+	sort 			underwater
 	{
 		map		gfx/effects/particles/bubble.tga
 		vertexColor

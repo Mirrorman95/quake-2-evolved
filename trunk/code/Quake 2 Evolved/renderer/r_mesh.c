@@ -34,7 +34,7 @@
  R_AddMeshToList
  ==================
 */
-void R_AddMeshToList (meshType_t type,  meshData_t *data, renderEntity_t *entity, material_t *material){
+void R_AddMeshToList (meshType_t type, meshData_t *data, renderEntity_t *entity, material_t *material){
 
 	mesh_t	*mesh;
 	int		index;
@@ -95,6 +95,9 @@ static void R_AddSprite (renderEntity_t *entity){
 			return;
 	}
 
+	// Mark as visible for this view
+	entity->viewCount = rg.viewCount;
+
 	rg.pc.entities++;
 
 	// Get the material
@@ -133,6 +136,9 @@ static void R_AddBeam (renderEntity_t *entity){
 		if (DotProduct(vec, rg.renderView.axis[0]) < 0.0f)
 			return;
 	}
+
+	// Mark as visible for this view
+	entity->viewCount = rg.viewCount;
 
 	rg.pc.entities++;
 
@@ -412,10 +418,10 @@ void R_AllocMeshes (){
 	rg.maxMeshes[2] = MAX_MESHES >> 1;
 	rg.maxMeshes[3] = MAX_MESHES >> 6;
 
-	rg.meshes[0] = (mesh_t *)Mem_ClearedAlloc(rg.maxMeshes[0] * sizeof(mesh_t), TAG_RENDERER);
-	rg.meshes[1] = (mesh_t *)Mem_ClearedAlloc(rg.maxMeshes[1] * sizeof(mesh_t), TAG_RENDERER);
-	rg.meshes[2] = (mesh_t *)Mem_ClearedAlloc(rg.maxMeshes[2] * sizeof(mesh_t), TAG_RENDERER);
-	rg.meshes[3] = (mesh_t *)Mem_ClearedAlloc(rg.maxMeshes[3] * sizeof(mesh_t), TAG_RENDERER);
+	rg.meshes[0] = (mesh_t *)Mem_Alloc(rg.maxMeshes[0] * sizeof(mesh_t), TAG_RENDERER);
+	rg.meshes[1] = (mesh_t *)Mem_Alloc(rg.maxMeshes[1] * sizeof(mesh_t), TAG_RENDERER);
+	rg.meshes[2] = (mesh_t *)Mem_Alloc(rg.maxMeshes[2] * sizeof(mesh_t), TAG_RENDERER);
+	rg.meshes[3] = (mesh_t *)Mem_Alloc(rg.maxMeshes[3] * sizeof(mesh_t), TAG_RENDERER);
 }
 
 /*
@@ -430,7 +436,6 @@ void R_GenerateMeshes (){
 	R_AddEntities();
 	R_AddDecals();
 	R_AddParticles();
-	R_AddEntityShadows();
 
 	// Set up the meshes
 	rg.viewParms.numMeshes[0] = rg.numMeshes[0] - rg.firstMesh[0];

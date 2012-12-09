@@ -1,4 +1,4 @@
-/*
+	/*
  ------------------------------------------------------------------------------
  Copyright (C) 1997-2001 Id Software.
 
@@ -663,6 +663,104 @@ void RB_CleanupColorStage (material_t *material, colorStage_t *colorStage){
 */
 void RB_SetupShaderStage (material_t *material, shaderStage_t *shaderStage){
 
+	uniform_t		*uniform;
+	shaderParm_t	*shaderParm;
+	shaderMap_t		*shaderMap;
+	int				i;
+
+	// Bind the program
+	GL_BindProgram(shaderStage->program);
+
+	// Set up the arrays
+	if (shaderStage->program->vertexAttribs & VA_NORMAL){
+		qglEnableVertexAttribArray(GL_ATTRIB_NORMAL);
+		qglVertexAttribPointer(GL_ATTRIB_NORMAL, 3, GL_FLOAT, false, sizeof(glVertex_t), GL_VERTEX_NORMAL(backEnd.vertexPointer));
+	}
+
+	if (shaderStage->program->vertexAttribs & VA_TANGENT1){
+		qglEnableVertexAttribArray(GL_ATTRIB_TANGENT1);
+		qglVertexAttribPointer(GL_ATTRIB_TANGENT1, 3, GL_FLOAT, false, sizeof(glVertex_t), GL_VERTEX_TANGENT1(backEnd.vertexPointer));
+	}
+
+	if (shaderStage->program->vertexAttribs & VA_TANGENT2){
+		qglEnableVertexAttribArray(GL_ATTRIB_TANGENT2);
+		qglVertexAttribPointer(GL_ATTRIB_TANGENT2, 3, GL_FLOAT, false, sizeof(glVertex_t), GL_VERTEX_TANGENT2(backEnd.vertexPointer));
+	}
+
+	if (shaderStage->program->vertexAttribs & VA_TEXCOORD){
+		qglEnableVertexAttribArray(GL_ATTRIB_TEXCOORD);
+		qglVertexAttribPointer(GL_ATTRIB_TEXCOORD, 2, GL_FLOAT, false, sizeof(glVertex_t), GL_VERTEX_TEXCOORD(backEnd.vertexPointer));
+	}
+
+	if (shaderStage->program->vertexAttribs & VA_COLOR){
+		qglEnableVertexAttribArray(GL_ATTRIB_COLOR);
+		qglVertexAttribPointer(GL_ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, true, sizeof(glVertex_t), GL_VERTEX_COLOR(backEnd.vertexPointer));
+	}
+
+	// Set up the predefined uniforms
+	for (i = 0, uniform = shaderStage->program->uniforms; i < shaderStage->program->numUniforms; i++, uniform++){
+		if (uniform->type == UT_CUSTOM)
+			continue;
+
+		switch (uniform->type){
+		case UT_VIEW_ORIGIN:
+			R_UniformVector3(uniform, backEnd.localParms.viewOrigin);
+			break;
+		case UT_VIEW_AXIS:
+
+			break;
+		case UT_ENTITY_ORIGIN:
+			R_UniformVector3(uniform, backEnd.entity->origin);
+			break;
+		case UT_ENTITY_AXIS:
+
+			break;
+		case UT_SUN_ORIGIN:
+
+			break;
+		case UT_SUN_DIRECTION:
+
+			break;
+		case UT_SUN_COLOR:
+
+			break;
+		case UT_SCREEN_MATRIX:
+
+			break;
+		case UT_COORD_SCALE_AND_BIAS:
+			R_UniformFloat4(uniform, backEnd.coordScale[0], backEnd.coordScale[1], backEnd.coordBias[0], backEnd.coordBias[1]);
+			break;
+		case UT_COLOR_SCALE_AND_BIAS:
+			R_UniformFloat2(uniform, shaderStage->colorScale, shaderStage->colorBias);
+			break;
+		default:
+			Com_Error(ERR_DROP, "RB_SetupShaderStage: unknown shader uniform type in material '%s'", material->name);
+		}
+	}
+
+	// Set up the shader parms
+	for (i = 0, shaderParm = shaderStage->shaderParms; i < shaderStage->numShaderParms; i++, shaderParm++){
+		switch (shaderParm->uniform->format){
+		case GL_FLOAT:
+			R_UniformFloat(shaderParm->uniform, material->expressionRegisters[shaderParm->registers[0]]);
+			break;
+		case GL_FLOAT_VEC2:
+			R_UniformFloat2(shaderParm->uniform, material->expressionRegisters[shaderParm->registers[0]], material->expressionRegisters[shaderParm->registers[1]]);
+			break;
+		case GL_FLOAT_VEC3:
+			R_UniformFloat3(shaderParm->uniform, material->expressionRegisters[shaderParm->registers[0]], material->expressionRegisters[shaderParm->registers[1]], material->expressionRegisters[shaderParm->registers[2]]);
+			break;
+		case GL_FLOAT_VEC4:
+			R_UniformFloat4(shaderParm->uniform, material->expressionRegisters[shaderParm->registers[0]], material->expressionRegisters[shaderParm->registers[1]], material->expressionRegisters[shaderParm->registers[2]], material->expressionRegisters[shaderParm->registers[3]]);
+			break;
+		default:
+			Com_Error(ERR_DROP, "RB_SetupShaderStage: unknown shader uniform format in material '%s'", material->name);
+		}
+	}
+
+	// Set up the shader maps
+	for (i = 0, shaderMap = shaderStage->shaderMaps; i < shaderStage->numShaderMaps; i++, shaderMap++)
+		RB_BindMultitexture(material, shaderMap->texture, shaderMap->cinematicHandle, shaderMap->uniform->unit);
 }
 
 /*
@@ -704,27 +802,27 @@ void RB_CleanupShaderStage (material_t *material, shaderStage_t *shaderStage){
 
 /*
  ==================
- 
+ RB_EntityState
  ==================
 */
 void RB_EntityState (renderEntity_t *entity){
 
 	mat4_t	transformMatrix;
-	vec3_t	tmpOrigin;
 
 	// Transform view origin and view matrix into local space
 	if (entity == rg.worldEntity){
 		VectorCopy(backEnd.viewParms.origin, backEnd.localParms.viewOrigin);
-
-		// TODO: viewAxis
-
-		Matrix4_Copy(backEnd.viewParms.modelviewMatrix, backEnd.localParms.viewMatrix);
+		Matrix3_Copy(backEnd.viewParms.axis, backEnd.localParms.viewAxis);
 	}
 	else {
-		// Compute the view matrix
-		VectorSubtract(backEnd.viewParms.origin, entity->origin, tmpOrigin);
-		VectorRotate(tmpOrigin, entity->axis, backEnd.localParms.viewOrigin);
+		R_WorldPointToLocal(backEnd.viewParms.origin, backEnd.localParms.viewOrigin, entity->origin, entity->axis);
+		R_WorldAxisToLocal(backEnd.viewParms.axis, backEnd.localParms.viewAxis, entity->axis);
+	}
 
+	// Compute the view matrix
+	if (entity == rg.worldEntity)
+		Matrix4_Copy(backEnd.viewParms.modelviewMatrix, backEnd.localParms.viewMatrix);
+	else {
 		if (entity->type == RE_MODEL){
 			Matrix4_Set(transformMatrix, entity->axis, entity->origin);
 			Matrix4_MultiplyFast(backEnd.viewParms.modelviewMatrix, transformMatrix, backEnd.localParms.viewMatrix);
@@ -745,11 +843,36 @@ void RB_EntityState (renderEntity_t *entity){
 
 /*
  ==================
-
+ RB_TransformLightForEntity
  ==================
 */
-void RB_TransformLightForEntity (renderLight_t *light, renderEntity_t *entity){
+void RB_TransformLightForEntity (light_t *light, renderEntity_t *entity){
 
+	// Transform light origin, light direction, and light axis into local space
+	if (entity == rg.worldEntity){
+		VectorCopy(light->origin, backEnd.localParms.lightOrigin);
+		VectorCopy(light->direction, backEnd.localParms.lightDirection);
+		Matrix3_Copy(light->axis, backEnd.localParms.lightAxis);
+	}
+	else {
+		R_WorldPointToLocal(light->origin, backEnd.localParms.lightOrigin, entity->origin, entity->axis);
+		R_WorldVectorToLocal(light->direction, backEnd.localParms.lightDirection, entity->axis);
+		R_WorldAxisToLocal(light->axis, backEnd.localParms.lightAxis, entity->axis);
+	}
+
+	// Compute the light plane
+	if (entity == rg.worldEntity){
+		backEnd.localParms.lightPlane[0] = light->axis[0][0];
+		backEnd.localParms.lightPlane[1] = light->axis[0][1];
+		backEnd.localParms.lightPlane[2] = light->axis[0][2];
+		backEnd.localParms.lightPlane[3] = -DotProduct(light->origin, light->axis[0]);
+	}
+	else {
+		backEnd.localParms.lightPlane[0] = DotProduct(entity->axis[0], light->axis[0]);
+		backEnd.localParms.lightPlane[1] = DotProduct(entity->axis[1], light->axis[0]);
+		backEnd.localParms.lightPlane[2] = DotProduct(entity->axis[2], light->axis[0]);
+		backEnd.localParms.lightPlane[3] = DotProduct(entity->origin, light->axis[0]) - DotProduct(light->origin, light->axis[0]);
+	}
 }
 
 /*
@@ -757,13 +880,60 @@ void RB_TransformLightForEntity (renderLight_t *light, renderEntity_t *entity){
 
  ==================
 */
-void RB_ComputeLightMatrix (renderLight_t *light, renderEntity_t *entity, material_t *material, textureStage_t *textureStage){
+void RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *material, textureStage_t *textureStage){
 
+	mat4_t	transformMatrix, entityMatrix, textureMatrix;
+	mat4_t	tmpMatrix;
+	float	distanceScale, heightScale;
+
+	// Compute a generic, ambient, or blend light
+	if (material->lightType != LT_FOG){
+		if (entity == rg.worldEntity){
+			if (!textureStage->numTexMods)
+				Matrix4_Transpose(light->modelviewProjectionMatrix, backEnd.localParms.lightMatrix);
+			else {
+				RB_ComputeTextureMatrix(material, textureStage, textureMatrix);
+
+				Matrix4_MultiplyFast(textureMatrix, light->modelviewProjectionMatrix, tmpMatrix);
+				Matrix4_Transpose(tmpMatrix, backEnd.localParms.lightMatrix);
+			}
+		}
+		else {
+			Matrix4_Set(transformMatrix, entity->axis, entity->origin);
+			Matrix4_MultiplyFast(light->modelviewProjectionMatrix, transformMatrix, entityMatrix);
+
+			if (!textureStage->numTexMods)
+				Matrix4_Transpose(entityMatrix, backEnd.localParms.lightMatrix);
+			else {
+				RB_ComputeTextureMatrix(material, textureStage, textureMatrix);
+
+				Matrix4_MultiplyFast(textureMatrix, entityMatrix, tmpMatrix);
+				Matrix4_Transpose(tmpMatrix, backEnd.localParms.lightMatrix);
+			}
+		}
+
+		return;
+	}
+
+	// Compute a fog light
+	if (light->fogDistance < 1.0f)
+		distanceScale = 0.5f / 500.0f;
+	else
+		distanceScale = 0.5f / light->fogDistance;
+
+	if (light->fogHeight < 1.0f)
+		heightScale = 0.5f / 500.0f;
+	else
+		heightScale = 0.5f / light->fogHeight;
+
+	// TODO!!!
 }
 
 /*
  ==================
+ RB_DrawElements
 
+ TODO: we might need to get indicies for shadows
  ==================
 */
 void RB_DrawElements (){
@@ -775,23 +945,48 @@ void RB_DrawElements (){
 	rg.pc.totalIndices += backEnd.numIndices;
 	rg.pc.totalVertices += backEnd.numVertices;
 
-	qglDrawElements(GL_TRIANGLES, backEnd.numIndices, GL_INDEX_TYPE, backEnd.indices);
+	qglDrawElements(GL_TRIANGLES, backEnd.numIndices, GL_INDEX_TYPE, backEnd.indexPointer);
 }
 
 /*
  ==================
+ RB_DrawElementsWithCounters
 
+ TODO: we might need to get indicies for shadows
  ==================
 */
 void RB_DrawElementsWithCounters (int *totalIndices, int *totalVertices){
 
+	if (r_skipDrawElements->integerValue)
+		return;
+
+	rg.pc.draws++;
+	rg.pc.totalIndices += backEnd.numIndices;
+	rg.pc.totalVertices += backEnd.numVertices;
+
+	if (totalIndices)
+		*totalIndices += backEnd.numIndices;
+	if (totalVertices)
+		*totalVertices += backEnd.numVertices;
+
+	qglDrawElements(GL_TRIANGLES, backEnd.numIndices, GL_INDEX_TYPE, backEnd.indexPointer);
 }
 
 /*
  ==================
+ RB_DrawElementsStaticIndices
 
+ TODO: we might need to get indicies for shadows
  ==================
 */
 void RB_DrawElementsStaticIndices (int numVertices, int numIndices, const void *indices){
 
+	if (r_skipDrawElements->integerValue)
+		return;
+
+	rg.pc.draws++;
+	rg.pc.totalIndices += numIndices;
+	rg.pc.totalVertices += numVertices;
+
+	qglDrawElements(GL_TRIANGLES, numIndices, GL_INDEX_TYPE, indices);
 }

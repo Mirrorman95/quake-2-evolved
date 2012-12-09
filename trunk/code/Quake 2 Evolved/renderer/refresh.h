@@ -151,11 +151,14 @@ typedef struct {
 
 typedef struct {
 	reType_t				type;
+
 	int						renderFX;
 
-	int						index;			// Set by the renderer
+	int						index;				// Set by the renderer
 
 	model_t *				model;
+
+	int						viewCount;			// Set by the renderer
 
 	// Transformation matrix
 	vec3_t					origin;
@@ -180,6 +183,9 @@ typedef struct {
 	// Entity attributes
 	bool					depthHack;			// Hack the depth range to avoid poking into geometry (implies noShadows)
 
+	int						allowInView;		// For per-view allow/suppress
+	int						allowShadowInView;	// For per-view allow/suppress
+
 	int						skinIndex;
 
 	int						frame;
@@ -191,6 +197,8 @@ typedef struct {
 
 typedef struct {
 	rlType_t				type;
+
+	int						index;				// Set by the renderer
 
 	int						lightNum;
 
@@ -241,8 +249,8 @@ typedef struct {
 } renderParticle_t;
 
 typedef struct {
-	vec3_t					rgb;			// 0.0 - 2.0
-	float					white;			// Highest of RGB
+	vec3_t					rgb;				// 0.0 - 2.0
+	float					white;				// Highest of RGB
 } lightStyle_t;
 
 typedef struct {
@@ -301,6 +309,9 @@ typedef struct {
 	bool					textureFilterAnisotropicAvailable;
 	bool					swapControlAvailable;
 	bool					swapControlTearAvailable;
+	bool					stencilWrapAvailable;
+	bool					stencilTwoSideAvailable;
+	bool					atiSeparateStencilAvailable;
 
 	int						maxTextureSize;
 	int						max3DTextureSize;
@@ -359,6 +370,12 @@ void			R_AddLightToScene (const renderLight_t *renderLight);
 
 // Adds particles to the scene for rendering
 void			R_AddParticleToScene (const renderParticle_t *renderParticle);
+
+// Generates lists of static shadows and interactions and precaches the given
+// lights.
+// If this isn't called after loading a map, all the world shadows and
+// interactions will be dynamically generated.
+void			R_PrecacheLights (int numRenderLights, const renderLight_t *renderLights);
 
 // Renders all scene objects.
 // If primaryView is false, the world map will be ignored completely.

@@ -1,47 +1,47 @@
 
-gfx/effects/caustics/water
+gfx/caustics/water
 {
 	sort 			underwater
 	{
-		map		gfx/effects/caustics/water.tga
+		map		gfx/caustics/water.tga
 		blend		GL_DST_COLOR, GL_ONE
 		scroll 		time * 0.25, time * -0.125
 		scale		0.3, 0.3
 	}
 	{
-		map		gfx/effects/caustics/water.tga
+		map		gfx/caustics/water.tga
 		blend		GL_DST_COLOR, GL_ONE
 		scroll 		time * 0.125, time * -0.25
 		scale		0.5, 0.5
 	}
 }
 
-gfx/effects/caustics/slime
+gfx/caustics/slime
 {
 	sort 			underwater
 	{
-		map		gfx/effects/caustics/slime.tga
+		map		gfx/caustics/slime.tga
 		blend		GL_DST_COLOR, GL_ONE
 		scroll 		time * 0.25, time * -0.125
 	}
 	{
-		map		gfx/effects/caustics/slime.tga
+		map		gfx/caustics/slime.tga
 		blend		GL_DST_COLOR, GL_ONE
 		scroll 		time * 0.125, time * -0.25
 	}
 }
 
-gfx/effects/caustics/lava
+gfx/caustics/lava
 {
 	sort 			underwater
 	{
-		map		gfx/effects/caustics/lava.tga
+		map		gfx/caustics/lava.tga
 		blend		GL_DST_COLOR, GL_ONE
 		scroll 		time * 0.25, time * -0.125
 		scale		0.5, 0.4
 	}
 	{
-		map		gfx/effects/caustics/lava.tga
+		map		gfx/caustics/lava.tga
 		blend		GL_DST_COLOR, GL_ONE
 		scroll 		time * 0.125, time * -0.25
 		scale		0.4, 0.5

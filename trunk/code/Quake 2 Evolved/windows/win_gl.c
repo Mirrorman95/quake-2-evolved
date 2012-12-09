@@ -564,6 +564,35 @@ static void GLW_InitExtensions (void){
 	}
 	else
 		Com_Printf("...WGL_EXT_swap_control_tear not found\n");
+
+	if (GLW_IsExtensionPresent(glConfig.extensionsString, "GL_EXT_stencil_wrap")){
+		glConfig.stencilWrapAvailable = true;
+
+		Com_Printf("...using GL_EXT_stencil_wrap\n");
+	}
+	else
+		Com_Printf("...GL_EXT_stencil_wrap not found\n");
+
+	if (GLW_IsExtensionPresent(glConfig.extensionsString, "GL_EXT_stencil_two_side")){
+		glConfig.stencilTwoSideAvailable = true;
+
+		qglActiveStencilFaceEXT					= GLW_GetProcAddress("glActiveStencilFaceEXT");
+
+		Com_Printf("...using GL_EXT_stencil_two_side\n");
+	}
+	else
+		Com_Printf("...GL_EXT_stencil_two_side not found\n");
+
+	if (GLW_IsExtensionPresent(glConfig.extensionsString, "GL_ATI_separate_stencil")){
+		glConfig.atiSeparateStencilAvailable = true;
+
+		qglStencilOpSeparateATI					= GLW_GetProcAddress("glStencilOpSeparateATI");
+		qglStencilFuncSeparateATI				= GLW_GetProcAddress("glStencilFuncSeparateATI");
+
+		Com_Printf("...using GL_ATI_separate_stencil\n");
+	}
+	else
+		Com_Printf("...GL_ATI_separate_stencil not found\n");
 }
 
 
@@ -1301,20 +1330,22 @@ void GLW_ActivateContext (bool active){
 */
 void GLW_SwapBuffers (){
 
+	int		interval;
+
 	if (!glwState.hDC)
 		return;
 
 	if (r_swapInterval->modified){
-		if (!glConfig.swapControlAvailable)
-			CVar_SetInteger(r_swapInterval, 0);
+		if (glConfig.swapControlAvailable){
+			interval = 0;
 
-		if (!glConfig.swapControlTearAvailable){
-			if (r_swapInterval->integerValue < 0)
-				CVar_SetInteger(r_swapInterval, 0);
+			if (r_swapInterval->integerValue == 1)
+				interval = 1;
+			else if (r_swapInterval->integerValue == 2)
+				interval = (glConfig.swapControlTearAvailable) ? -1 : 1;
+
+			qwglSwapIntervalEXT(interval);
 		}
-
-		if (glConfig.swapControlAvailable)
-			qwglSwapIntervalEXT(r_swapInterval->integerValue);
 
 		r_swapInterval->modified = false;
 	}

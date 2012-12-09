@@ -47,7 +47,6 @@
 #include "table.h"
 #include "parser.h"
 #include "system.h"
-#include "editor.h"
 
 #include "../collision/cm_public.h"
 
@@ -312,17 +311,21 @@ void			PMove (pmove_t *pmove);
  ==============================================================================
 */
 
+void			R_DebugLine (const vec4_t color, const vec3_t start, const vec3_t end, bool depthTest, int allowInView);
+void			R_DebugBounds (const vec4_t color, const vec3_t mins, const vec3_t maxs, bool depthTest, int allowInView);
+void			R_DebugBox (const vec4_t color, const vec3_t origin, const vec3_t axis[3], const vec3_t mins, const vec3_t maxs, bool depthTest, int allowInView);
+void			R_DebugPolygon (const vec4_t color, int numPoints, const vec3_t *points, bool fill, bool depthTest, int allowInView);
+void			R_DebugText (const vec4_t color, bool forceColor, const vec3_t origin, float cw, float ch, const char *text, bool depthTest, int allowInView);
+
 void			Con_Print (const char *text);
 
 void			Key_WriteBindings (fileHandle_t f);
 void			Key_Init ();
 void			Key_Shutdown ();
 
-void			CL_Loading ();
 void			CL_UpdateScreen ();
 void			CL_ForwardCommandToServer ();
 bool			CL_CanLaunchEditor (const char *editor);
-void			CL_ClearMemory ();
 void			CL_Drop ();
 void			CL_MapLoading ();
 

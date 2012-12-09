@@ -125,11 +125,45 @@ void CL_FillRect (float x, float y, float w, float h, horzAdjust_t horzAdjust, f
 
 /*
  ==================
+ CL_DrawTextWidth
+ ==================
+*/
+float CL_DrawTextWidth (const char *text, float scale, fontInfo_t *fontInfo){
+
+	glyphInfo_t	*glyphInfo;
+	float		width = 0.0f;
+
+	while (*text){
+		if (Str_IsColor(text)){
+			text += 2;
+			continue;
+		}
+
+		glyphInfo = &fontInfo->glyphs[*(const byte *)text++];
+
+		width += glyphInfo->xAdjust * scale;
+	}
+
+	return width;
+}
+
+/*
+ ==================
  
  ==================
 */
-void CL_DrawString (float x, float y, float w, float h, float width, const char *string, const color_t color, material_t *fontMaterial, int flags){
+void CL_DrawText (){
 
+}
+
+/*
+ ==================
+ CL_DrawString
+ ==================
+*/
+void CL_DrawString (float x, float y, float w, float h, const char *string, const vec4_t color, bool forceColor, float xShadow, float yShadow, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent, material_t *material){
+
+	R_DrawString(x, y, w, h, string, color, forceColor, xShadow, yShadow, horzAdjust, horzPercent, vertAdjust, vertPercent, material);
 }
 
 /*
@@ -221,25 +255,50 @@ void CL_DrawPicByName (float x, float y, float w, float h, const vec4_t color, c
 	material = R_RegisterMaterialNoMip(name);
 
 	R_SetColor(color);
-	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_NONE, 1.0f, V_NONE, 1.0f, material);
+	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_SCALE, 1.0f, V_SCALE, 1.0f, material);
 }
 
 /*
  ==================
  
+ FIXME: x and y coords are way off
  ==================
 */
 void CL_DrawPicFixed (float x, float y, material_t *material){
 
+	float	w, h;
+
+	R_GetPicSize(material, &w, &h);
+
+	R_SetColor(colorWhite);
+	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_SCALE, 1.0f, V_SCALE, 1.0f, material);
 }
 
 /*
  ==================
  
+ FIXME: does not show up on screen for some reason...
  ==================
 */
 void CL_DrawPicFixedByName (float x, float y, const char *pic){
 
+	material_t	*material;
+	char		name[MAX_OSPATH];
+	float		w, h;
+
+	if (!Str_FindChar(pic, '/'))
+		Str_SPrintf(name, sizeof(name), "pics/%s", pic);
+	else {
+		Str_Copy(name, pic, sizeof(name));
+		Str_StripFileExtension(name);
+	}
+
+	material = R_RegisterMaterialNoMip(name);
+
+	R_GetPicSize(material, &w, &h);
+
+	R_SetColor(colorWhite);
+	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_SCALE, 1.0f, V_SCALE, 1.0f, material);
 }
 
 
@@ -249,6 +308,8 @@ void CL_DrawPicFixedByName (float x, float y, const char *pic){
 /*
  ==================
  
+ TODO: some strings uses \n and \r which messes up the string
+ TODO: fix position
  ==================
 */
 void CL_DrawLoading (){
@@ -256,6 +317,7 @@ void CL_DrawLoading (){
 	char	string[MAX_STRING_LENGTH];
 	float	speed;
 	int		percent;
+	int		length;
 
 	if (!cls.loading)
 		return;
@@ -271,15 +333,17 @@ void CL_DrawLoading (){
 		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
 
 		if (NET_IsLocalAddress(cls.serverAddress)){
-			Str_SPrintf(string, sizeof(string), "Starting up...");
-			// CL_DrawString
+			length = Str_SPrintf(string, sizeof(string), "Starting up...");
+			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 56.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 		}
 		else {
-//			if (cls.serverMessage[0])
-				// CL_DrawString
+			if (cls.serverMessage[0]){
+				length = Str_SPrintf(string, sizeof(string), "%s", cls.serverMessage[0]);
+				CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 120.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
+			}
 
-			Str_SPrintf(string, sizeof(string), "Connecting to %s\nAwaiting connection... %i", cls.serverName, cls.connectCount);
-			// CL_DrawString
+			length = Str_SPrintf(string, sizeof(string), "Connecting to %s\nAwaiting connection... %i", cls.serverName, cls.connectCount);
+			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 72.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 		}
 
 		break;
@@ -288,15 +352,17 @@ void CL_DrawLoading (){
 		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
 
 		if (NET_IsLocalAddress(cls.serverAddress)){
-			Str_SPrintf(string, sizeof(string), "Starting up...");
-			// CL_DrawString
+			length = Str_SPrintf(string, sizeof(string), "Starting up...");
+			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 56.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 		}
 		else {
-//			if (cls.serverMessage[0])
-				// CL_DrawString
+			if (cls.serverMessage[0]){
+				length = Str_SPrintf(string, sizeof(string), "%s", cls.serverMessage[0]);
+				CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 120.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
+			}
 
-			Str_SPrintf(string, sizeof(string), "Connecting to %s\nAwaiting challenge... %i", cls.serverName, cls.connectCount);
-			// CL_DrawString
+			length = Str_SPrintf(string, sizeof(string), "Connecting to %s\nAwaiting challenge... %i", cls.serverName, cls.connectCount);
+			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 72.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 		}
 
 		break;
@@ -311,15 +377,15 @@ void CL_DrawLoading (){
 				speed = 0;
 
 			if (Com_ServerState()){
-				Str_SPrintf(string, sizeof(string), "Downloading %s... (%i%% @ %.2f KB/sec)", cls.downloadName, cls.downloadPercent, speed);
-				// CL_DrawString
+				length = Str_SPrintf(string, sizeof(string), "Downloading %s... (%i%% @ %.2f KB/sec)", cls.downloadName, cls.downloadPercent, speed);
+				CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 56.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 			}
 			else {
-				Str_SPrintf(string, sizeof(string), "Connecting to %s\nDownloading %s... (%i%% @ %.2f KB/sec)", cls.serverName, cls.downloadName, cls.downloadPercent, speed);
-				// CL_DrawString
+				length = Str_SPrintf(string, sizeof(string), "Connecting to %s\nDownloading %s... (%i%% @ %.2f KB/sec)", cls.serverName, cls.downloadName, cls.downloadPercent, speed);
+				CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 72.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 			}
 
-			percent = Clamp(cls.downloadPercent - (cls.downloadPercent % 5), 5, 100);
+			percent = ClampInt(cls.downloadPercent - (cls.downloadPercent % 5), 5, 100);
 			if (percent){
 				CL_DrawPicByName(240.0f, 160.0f, 160.0f, 160.0f, colorWhite, "ui/assets/loading/load_main2");
 				CL_DrawPicByName(240.0f, 160.0f, 160.0f, 160.0f, colorWhite, Str_VarArgs("ui/assets/loading/percent/load_%i", percent));
@@ -333,12 +399,12 @@ void CL_DrawLoading (){
 		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
 
 		if (NET_IsLocalAddress(cls.serverAddress)){
-			Str_SPrintf(string, sizeof(string), "Starting up...");
-			// CL_DrawString
+			length = Str_SPrintf(string, sizeof(string), "Starting up...");
+			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 56.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 		}
 		else {
-			Str_SPrintf(string, sizeof(string), "Connecting to %s\nAwaiting game state...", cls.serverName);
-			// CL_DrawString
+			length = Str_SPrintf(string, sizeof(string), "Connecting to %s\nAwaiting game state...", cls.serverName);
+			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 72.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 		}
 
 		break;
@@ -348,15 +414,15 @@ void CL_DrawLoading (){
 		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, cl.media.loadingLogo);
 
 		if (NET_IsLocalAddress(cls.serverAddress)){
-			Str_SPrintf(string, sizeof(string), "Loading %s\n\"%s\"\n\n\nLoading... %s\n", cls.loadingInfo.map, cls.loadingInfo.name, cls.loadingInfo.string);
-			// CL_DrawString
+			length = Str_SPrintf(string, sizeof(string), "Loading %s\n\"%s\"\n\n\nLoading... %s\n", cls.loadingInfo.map, cls.loadingInfo.name, cls.loadingInfo.string);
+			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 180.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 		}
 		else {
-			Str_SPrintf(string, sizeof(string), "Loading %s\n\"%s\"\n\nConnecting to %s\nLoading... %s\n", cls.loadingInfo.map, cls.loadingInfo.name, cls.serverName, cls.loadingInfo.string);
-			// CL_DrawString
+			length = Str_SPrintf(string, sizeof(string), "Loading %s\n\"%s\"\n\nConnecting to %s\nLoading... %s\n", cls.loadingInfo.map, cls.loadingInfo.name, cls.serverName, cls.loadingInfo.string);
+			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 180.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 		}
 
-		percent = Clamp((cls.loadingInfo.percent / 5) - 1, 0, 19);
+		percent = ClampInt((cls.loadingInfo.percent / 5) - 1, 0, 19);
 		if (percent){
 			CL_DrawPic(240.0f, 160.0f, 160.0f, 160.0f, colorWhite, cl.media.loadingDetail[0]);
 			CL_DrawPic(240.0f, 160.0f, 160.0f, 160.0f, colorWhite, cl.media.loadingPercent[percent]);
@@ -375,8 +441,8 @@ void CL_DrawLoading (){
 		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshotDetail);
 		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, cl.media.loadingLogo);
 
-		Str_SPrintf(string, sizeof(string), "Awaiting frame...");
-		// CL_DrawString
+		length = Str_SPrintf(string, sizeof(string), "Awaiting frame...");
+		CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 56.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
 
 		break;
 	}
@@ -385,17 +451,9 @@ void CL_DrawLoading (){
 
 // ============================================================================
 
+#define STAT_MINUS			10	// Num frame for '-' stats digit
+#define	CHAR_WIDTH			16
 
-/*
- ==================
- 
- ==================
-*/
-static void CL_DrawStatus (){
-
-	if (!cl_drawStatus->integerValue)
-		return;
-}
 
 /*
  ==================
@@ -410,13 +468,272 @@ static void CL_DrawInventory (){
 
 /*
  ==================
+ CL_DrawLayoutFieldNumber
+ ==================
+*/
+static void CL_DrawLayoutFieldNumber (int x, int y, int color, int width, int value){
+
+	char	number[16];
+	char	*ptr;
+	int		length;
+	int		frame;
+
+	if (width < 1)
+		return;
+
+	if (width > 5)
+		width = 5;
+
+	// Set the string
+	Str_SPrintf(number, sizeof(number), "%i", value);
+
+	length = Str_Length(number);
+	if (length > width)
+		length = width;
+
+	x += 2 + CHAR_WIDTH * (width - length);
+
+	// Draw each character
+	ptr = number;
+	while (*ptr && length){
+		if (*ptr == '-')
+			frame = STAT_MINUS;
+		else
+			frame = *ptr - '0';
+
+		CL_DrawPicFixed(x, y, cl.media.hudNumberMaterials[color][frame]);
+
+		x += CHAR_WIDTH;
+		ptr++;
+		length--;
+	}
+}
+
+/*
+ ==================
  
+ ==================
+*/
+static void CL_DrawLayoutString (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void CL_ExecuteLayoutString (char *string){
+
+	script_t	*script;
+	token_t		token;
+	int			width;
+	int			index;
+	int			x, y;
+
+	if (!string[0])
+		return;
+
+	script = PS_LoadScriptMemory("LayoutString", string, Str_Length(string), 1);
+	if (!script)
+		return;
+
+	PS_SetScriptFlags(script, SF_NOWARNINGS | SF_NOERRORS | SF_ALLOWPATHNAMES);
+
+	x = 0;
+	y = 0;
+
+	while (string){
+		if (!PS_ReadToken(script, &token))
+			break;
+
+		if (!Str_ICompare(token.string, "xl")){
+			PS_ReadToken(script, &token);
+
+			x = Str_ToInteger(token.string);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "xr")){
+			PS_ReadToken(script, &token);
+
+			x = cls.glConfig.videoWidth + Str_ToInteger(token.string);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "xv")){
+			PS_ReadToken(script, &token);
+
+			x = cls.glConfig.videoWidth/2 - 160 + Str_ToInteger(token.string);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "yt")){
+			PS_ReadToken(script, &token);
+
+			y = Str_ToInteger(token.string);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "yb")){
+			PS_ReadToken(script, &token);
+
+			y = cls.glConfig.videoHeight + Str_ToInteger(token.string);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "yv")){
+			PS_ReadToken(script, &token);
+
+			y = cls.glConfig.videoHeight/2 - 120 + Str_ToInteger(token.string);
+
+			continue;
+		}
+
+		// Draw a deathmatch client block
+		if (!Str_ICompare(token.string, "client")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		// Draw a CTF client block
+		if (!Str_ICompare(token.string, "ctf")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		// Draw a pic from a stat number
+		if (!Str_ICompare(token.string, "pic")){
+			PS_ReadToken(script, &token);
+
+			index = Str_ToInteger(token.string);
+			if (index < 0 || index >= MAX_IMAGES)
+				Com_Error(ERR_DROP, "CL_ExecuteLayoutString: bad pic index %i", index);
+
+			if (!cl.media.gameMaterials[index])
+				continue;
+
+			if (cl_drawIcons->integerValue)
+				CL_DrawPicFixed(x, y, cl.media.gameMaterials[index]);
+
+			continue;
+		}
+
+		// Draw a pic from a name
+		if (!Str_ICompare(token.string, "picn")){
+			PS_ReadToken(script, &token);
+
+			if (cl_drawIcons->integerValue)
+				CL_DrawPicFixedByName(x, y, token.string);
+
+			continue;
+		}
+
+		// Draw a number
+		if (!Str_ICompare(token.string, "num")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		// Health number
+		if (!Str_ICompare(token.string, "hnum")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		// Armor number
+		if (!Str_ICompare(token.string, "rnum")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		// Ammo number
+		if (!Str_ICompare(token.string, "anum")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "stat_string")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "string")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "string2")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "cstring")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "cstring2")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+
+		if (!Str_ICompare(token.string, "if")){
+			PS_ReadToken(script, &token);
+
+			continue;
+		}
+	}
+
+	PS_FreeScript(script);
+}
+
+/*
+ ==================
+ CL_DrawStatus
+ ==================
+*/
+static void CL_DrawStatus (){
+
+	if (!cl_drawStatus->integerValue)
+		return;
+
+//	if (!cl.gameMod)
+//		return;
+
+	CL_ExecuteLayoutString(cl.configStrings[CS_STATUSBAR]);
+}
+
+/*
+ ==================
+ CL_DrawLayout
  ==================
 */
 static void CL_DrawLayout (){
 
 	if (!cl_drawLayout->integerValue)
 		return;
+
+	if (!(cl.playerState->stats[STAT_LAYOUTS] & 1))
+		return;
+
+	CL_ExecuteLayoutString(cl.layout);
 }
 
 /*
@@ -454,19 +771,89 @@ static void CL_ScanForPlayerEntity (){
 */
 static void CL_DrawCrosshair (){
 
+	clientInfo_t	*clientInfo;
+	int				crosshair, health;
+	float			color[4], *fadeColor;
+	float			x, y, w, h;
+
 	if (!cl_drawCrosshair->integerValue)
 		return;
+
+	if ((cl.playerState->rdflags & RDF_IRGOGGLES) || cl_thirdPerson->integerValue)
+		return;
+
+	// Select the crosshair
+	crosshair = (cl_drawCrosshair->integerValue - 1) % NUM_CROSSHAIRS;
+	if (crosshair < 0)
+		return;
+
+	// Set dimensions and position
+	w = cl_crosshairSize->integerValue;
+	h = cl_crosshairSize->integerValue;
+
+	x = cl_crosshairX->integerValue + ((SCREEN_WIDTH - w) * 0.5f);
+	y = cl_crosshairY->integerValue + ((SCREEN_HEIGHT- h) * 0.5f);
+
+	// Set color and alpha
+	if (cl_crosshairHealth->integerValue){
+		health = cl.playerState->stats[STAT_HEALTH];
+
+		// TODO!!!
+	}
+	else {
+		color[0] = color_table[cl_crosshairColor->integerValue & COLOR_MASK][0];
+		color[1] = color_table[cl_crosshairColor->integerValue & COLOR_MASK][1];
+		color[2] = color_table[cl_crosshairColor->integerValue & COLOR_MASK][2];
+		color[3] = 1.0f * ClampFloat(cl_crosshairAlpha->floatValue, 0.0f, 1.0f);
+	}
+
+	// Draw it
+	R_SetColor(color);
+	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_CENTER, 1.0f, cl.media.crosshairMaterials[crosshair]);
+
+	// Draw the target name
+	if (cl_crosshairNames->integerValue){
+		if (!cl.multiPlayer)
+			return;		// Don't bother in singleplayer
+
+		// Scan for a player entity
+		CL_ScanForPlayerEntity();
+
+		if (!cl.crosshairEntTime || !cl.crosshairEntNumber)
+			return;
+
+		clientInfo = &cl.clientInfo[cl.crosshairEntNumber - 1];
+		if (!clientInfo->valid)
+			return;
+
+		// Set color and alpha
+		if (cl_crosshairHealth->integerValue){
+			color[0] = color_table[cl_crosshairColor->integerValue & COLOR_MASK][0];
+			color[1] = color_table[cl_crosshairColor->integerValue & COLOR_MASK][1];
+			color[2] = color_table[cl_crosshairColor->integerValue & COLOR_MASK][2];
+		}
+
+		fadeColor = CL_FadeAlpha(color, cl.crosshairEntTime, 1000, 250);
+		if (!fadeColor){
+			cl.crosshairEntTime = 0;
+			cl.crosshairEntNumber = 0;
+			return;
+		}
+
+		// Draw it
+	}
 }
 
 /*
  ==================
- 
- TODO: fix position
+ CL_DrawCenterString
  ==================
 */
 static void CL_DrawCenterString (){
 
 	float	*fadeColor;
+	char	string[MAX_STRING_LENGTH];
+	int		length;
 
 	if (!cl_drawCenterString->integerValue)
 		return;
@@ -475,7 +862,11 @@ static void CL_DrawCenterString (){
 	if (!fadeColor)
 		return;
 
-	R_DrawString(0.0f, SCREEN_HEIGHT - 320.0f, 10.0f, 10.0f, cl.centerPrint, fadeColor, true, 1.0f, 2.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+	// Set the string
+	length = Str_SPrintf(string, sizeof(string), "%s", cl.centerPrint);
+
+	// Draw it
+	R_DrawString((SCREEN_WIDTH - length * 10.0f) * 0.5f, SCREEN_HEIGHT - 320.0f, 10.0f, 10.0f, string, fadeColor, true, 1.0f, 2.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
 }
 
 /*
@@ -604,17 +995,194 @@ static void CL_DrawPause (){
 
 	if (!cl_drawPause->integerValue)
 		return;
+
+	// Draw it
+	R_SetColor(colorWhite);
+	R_DrawStretchPic(0.0f, SCREEN_HEIGHT - 260.0f, 0.0f, 40.0f, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_CENTER, 1.0f, cl.media.pauseMaterial);
 }
 
 /*
  ==================
- 
+ CL_DrawMaterial
  ==================
 */
 static void CL_DrawMaterial (){
 
+	trace_t	trace;
+	vec3_t	start, end;
+	char	string[512];
+	float	ofs;
+
 	if (!cl_showMaterial->integerValue)
 		return;
+
+	// Set up the trace
+	VectorCopy(cl.renderView.origin, start);
+	VectorMA(cl.renderView.origin, 8192.0f, cl.renderView.axis[0], end);
+
+	if (cl_showMaterial->integerValue == 2)
+		trace = CL_Trace(start, vec3_origin, vec3_origin, end, cl.clientNum, MASK_ALL, true, NULL);
+	else
+		trace = CL_Trace(start, vec3_origin, vec3_origin, end, cl.clientNum, MASK_SOLID | MASK_WATER, true, NULL);
+
+	if (trace.fraction == 0.0f || trace.fraction == 1.0f)
+		return;
+
+	// Material
+	ofs = 120.0f;
+
+	R_DrawString(5.0f, ofs, 5.0f, 10.0f, "MATERIAL", colorGreen, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+	ofs += 10.0f;
+
+	Str_SPrintf(string, sizeof(string), "textures/%s", trace.surface->name);
+	R_DrawString(5.0f, ofs, 5.0f, 10.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+
+	ofs += 10.0f;
+
+	// Surface flags
+	ofs += 5.0f;
+
+	R_DrawString(5.0f, ofs, 5.0f, 10.0f, "SURFACE FLAGS", colorGreen, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+	ofs += 10.0f;
+
+	if (trace.surface->flags){
+		if (trace.surface->flags & SURF_LIGHT){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "light", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.surface->flags & SURF_SLICK){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "slick", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.surface->flags & SURF_SKY){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "sky", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}	 
+		if (trace.surface->flags & SURF_WARP){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "warp", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.surface->flags & SURF_TRANS33){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "trans33", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.surface->flags & SURF_TRANS66){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "trans66", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.surface->flags & SURF_FLOWING){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "flowing", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.surface->flags & SURF_NODRAW){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "noDraw", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+	}
+	else
+		ofs += 10.0f;
+
+	// Content flags
+	ofs += 5.0f;
+
+	R_DrawString(5.0f, ofs, 5.0f, 10.0f, "CONTENT FLAGS", colorGreen, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+	ofs += 10.0f;
+
+	if (trace.contents){
+		if (trace.contents & CONTENTS_SOLID){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "solid", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_WINDOW){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "window", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_AUX){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "aux", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_LAVA){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "lava", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_SLIME){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "slime", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_WATER){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "water", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_MIST){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "mist", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+
+		if (trace.contents & CONTENTS_AREAPORTAL){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "areaPortal", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_PLAYERCLIP){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "playerClip", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_MONSTERCLIP){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "monsterClip", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+
+		if (trace.contents & CONTENTS_CURRENT_0){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "current_0", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_CURRENT_90){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "current_90", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_CURRENT_180){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "current_180", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_CURRENT_270){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "current_270", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_CURRENT_UP){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "current_up", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_CURRENT_DOWN){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "current_down", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+
+		if (trace.contents & CONTENTS_ORIGIN){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "origin", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_MONSTER){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "monster", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_DEADMONSTER){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "deadMonster", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_DETAIL){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "detail", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_TRANSLUCENT){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "translucent", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+		if (trace.contents & CONTENTS_LADDER){
+			R_DrawString(5.0f, ofs, 5.0f, 10.0f, "ladder", colorWhite, true, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.charsetMaterial);
+			ofs += 10.0f;
+		}
+	}
+	else
+		ofs += 10.0f;
 }
 
 

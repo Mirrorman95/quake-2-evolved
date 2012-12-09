@@ -631,7 +631,7 @@ void CL_Explosion (const vec3_t org, const vec3_t dir, float radius, float rotat
 	VectorMA(org, radius * 0.5f, dir, le->entity.origin);
 	le->entity.spriteRotation = rotation;
 	le->entity.material = material;
-	le->entity.materialParms[MATERIALPARM_TIMEOFFSET] = MS2SEC(le->startTime);
+	le->entity.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(le->startTime);
 }
 
 /*
@@ -855,7 +855,7 @@ void CL_MachinegunEjectBrass (const centity_t *cent, int count, float x, float y
 		le->gravity = -400.0f;
 
 		le->bounceFactor = 1.2f;
-		le->bounceSound = cl.media.sfxMachinegunBrass;
+		le->bounceSound = cl.media.machinegunBrassSound;
 
 		angles[0] = cent->current.angles[0] + (rand() & 31);
 		angles[1] = cent->current.angles[1] + (rand() & 31);
@@ -930,7 +930,7 @@ void CL_ShotgunEjectBrass (const centity_t *cent, int count, float x, float y, f
 		le->gravity = -300.0f;
 
 		le->bounceFactor = 0.8f;
-		le->bounceSound = cl.media.sfxShotgunBrass;
+		le->bounceSound = cl.media.shotgunBrassSound;
 
 		angles[0] = cent->current.angles[0] + (rand() & 31);
 		angles[1] = cent->current.angles[1] + (rand() & 31);

@@ -59,7 +59,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>windows\lib\libogg.lib;windows\lib\libvorbis.lib;windows\lib\libvorbisfile.lib;windows\lib\zlib.lib;winmm.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>windows\lib\libogg.lib;windows\lib\libvorbis.lib;windows\lib\libvorbisfile.lib;windows\lib\zlib.lib;winmm.lib;comctl32.lib;wsock32.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -109,6 +109,7 @@
     <ClInclude Include="shared\math\math.h" />
     <ClInclude Include="shared\math\matrix.h" />
     <ClInclude Include="shared\math\plane.h" />
+    <ClInclude Include="shared\math\rect.h" />
     <ClInclude Include="shared\math\vector.h" />
     <ClInclude Include="shared\q_shared.h" />
     <ClInclude Include="shared\string.h" />
@@ -174,19 +175,23 @@
     <ClCompile Include="renderer\r_glState.c" />
     <ClCompile Include="renderer\r_image.c" />
     <ClCompile Include="renderer\r_light.c" />
+    <ClCompile Include="renderer\r_lightCache.c" />
+    <ClCompile Include="renderer\r_lightEditor.c" />
+    <ClCompile Include="renderer\r_lightInteraction.c" />
     <ClCompile Include="renderer\r_main.c" />
     <ClCompile Include="renderer\r_material.c" />
     <ClCompile Include="renderer\r_mesh.c" />
     <ClCompile Include="renderer\r_model.c" />
+    <ClCompile Include="renderer\r_polygon.c" />
     <ClCompile Include="renderer\r_program.c" />
     <ClCompile Include="renderer\r_render.c" />
     <ClCompile Include="renderer\r_renderCommon.c" />
     <ClCompile Include="renderer\r_renderInteraction.c" />
     <ClCompile Include="renderer\r_scene.c" />
     <ClCompile Include="renderer\r_shader.c" />
-    <ClCompile Include="renderer\r_shadow.c" />
     <ClCompile Include="renderer\r_subview.c" />
     <ClCompile Include="renderer\r_texture.c" />
+    <ClCompile Include="renderer\r_transform.c" />
     <ClCompile Include="renderer\r_world.c" />
     <ClCompile Include="server\sv_commands.c" />
     <ClCompile Include="server\sv_ents.c" />
@@ -202,6 +207,7 @@
     <ClCompile Include="shared\math\math.c" />
     <ClCompile Include="shared\math\matrix.c" />
     <ClCompile Include="shared\math\plane.c" />
+    <ClCompile Include="shared\math\rect.c" />
     <ClCompile Include="shared\math\vector.c" />
     <ClCompile Include="shared\q_math.c" />
     <ClCompile Include="shared\q_shared.c" />
@@ -248,20 +254,6 @@
     <ClCompile Include="windows\win_wndProc.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\baseq2\shaders\ambientLight\generic.fs" />
-    <None Include="..\..\baseq2\shaders\ambientLight\generic.vs" />
-    <None Include="..\..\baseq2\shaders\blendLight\generic.fs" />
-    <None Include="..\..\baseq2\shaders\blendLight\generic.vs" />
-    <None Include="..\..\baseq2\shaders\fogLight\generic.fs" />
-    <None Include="..\..\baseq2\shaders\fogLight\generic.vs" />
-    <None Include="..\..\baseq2\shaders\interaction\cubicGeneric.fs" />
-    <None Include="..\..\baseq2\shaders\interaction\cubicGeneric.vs" />
-    <None Include="..\..\baseq2\shaders\interaction\directionalGeneric.fs" />
-    <None Include="..\..\baseq2\shaders\interaction\directionalGeneric.vs" />
-    <None Include="..\..\baseq2\shaders\interaction\pointGeneric.fs" />
-    <None Include="..\..\baseq2\shaders\interaction\pointGeneric.vs" />
-    <None Include="..\..\baseq2\shaders\interaction\projectedGeneric.fs" />
-    <None Include="..\..\baseq2\shaders\interaction\projectedGeneric.vs" />
     <None Include="windows\q2.ico" />
   </ItemGroup>
   <ItemGroup>

@@ -497,7 +497,7 @@ static void CL_FireEntityEvents (){
 			break;
 		case EV_FOOTSTEP:
 			if (cl_footSteps->integerValue)
-				S_PlaySound(NULL, state->number, CHAN_BODY, cl.media.sfxFootSteps[rand() & 3], 1.0f, ATTN_NORM, 0.0f);
+				S_PlaySound(NULL, state->number, CHAN_BODY, cl.media.footStepSounds[rand() & 3], 1.0f, ATTN_NORM, 0.0f);
 
 			CL_FootStepEffect(state);
 
@@ -1030,10 +1030,10 @@ void CL_AddPacketEntities (){
 		entity.materialParms[MATERIALPARM_GREEN] = 1.0f;
 		entity.materialParms[MATERIALPARM_BLUE] = 1.0f;
 		entity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-		entity.materialParms[MATERIALPARM_TIMEOFFSET] = centity->flashStartTime;
+		entity.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(centity->flashStartTime);
 		entity.materialParms[MATERIALPARM_DIVERSITY] = centity->flashRotation;
 		entity.materialParms[MATERIALPARM_MISC] = entity.frame;
-		entity.materialParms[MATERIALPARM_MODE] = 1.0f;
+		entity.materialParms[MATERIALPARM_MODE] = 0.0f;
 
 		// Only used for black hole model
 		if (state->renderfx == RF_TRANSLUCENT)
@@ -1181,10 +1181,10 @@ void CL_AddViewWeapon (){
 	gun.materialParms[MATERIALPARM_GREEN] = 1.0f;
 	gun.materialParms[MATERIALPARM_BLUE] = 1.0f;
 	gun.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-	gun.materialParms[MATERIALPARM_TIMEOFFSET] = centity->flashStartTime;
+	gun.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(centity->flashStartTime);
 	gun.materialParms[MATERIALPARM_DIVERSITY] = centity->flashRotation;
 	gun.materialParms[MATERIALPARM_MISC] = cl.playerState->stats[STAT_AMMO];
-	gun.materialParms[MATERIALPARM_MODE] = 1.0f;
+	gun.materialParms[MATERIALPARM_MODE] = 0.0f;
 
     // Set up gun position and angles
 	gun.origin[0] = gun.oldOrigin[0] = cl.renderView.origin[0] + cl.oldPlayerState->gunoffset[0] + (cl.playerState->gunoffset[0] - cl.oldPlayerState->gunoffset[0]) * cl.lerpFrac;

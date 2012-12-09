@@ -288,7 +288,7 @@ typedef ushort						half;
 #include "math/bounds.h"
 #include "math/plane.h"
 #include "math/color.h"
-
+#include "math/rect.h"
 
 
 

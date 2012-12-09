@@ -22,54 +22,112 @@
 
 
 //
-// matrix.h - Matrix math
+// r_lightEditor.c - Light editor
 //
 
 
-#ifndef __MATH_MATRIX_H__
-#define __MATH_MATRIX_H__
+#include "r_local.h"
+#include "../common/editor.h"
 
 
-typedef float				mat3_t[9];
-typedef float				mat4_t[16];
+/*
+ ==================
+ 
+ ==================
+*/
+void R_RefreshLightEditor (){
 
-extern vec3_t				mat3_identity[3];
-extern mat4_t				mat4_identity;
+}
+
 
 /*
  ==============================================================================
 
- 3x3 MATRIX
+ CALLBACK FUNCTIONS
 
  ==============================================================================
 */
 
-void			Matrix3_Copy (const vec3_t in[3], vec3_t out[3]);
-bool			Matrix3_Compare (const vec3_t axis1[3], const vec3_t axis2[3]);
-void			Matrix3_Multiply (const vec3_t in1[3], const vec3_t in2[3], vec3_t out[3]);
-void			Matrix3_Identity (vec3_t axis[3]);
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_LightEditorUpdateCallback (int index, lightParms_t *parms){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_LightEditorRemoveCallback (int index){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_LightEditorCloseCallback (){
+
+}
+
 
 /*
  ==============================================================================
 
- 4x4 MATRIX
+ CONSOLE COMMANDS
 
  ==============================================================================
 */
 
-void			Matrix4_Copy (const mat4_t in, mat4_t out);
-bool			Matrix4_Compare (const mat4_t m1, const mat4_t m2);
-void			Matrix4_Set (mat4_t m, const vec3_t rotation[3], const vec3_t translation);
-void			Matrix4_Transpose (const mat4_t m, mat4_t out);
-void			Matrix4_Multiply (const mat4_t m1, const mat4_t m2, mat4_t out);
-void			Matrix4_MultiplyFast (const mat4_t m1, const mat4_t m2, mat4_t out);
-void			Matrix4_AffineInverse (const mat4_t in, mat4_t out);
-void			Matrix4_Identity (mat4_t m);
-void			Matrix4_Rotate (mat4_t m, float angle, float x, float y, float z);
-void			Matrix4_Scale (mat4_t m, float x, float y, float z);
-void			Matrix4_Translate (mat4_t m, float x, float y, float z);
-void			Matrix4_Shear (mat4_t m, float x, float y, float z);
-void			Matrix4_TransformVector (const mat4_t m, const vec3_t in, vec3_t out);
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void R_EditLights_f (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void R_AddLight_f (){
+
+}
 
 
-#endif	// __MATH_MATRIX_H__
+/*
+ ==============================================================================
+
+ INITIALIZATION AND SHUTDOWN
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_InitLightEditor (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_ShutdownLightEditor (){
+
+}

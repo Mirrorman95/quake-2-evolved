@@ -256,7 +256,7 @@ static void UI_GameOptions_Ownerdraw (void *self){
 			VectorCopy(color_table[Clamp(CVar_GetVariableInteger("cl_crosshairColor"), 0, 63)], color);
 			color[3] = 1.0f * Clamp(CVar_GetVariableFloat("cl_crosshairAlpha"), 0.0f, 1.0f);
 
-			UI_DrawPic(item->x, item->y, item->width, item->height, color, Str_VarArgs("pics/crosshair%i", uiGameOptions.currentCrosshair));
+			UI_DrawPic(item->x, item->y, item->width, item->height, color, Str_VarArgs("gfx/crosshairs/crosshair%i", uiGameOptions.currentCrosshair));
 		}
 	}
 	else {

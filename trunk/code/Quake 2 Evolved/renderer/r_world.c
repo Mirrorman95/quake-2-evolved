@@ -25,9 +25,6 @@
 // r_world.c - World surfaces
 //
 
-// TODO:
-// - move cull/surface list into their own files
-
 
 #include "r_local.h"
 
@@ -85,10 +82,10 @@ static bool R_CullSurface (surface_t *surface, const vec3_t origin, int clipFlag
 
 /*
  ==================
- R_AddSurfaceToList
+ R_AddSurface
  ==================
 */
-static void R_AddSurfaceToList (surface_t *surface, renderEntity_t *entity){
+static void R_AddSurface (surface_t *surface, renderEntity_t *entity){
 
 	texInfo_t	*texInfo = surface->texInfo;
 	material_t	*material;
@@ -171,6 +168,9 @@ void R_AddInlineModel (renderEntity_t *entity){
 		VectorSubtract(rg.renderView.origin, entity->origin, origin);
 	}
 
+	// Mark as visible for this view
+	entity->viewCount = rg.viewCount;
+
 	rg.pc.entities++;
 
 	// Add all the surfaces
@@ -187,7 +187,7 @@ void R_AddInlineModel (renderEntity_t *entity){
 			continue;
 
 		// Add the surface
-		R_AddSurfaceToList(surface, entity);
+		R_AddSurface(surface, entity);
 	}
 }
 
@@ -308,7 +308,7 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 	leaf_t		*leaf;
 	surface_t	*surface, **mark;
 	cplane_t	*plane;
-	int			clipped;
+	int			side;
 	int			i;
 
 	// Check for solid content
@@ -321,18 +321,22 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 
 	// Cull
 	if (clipFlags){
-		for (i = 0, plane = rg.viewParms.frustum; i < 4; i++, plane++){
+		for (i = 0, plane = rg.viewParms.frustum; i < NUM_FRUSTUM_PLANES; i++, plane++){
 			if (!(clipFlags & BIT(i)))
 				continue;
 
-			clipped = BoxOnPlaneSide(node->mins, node->maxs, plane);
-			if (clipped == 2)
+			side = BoxOnPlaneSide(node->mins, node->maxs, plane);
+
+			if (side == PLANESIDE_BACK)
 				return;
 
-			if (clipped == 1)
+			if (side == PLANESIDE_FRONT)
 				clipFlags &= ~BIT(i);
 		}
 	}
+
+	// Mark as visible for this view
+	node->viewCount = rg.viewCount;
 
 	// Recurse down the children
 	if (node->contents == -1){
@@ -354,8 +358,8 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 	}
 
 	// Add to world mins/maxs
-	AddPointToBounds(leaf->mins, rg.viewParms.worldMins, rg.viewParms.worldMaxs);
-	AddPointToBounds(leaf->maxs, rg.viewParms.worldMins, rg.viewParms.worldMaxs);
+	AddPointToBounds(leaf->mins, rg.viewParms.visMins, rg.viewParms.visMaxs);
+	AddPointToBounds(leaf->maxs, rg.viewParms.visMins, rg.viewParms.visMaxs);
 
 	rg.pc.leafs++;
 
@@ -364,15 +368,18 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 		surface = *mark;
 
 		if (surface->worldCount == rg.frameCount)
-			continue;	// Already added this surface from another leaf
+			continue;		// Already added this surface from another leaf
 		surface->worldCount = rg.frameCount;
+
+		if (!surface->texInfo->material->numStages)
+			continue;		// Don't bother drawing
 
 		// Cull
 		if (R_CullSurface(surface, rg.renderView.origin, clipFlags))
 			continue;
 
 		// Add the surface
-		R_AddSurfaceToList(surface, rg.worldEntity);
+		R_AddSurface(surface, rg.worldEntity);
 	}
 }
 
@@ -393,7 +400,7 @@ void R_AddWorldSurfaces (){
 	rg.worldEntity->frame = (int)(rg.renderView.time * 2);
 
 	// Clear world mins/maxs
-	ClearBounds(rg.viewParms.worldMins, rg.viewParms.worldMaxs);
+	ClearBounds(rg.viewParms.visMins, rg.viewParms.visMaxs);
 
 	// Mark leaves
 	R_MarkLeaves();
@@ -402,5 +409,8 @@ void R_AddWorldSurfaces (){
 	if (r_skipCulling->integerValue)
 		R_RecursiveWorldNode(rg.worldModel->nodes, 0);
 	else
-		R_RecursiveWorldNode(rg.worldModel->nodes, 15);
+		R_RecursiveWorldNode(rg.worldModel->nodes, rg.viewParms.planeBits);
+
+	// Now that we have the vis bounds, set the far clip plane
+	R_SetFarClip();
 }

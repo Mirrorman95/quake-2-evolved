@@ -30,6 +30,87 @@
 
 
 /*
+ ==================
+ R_SetFarClip
+ ==================
+*/
+void R_SetFarClip (){
+
+	static int	cornerIndices[6][4] = {{3, 2, 6, 7}, {0, 1, 5, 4}, {2, 3, 1, 0}, {4, 5, 7, 6}, {1, 3, 7, 5}, {2, 0, 4, 6}};
+	vec3_t		corners[8];
+	vec3_t		points[2][MAX_POLYGON_POINTS];
+	int			numPoints;
+	cplane_t	*plane;
+	float		distance, maxDistance = 0.0f;
+	float		z, w;
+	int			pingPong = 0;
+	int			i, j;
+
+	if (r_zFar->floatValue > r_zNear->floatValue)
+		return;
+
+	// If we have visible leaves
+	if (!BoundsIsCleared(rg.viewParms.visMins, rg.viewParms.visMaxs)){
+		BoundsToPoints(rg.viewParms.visMins, rg.viewParms.visMaxs, corners);
+
+		// Clip the visible volume to the view frustum
+		for (i = 0; i < 6; i++){
+			numPoints = 4;
+
+			VectorCopy(corners[cornerIndices[i][0]], points[pingPong][0]);
+			VectorCopy(corners[cornerIndices[i][1]], points[pingPong][1]);
+			VectorCopy(corners[cornerIndices[i][2]], points[pingPong][2]);
+			VectorCopy(corners[cornerIndices[i][3]], points[pingPong][3]);
+
+			for (j = 0; j < NUM_FRUSTUM_PLANES; j++){
+				if (!(rg.viewParms.planeBits & BIT(j)))
+					continue;
+
+				if (!R_ClipPolygon(numPoints, points[pingPong], rg.viewParms.frustum[j], ON_EPSILON, &numPoints, points[!pingPong]))
+					break;
+
+				pingPong ^= 1;
+			}
+
+			if (j != NUM_FRUSTUM_PLANES)
+				continue;
+
+			// Find the maximum distance to the near plane
+			plane = &rg.viewParms.frustum[FRUSTUM_NEAR];
+
+			for (j = 0; j < numPoints; j++){
+				distance = PlaneDistance(plane->normal, plane->dist, points[pingPong][j]);
+
+				if (distance > maxDistance)
+					maxDistance = distance;
+			}
+		}
+	}
+
+	// Compute distance to far clip plane
+	rg.viewParms.zFar = r_zNear->floatValue + maxDistance + 1.0f;
+	if (rg.viewParms.zFar < 50.0f)
+		rg.viewParms.zFar = 50.0f;
+
+	if (r_showFarClip->integerValue)
+		Com_Printf("zFar: %.2f\n", rg.viewParms.zFar);
+
+	z = -(rg.viewParms.zFar + r_zNear->floatValue) / (rg.viewParms.zFar - r_zNear->floatValue);
+	w = -2.0f * rg.viewParms.zFar * r_zNear->floatValue / (rg.viewParms.zFar - r_zNear->floatValue);
+
+	// Modify the projection matrix
+	rg.viewParms.projectionMatrix[10] = z;
+	rg.viewParms.projectionMatrix[14] = w;
+
+	// Modify the modelview-projection matrix
+	rg.viewParms.modelviewProjectionMatrix[2] = -rg.renderView.axis[0][0] * z;
+	rg.viewParms.modelviewProjectionMatrix[6] = -rg.renderView.axis[0][1] * z;
+	rg.viewParms.modelviewProjectionMatrix[10] = -rg.renderView.axis[0][2] * z;
+	rg.viewParms.modelviewProjectionMatrix[14] = DotProduct(rg.renderView.origin, rg.renderView.axis[0]) * z + w;
+}
+
+
+/*
  ==============================================================================
 
  VIEW FRUSTUM CULLING
@@ -53,7 +134,7 @@ bool R_CullBox (const vec3_t mins, const vec3_t maxs, int clipFlags){
 	if (r_skipCulling->integerValue)
 		return false;
 
-	for (i = 0, plane = rg.viewParms.frustum; i < 4; i++, plane++){
+	for (i = 0, plane = rg.viewParms.frustum; i < NUM_FRUSTUM_PLANES; i++, plane++){
 		if (!(clipFlags & BIT(i)))
 			continue;
 
@@ -140,7 +221,7 @@ bool R_CullSphere (const vec3_t origin, float radius, int clipFlags){
 	if (r_skipCulling->integerValue)
 		return false;
 
-	for (i = 0, plane = rg.viewParms.frustum; i < 4; i++, plane++){
+	for (i = 0, plane = rg.viewParms.frustum; i < NUM_FRUSTUM_PLANES; i++, plane++){
 		if (!(clipFlags & BIT(i)))
 			continue;
 
@@ -470,7 +551,7 @@ static void R_SetupViewportAndScissor (){
 	rg.viewParms.viewport.width = x + w;
 	rg.viewParms.viewport.height = y + h;
 
-	// TODO: clamp
+	RectClip(renderCrop->rect, rg.viewParms.viewport.x, rg.viewParms.viewport.y, rg.viewParms.viewport.width, rg.viewParms.viewport.height);
 
 	// Set up the scissor
 	if (r_skipScissors->integerValue){
@@ -489,7 +570,20 @@ static void R_SetupViewportAndScissor (){
 		rg.viewParms.scissor.height = rg.viewParms.viewport.height;
 	}
 	else {
+		// Transform into screen space
+		if (rg.viewParms.viewType == VIEW_SKY){
 
+		}
+		else {
+
+		}
+
+		// Set up the scissor
+
+		// Flip it horizontally if needed
+		if (rg.viewParms.viewType == VIEW_MIRROR){
+
+		}
 	}
 }
 
@@ -538,16 +632,39 @@ static void R_SetupFrustum (){
 	int		i;
 
 	// Set up the left/right clip planes
-	RotatePointAroundVector(rg.viewParms.frustum[FRUSTUM_LEFT].normal, rg.renderView.axis[2], rg.renderView.axis[0], -(90.0f - rg.viewParms.fovX / 2.0f));
-	RotatePointAroundVector(rg.viewParms.frustum[FRUSTUM_RIGHT].normal, rg.renderView.axis[2], rg.renderView.axis[0], 90.0f - rg.viewParms.fovX / 2.0f);
-	
-	// Set up the top/bottom clip planes
-	RotatePointAroundVector(rg.viewParms.frustum[FRUSTUM_TOP].normal, rg.renderView.axis[1], rg.renderView.axis[0], 90.0f - rg.viewParms.fovY / 2.0f);
-	RotatePointAroundVector(rg.viewParms.frustum[FRUSTUM_BOTTOM].normal, rg.renderView.axis[1], rg.renderView.axis[0], -(90.0f - rg.viewParms.fovY / 2.0f));
+	rg.viewParms.planeBits |= (BIT(FRUSTUM_LEFT) | BIT(FRUSTUM_RIGHT));
 
-	for (i = 0; i < 4; i++){
+	RotatePointAroundVector(rg.viewParms.frustum[FRUSTUM_LEFT].normal, rg.renderView.axis[2], rg.renderView.axis[0], -(90.0f - rg.viewParms.fovX / 2.0f));
+	rg.viewParms.frustum[FRUSTUM_LEFT].dist = DotProduct(rg.renderView.origin, rg.viewParms.frustum[FRUSTUM_LEFT].normal);
+
+	RotatePointAroundVector(rg.viewParms.frustum[FRUSTUM_RIGHT].normal, rg.renderView.axis[2], rg.renderView.axis[0], 90.0f - rg.viewParms.fovX / 2.0f);
+	rg.viewParms.frustum[FRUSTUM_RIGHT].dist = DotProduct(rg.renderView.origin, rg.viewParms.frustum[FRUSTUM_RIGHT].normal);
+
+	// Set up the top/bottom clip planes
+	rg.viewParms.planeBits |= (BIT(FRUSTUM_TOP) | BIT(FRUSTUM_BOTTOM));
+
+	RotatePointAroundVector(rg.viewParms.frustum[FRUSTUM_TOP].normal, rg.renderView.axis[1], rg.renderView.axis[0], 90.0f - rg.viewParms.fovY / 2.0f);
+	rg.viewParms.frustum[FRUSTUM_TOP].dist = DotProduct(rg.renderView.origin, rg.viewParms.frustum[FRUSTUM_TOP].normal);
+
+	RotatePointAroundVector(rg.viewParms.frustum[FRUSTUM_BOTTOM].normal, rg.renderView.axis[1], rg.renderView.axis[0], -(90.0f - rg.viewParms.fovY / 2.0f));
+	rg.viewParms.frustum[FRUSTUM_BOTTOM].dist = DotProduct(rg.renderView.origin, rg.viewParms.frustum[FRUSTUM_BOTTOM].normal);
+
+	// Set up the near clip plane
+	rg.viewParms.planeBits |= BIT(FRUSTUM_NEAR);
+
+	VectorCopy(rg.renderView.axis[0], rg.viewParms.frustum[FRUSTUM_NEAR].normal);
+	rg.viewParms.frustum[FRUSTUM_NEAR].dist = DotProduct(rg.renderView.origin, rg.viewParms.frustum[FRUSTUM_NEAR].normal) + r_zNear->floatValue;
+
+	// Set up the user clip plane if needed
+	if (rg.viewParms.viewType == VIEW_MIRROR){
+		rg.viewParms.planeBits |= BIT(FRUSTUM_USER);
+
+		// TODO: frustum
+	}
+
+	// FIXME: do we really need this loop?
+	for (i = 0; i < NUM_FRUSTUM_PLANES; i++){
 		rg.viewParms.frustum[i].type = PLANE_NON_AXIAL;
-		rg.viewParms.frustum[i].dist = DotProduct(rg.renderView.origin, rg.viewParms.frustum[i].normal);
 		SetPlaneSignbits(&rg.viewParms.frustum[i]);
 	}
 }
@@ -559,40 +676,27 @@ static void R_SetupFrustum (){
 */
 static void R_SetupMatrices (){
 
-	float	xMax, xMin, yMax, yMin;
-	float	xDiv, yDiv, zDiv;
-
 	// Compute the projection matrix
-	xMax = r_zNear->floatValue * tan(rg.viewParms.fovX * M_PI / 360.0);
-	xMin = -xMax;
-
-	yMax = r_zNear->floatValue * tan(rg.viewParms.fovY * M_PI / 360.0);
-	yMin = -yMax;
-
-	xDiv = 1.0 / (xMax - xMin);
-	yDiv = 1.0 / (yMax - yMin);
-	zDiv = 1.0 / (r_zFar->floatValue - r_zNear->floatValue);
-
-	rg.viewParms.projectionMatrix[ 0] = 2.0f * r_zNear->floatValue * xDiv;
+	rg.viewParms.projectionMatrix[ 0] = 1.0f / Tan(rg.viewParms.fovX * (M_PI / 360.0f));
 	rg.viewParms.projectionMatrix[ 1] = 0.0f;
 	rg.viewParms.projectionMatrix[ 2] = 0.0f;
 	rg.viewParms.projectionMatrix[ 3] = 0.0f;
 	rg.viewParms.projectionMatrix[ 4] = 0.0f;
-	rg.viewParms.projectionMatrix[ 5] = 2.0f * r_zNear->floatValue * yDiv;
+	rg.viewParms.projectionMatrix[ 5] = 1.0f / Tan(rg.viewParms.fovY * (M_PI / 360.0f));
 	rg.viewParms.projectionMatrix[ 6] = 0.0f;
 	rg.viewParms.projectionMatrix[ 7] = 0.0f;
-	rg.viewParms.projectionMatrix[ 8] = (xMax + xMin) * xDiv;
-	rg.viewParms.projectionMatrix[ 9] = (yMax + yMin) * yDiv;
-	rg.viewParms.projectionMatrix[10] = -0.9f;
+	rg.viewParms.projectionMatrix[ 8] = 0.0f;
+	rg.viewParms.projectionMatrix[ 9] = 0.0f;
+	rg.viewParms.projectionMatrix[10] = -(rg.viewParms.zFar + r_zNear->floatValue) / (rg.viewParms.zFar - r_zNear->floatValue);
 	rg.viewParms.projectionMatrix[11] = -1.0f;
 	rg.viewParms.projectionMatrix[12] = 0.0f;
 	rg.viewParms.projectionMatrix[13] = 0.0f;
-	rg.viewParms.projectionMatrix[14] = -2.0f * r_zNear->floatValue * 0.9f;
+	rg.viewParms.projectionMatrix[14] = -2.0f * rg.viewParms.zFar * r_zNear->floatValue / (rg.viewParms.zFar - r_zNear->floatValue);
 	rg.viewParms.projectionMatrix[15] = 0.0f;
 
-	if (r_zFar->floatValue > r_zNear->floatValue){
-		rg.viewParms.projectionMatrix[10] = -(r_zNear->floatValue + r_zFar->floatValue) * zDiv;
-		rg.viewParms.projectionMatrix[14] = -2.0f * r_zNear->floatValue * r_zFar->floatValue * zDiv;
+	if (rg.viewParms.primaryView && r_zFar->floatValue <= r_zNear->floatValue){
+		rg.viewParms.projectionMatrix[10] = -0.999f;
+		rg.viewParms.projectionMatrix[14] = -2.0f * r_zNear->floatValue;
 	}
 
 	// Compute the modelview matrix
@@ -640,7 +744,7 @@ static void R_SetupMatrices (){
 
 /*
  ==================
- 
+ R_RenderView
  ==================
 */
 void R_RenderView (bool primaryView, int viewType){
@@ -652,8 +756,16 @@ void R_RenderView (bool primaryView, int viewType){
 	rg.viewParms.primaryView = primaryView;
 	rg.viewParms.viewType = viewType;
 
+	if (r_zFar->floatValue > r_zNear->floatValue)
+		rg.viewParms.zFar = r_zFar->floatValue;
+	else
+		rg.viewParms.zFar = FAR_PLANE_DISTANCE;
+
 	// Set up the viewport and scissor
 	R_SetupViewportAndScissor();
+
+	if (!RectSize(rg.viewParms.viewport) || !RectSize(rg.viewParms.scissor))
+		return;
 
 	// Set up FOV, frustum, and matrices
 	R_SetupFOV();

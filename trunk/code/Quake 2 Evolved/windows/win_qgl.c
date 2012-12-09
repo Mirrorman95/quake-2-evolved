@@ -72,6 +72,7 @@ BOOL						(WINAPI * qwglUseFontOutlines)(HDC hDC, DWORD first, DWORD count, DWOR
 BOOL						(WINAPI * qwglSwapIntervalEXT)(int interval);
 
 GLvoid					(APIENTRY * qglAccum)(GLenum op, GLfloat value);
+GLvoid					(APIENTRY * qglActiveStencilFaceEXT)(GLenum face);
 GLvoid					(APIENTRY * qglActiveTexture)(GLenum texture);
 GLvoid					(APIENTRY * qglAlphaFunc)(GLenum func, GLclampf ref);
 GLboolean				(APIENTRY * qglAreTexturesResident)(GLsizei n, const GLuint *textures, GLboolean *residences);
@@ -573,6 +574,8 @@ GLvoid					(APIENTRY * qglStencilMask)(GLuint mask);
 GLvoid					(APIENTRY * qglStencilMaskSeparate)(GLenum face, GLuint mask);
 GLvoid					(APIENTRY * qglStencilOp)(GLenum fail, GLenum zfail, GLenum zpass);
 GLvoid					(APIENTRY * qglStencilOpSeparate)(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
+GLvoid					(APIENTRY * qglStencilOpSeparateATI)(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
+GLvoid					(APIENTRY * qglStencilFuncSeparateATI)(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask);
 GLvoid					(APIENTRY * qglTexBuffer)(GLenum target, GLenum internalformat, GLuint buffer);
 GLvoid					(APIENTRY * qglTexCoord1d)(GLdouble s);
 GLvoid					(APIENTRY * qglTexCoord1dv)(const GLdouble *v);
@@ -800,6 +803,7 @@ GLvoid					(APIENTRY * qglWindowPos3sv)(const GLshort *v);
 
 
 static GLvoid			(APIENTRY * dllAccum)(GLenum op, GLfloat value);
+static GLvoid			(APIENTRY * dllActiveStencilFaceEXT)(GLenum face);
 static GLvoid			(APIENTRY * dllActiveTexture)(GLenum texture);
 static GLvoid			(APIENTRY * dllAlphaFunc)(GLenum func, GLclampf ref);
 static GLboolean		(APIENTRY * dllAreTexturesResident)(GLsizei n, const GLuint *textures, GLboolean *residences);
@@ -1301,6 +1305,8 @@ static GLvoid			(APIENTRY * dllStencilMask)(GLuint mask);
 static GLvoid			(APIENTRY * dllStencilMaskSeparate)(GLenum face, GLuint mask);
 static GLvoid			(APIENTRY * dllStencilOp)(GLenum fail, GLenum zfail, GLenum zpass);
 static GLvoid			(APIENTRY * dllStencilOpSeparate)(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
+static GLvoid			(APIENTRY * dllStencilOpSeparateATI)(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
+static GLvoid			(APIENTRY * dllStencilFuncSeparateATI)(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask);
 static GLvoid			(APIENTRY * dllTexBuffer)(GLenum target, GLenum internalformat, GLuint buffer);
 static GLvoid			(APIENTRY * dllTexCoord1d)(GLdouble s);
 static GLvoid			(APIENTRY * dllTexCoord1dv)(const GLdouble *v);
@@ -1531,6 +1537,20 @@ static GLvoid APIENTRY logAccum (GLenum op, GLfloat value){
 
 	fprintf(qglState.logFile, "glAccum( 0x%08X, %g )\n", op, value);
 	dllAccum(op, value);
+}
+
+static GLvoid APIENTRY logActiveStencilFaceEXT (GLenum face){
+
+	const char	*f;
+
+	switch (face){
+	case GL_FRONT:	f = "GL_FRONT";						break;
+	case GL_BACK:	f = "GL_BACK";						break;
+	default:		f = Str_VarArgs("0x%X", face);		break;
+	}
+
+	fprintf(qglState.logFile, "glActiveStencilFace( %s )\n", f);
+	dllActiveStencilFaceEXT(face);
 }
 
 static GLvoid APIENTRY logActiveTexture (GLenum texture){
@@ -6739,6 +6759,89 @@ static GLvoid APIENTRY logStencilOpSeparate (GLenum face, GLenum fail, GLenum zf
 	dllStencilOpSeparate(face, fail, zfail, zpass);
 }
 
+static GLvoid APIENTRY logStencilOpSeparateATI (GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass){
+
+	const char	*f, *sf, *dpf, *dpp;
+
+	switch (face){
+	case GL_FRONT:			f = "GL_FRONT";						break;
+	case GL_BACK:			f = "GL_BACK";						break;
+	case GL_FRONT_AND_BACK:	f = "GL_FRONT_AND_BACK";			break;
+	default:				f = Str_VarArgs("0x%X", face);		break;
+	}
+
+	switch (sfail){
+	case GL_KEEP:			sf = "GL_KEEP";						break;
+	case GL_ZERO:			sf = "GL_ZERO";						break;
+	case GL_REPLACE:		sf = "GL_REPLACE";					break;
+	case GL_INCR:			sf = "GL_INCR";						break;
+	case GL_INCR_WRAP_EXT:	sf = "GL_INCR_WRAP";				break;
+	case GL_DECR:			sf = "GL_DECR";						break;
+	case GL_DECR_WRAP_EXT:	sf = "GL_DECR_WRAP";				break;
+	case GL_INVERT:			sf = "GL_INVERT";					break;
+	default:				sf = Str_VarArgs("0x%X", sfail);	break;
+	}
+
+	switch (dpfail){
+	case GL_KEEP:			dpf = "GL_KEEP";					break;
+	case GL_ZERO:			dpf = "GL_ZERO";					break;
+	case GL_REPLACE:		dpf = "GL_REPLACE";					break;
+	case GL_INCR:			dpf = "GL_INCR";					break;
+	case GL_INCR_WRAP_EXT:	dpf = "GL_INCR_WRAP";				break;
+	case GL_DECR:			dpf = "GL_DECR";					break;
+	case GL_DECR_WRAP_EXT:	dpf = "GL_DECR_WRAP";				break;
+	case GL_INVERT:			dpf = "GL_INVERT";					break;
+	default:				dpf = Str_VarArgs("0x%X", dpfail);	break;
+	}
+
+	switch (dppass){
+	case GL_KEEP:			dpp = "GL_KEEP";					break;
+	case GL_ZERO:			dpp = "GL_ZERO";					break;
+	case GL_REPLACE:		dpp = "GL_REPLACE";					break;
+	case GL_INCR:			dpp = "GL_INCR";					break;
+	case GL_INCR_WRAP_EXT:	dpp = "GL_INCR_WRAP";				break;
+	case GL_DECR:			dpp = "GL_DECR";					break;
+	case GL_DECR_WRAP_EXT:	dpp = "GL_DECR_WRAP";				break;
+	case GL_INVERT:			dpp = "GL_INVERT";					break;
+	default:				dpp = Str_VarArgs("0x%X", dppass);	break;
+	}
+
+	fprintf(qglState.logFile, "glStencilOpSeparate( %s, %s, %s, %s )\n", f, sf, dpf, dpp);
+	dllStencilOpSeparateATI(face, sfail, dpfail, dppass);
+}
+
+static GLvoid APIENTRY logStencilFuncSeparateATI (GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask){
+
+	const char	*ff, *bf;
+
+	switch (frontfunc){
+	case GL_NEVER:		ff = "GL_NEVER";						break;
+	case GL_LESS:		ff = "GL_LESS";							break;
+	case GL_LEQUAL:		ff = "GL_LEQUAL";						break;
+	case GL_GREATER:	ff = "GL_GREATER";						break;
+	case GL_GEQUAL:		ff = "GL_GEQUAL";						break;
+	case GL_EQUAL:		ff = "GL_EQUAL";						break;
+	case GL_NOTEQUAL:	ff = "GL_NOTEQUAL";						break;
+	case GL_ALWAYS:		ff = "GL_ALWAYS";						break;
+	default:			ff = Str_VarArgs("0x%X", frontfunc);	break;
+	}
+
+	switch (backfunc){
+	case GL_NEVER:		bf = "GL_NEVER";						break;
+	case GL_LESS:		bf = "GL_LESS";							break;
+	case GL_LEQUAL:		bf = "GL_LEQUAL";						break;
+	case GL_GREATER:	bf = "GL_GREATER";						break;
+	case GL_GEQUAL:		bf = "GL_GEQUAL";						break;
+	case GL_EQUAL:		bf = "GL_EQUAL";						break;
+	case GL_NOTEQUAL:	bf = "GL_NOTEQUAL";						break;
+	case GL_ALWAYS:		bf = "GL_ALWAYS";						break;
+	default:			bf = Str_VarArgs("0x%X", backfunc);		break;
+	}
+
+	fprintf(qglState.logFile, "glStencilFuncSeparate( %s, %s, %i, %u )\n", ff, bf, ref, mask);
+	dllStencilFuncSeparateATI(frontfunc, backfunc, ref, mask);
+}
+
 static GLvoid APIENTRY logTexBuffer (GLenum target, GLenum internalformat, GLuint buffer){
 
 	const char	*t, *i;
@@ -9274,6 +9377,7 @@ static GLvoid APIENTRY logWindowPos3sv (const GLshort *v){
 static void QGL_CopyPointers (){
 
 	dllAccum								= qglAccum;
+	dllActiveStencilFaceEXT					= qglActiveStencilFaceEXT;
 	dllActiveTexture						= qglActiveTexture;
 	dllAlphaFunc							= qglAlphaFunc;
 	dllAreTexturesResident					= qglAreTexturesResident;
@@ -9775,6 +9879,8 @@ static void QGL_CopyPointers (){
 	dllStencilMaskSeparate					= qglStencilMaskSeparate;
 	dllStencilOp							= qglStencilOp;
 	dllStencilOpSeparate					= qglStencilOpSeparate;
+	dllStencilOpSeparateATI					= qglStencilOpSeparateATI;
+	dllStencilFuncSeparateATI				= qglStencilFuncSeparateATI;
 	dllTexBuffer							= qglTexBuffer;
 	dllTexCoord1d							= qglTexCoord1d;
 	dllTexCoord1dv							= qglTexCoord1dv;
@@ -10059,6 +10165,7 @@ void QGL_EnableLogging (bool enable){
 
 		// Change the function pointers
 		qglAccum								= logAccum;
+		qglActiveStencilFaceEXT					= logActiveStencilFaceEXT;
 		qglActiveTexture						= logActiveTexture;
 		qglAlphaFunc							= logAlphaFunc;
 		qglAreTexturesResident					= logAreTexturesResident;
@@ -10560,6 +10667,8 @@ void QGL_EnableLogging (bool enable){
 		qglStencilMaskSeparate					= logStencilMaskSeparate;
 		qglStencilOp							= logStencilOp;
 		qglStencilOpSeparate					= logStencilOpSeparate;
+		qglStencilOpSeparateATI					= logStencilOpSeparateATI;
+		qglStencilFuncSeparateATI				= logStencilFuncSeparateATI;
 		qglTexBuffer							= logTexBuffer;
 		qglTexCoord1d							= logTexCoord1d;
 		qglTexCoord1dv							= logTexCoord1dv;
@@ -10799,6 +10908,7 @@ void QGL_EnableLogging (bool enable){
 
 		// Reset the function pointers
 		qglAccum								= dllAccum;
+		qglActiveStencilFaceEXT					= dllActiveStencilFaceEXT;
 		qglActiveTexture						= dllActiveTexture;
 		qglAlphaFunc							= dllAlphaFunc;
 		qglAreTexturesResident					= dllAreTexturesResident;
@@ -11300,6 +11410,8 @@ void QGL_EnableLogging (bool enable){
 		qglStencilMaskSeparate					= dllStencilMaskSeparate;
 		qglStencilOp							= dllStencilOp;
 		qglStencilOpSeparate					= dllStencilOpSeparate;
+		qglStencilOpSeparateATI					= dllStencilOpSeparateATI;
+		qglStencilFuncSeparateATI				= dllStencilFuncSeparateATI;
 		qglTexBuffer							= dllTexBuffer;
 		qglTexCoord1d							= dllTexCoord1d;
 		qglTexCoord1dv							= dllTexCoord1dv;
@@ -11622,6 +11734,7 @@ bool QGL_Init (const char *driver){
 	qwglSwapIntervalEXT						= NULL;
 
 	qglAccum								= (GLACCUM)QGL_GetProcAddress("glAccum");
+	qglActiveStencilFaceEXT					= NULL;
 	qglActiveTexture						= NULL;
 	qglAlphaFunc							= (GLALPHAFUNC)QGL_GetProcAddress("glAlphaFunc");
 	qglAreTexturesResident					= (GLARETEXTURESRESIDENT)QGL_GetProcAddress("glAreTexturesResident");
@@ -12123,6 +12236,8 @@ bool QGL_Init (const char *driver){
 	qglStencilMaskSeparate					= NULL;
 	qglStencilOp							= (GLSTENCILOP)QGL_GetProcAddress("glStencilOp");
 	qglStencilOpSeparate					= NULL;
+	qglStencilOpSeparateATI					= NULL;
+	qglStencilFuncSeparateATI				= NULL;
 	qglTexBuffer							= NULL;
 	qglTexCoord1d							= (GLTEXCOORD1D)QGL_GetProcAddress("glTexCoord1d");
 	qglTexCoord1dv							= (GLTEXCOORD1DV)QGL_GetProcAddress("glTexCoord1dv");
@@ -12398,6 +12513,7 @@ void QGL_Shutdown (){
 	qwglSwapIntervalEXT						= NULL;
 
 	qglAccum								= NULL;
+	qglActiveStencilFaceEXT					= NULL;
 	qglActiveTexture						= NULL;
 	qglAlphaFunc							= NULL;
 	qglAreTexturesResident					= NULL;

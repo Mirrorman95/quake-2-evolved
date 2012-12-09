@@ -36,8 +36,21 @@
 */
 void ClearBounds (vec3_t mins, vec3_t maxs){
 
-	mins[0] = mins[1] = mins[2] = 999999.0f;
-	maxs[0] = maxs[1] = maxs[2] = -999999.0f;
+	mins[0] = mins[1] = mins[2] = M_INFINITY;
+	maxs[0] = maxs[1] = maxs[2] = -M_INFINITY;
+}
+
+/*
+ ==================
+ BoundsIsCleared
+ ==================
+*/
+bool BoundsIsCleared (vec3_t mins, vec3_t maxs){
+
+	if (mins[0] <= maxs[0] || mins[1] <= maxs[1] || mins[2] <= maxs[2])
+		return false;
+
+	return true;
 }
 
 /*
@@ -61,6 +74,52 @@ void AddPointToBounds (const vec3_t v, vec3_t mins, vec3_t maxs){
 		mins[2] = v[2];
 	if (v[2] > maxs[2])
 		maxs[2] = v[2];
+}
+
+/*
+ ==================
+ BoundsToPoints
+ ==================
+*/
+void BoundsToPoints (const vec3_t mins, const vec3_t maxs, vec3_t points[8]){
+
+	int		i;
+
+	for (i = 0; i < 8; i++){
+		points[i][0] = (i & 1) ? mins[0] : maxs[0];
+		points[i][1] = (i & 2) ? mins[1] : maxs[1];
+		points[i][2] = (i & 4) ? mins[2] : maxs[2];
+	}
+}
+
+/*
+ ==================
+ BoundsFromPoints
+ ==================
+*/
+void BoundsFromPoints (vec3_t mins, vec3_t maxs, const vec3_t points[8]){
+
+	int		i;
+
+	mins[0] = mins[1] = mins[2] = M_INFINITY;
+	maxs[0] = maxs[1] = maxs[2] = -M_INFINITY;
+
+	for (i = 0; i < 8; i++){
+		if (points[i][0] < mins[0])
+			mins[0] = points[i][0];
+		if (points[i][0] > mins[0])
+			maxs[0] = points[i][0];
+
+		if (points[i][1] < mins[1])
+			mins[1] = points[i][1];
+		if (points[i][1] > mins[1])
+			maxs[1] = points[i][1];
+
+		if (points[i][2] < mins[2])
+			mins[2] = points[i][2];
+		if (points[i][2] > mins[2])
+			maxs[2] = points[i][2];
+	}
 }
 
 /*
@@ -113,6 +172,36 @@ bool BoundsAndSphereIntersect (const vec3_t mins, const vec3_t maxs, const vec3_
 	if (mins[0] > origin[0] + radius || mins[1] > origin[1] + radius || mins[2] > origin[2] + radius)
 		return false;
 	if (maxs[0] < origin[0] - radius || maxs[1] < origin[1] - radius || maxs[2] < origin[2] - radius)
+		return false;
+
+	return true;
+}
+
+/*
+ ==================
+ BoundsAndPointIntersect
+ ==================
+*/
+bool BoundsAndPointIntersect (const vec3_t mins, const vec3_t maxs, const vec3_t point){
+
+	if (point[0] > maxs[0] || point[1] > maxs[1] || point[2] > maxs[2])
+		return false;
+	if (point[0] < mins[0] || point[1] < mins[1] || point[2] < mins[2])
+		return false;
+
+	return true;
+}
+
+/*
+ ==================
+ BoundsContainsPoint
+ ==================
+*/
+bool BoundsContainsPoint (const vec3_t mins, const vec3_t maxs, const vec3_t point){
+
+	if (maxs[0] > point[0] || maxs[1] > point[1] || maxs[2] > point[2])
+		return false;
+	if (mins[0] < point[0] || mins[1] < point[1] || mins[2] < point[2])
 		return false;
 
 	return true;

@@ -37,7 +37,7 @@ static const char *			uiCreditsId[] = {
 	"",
 	"+PROGRAMMING",
 	"Nicolas \"^4BE^3RSE^4RK^7\" Flekenstein",
-	"Kevin \"Annatar\" Jonasson",
+	"Kevin \"Paradox\" Jonasson",
 	"",
 	"+ART",
 	"Gavin \"o'dium\" Stevens",
@@ -186,7 +186,7 @@ static const char *			uiCreditsXatrix[] = {
 	"",
 	"+PROGRAMMING",
 	"Nicolas \"^4BE^3RSE^4RK^7\" Flekenstein",
-	"Kevin \"Annatar\" Jonasson",
+	"Kevin \"Paradox\" Jonasson",
 	"",
 	"+ART",
 	"Gavin \"o'dium\" Stevens",
@@ -385,7 +385,7 @@ static const char *			uiCreditsRogue[] = {
 	"",
 	"+PROGRAMMING",
 	"Nicolas \"^4BE^3RSE^4RK^7\" Flekenstein",
-	"Kevin \"Annatar\" Jonasson",
+	"Kevin \"^Paradox\" Jonasson",
 	"",
 	"+ART",
 	"Gavin \"o'dium\" Stevens",
@@ -586,9 +586,9 @@ static void UI_Credits_DrawFunc (){
 
 		string = uiCredits.credits[i];
 		if (string[0] == '+')
-			UI_DrawString(0, y, 1024*uiStatic.scaleX, h, string+1, colorRed, false, w, h, 1, true);
+			UI_DrawString(0, y, 1024*uiStatic.scaleX, h, string+1, colorRed, false, w, h, H_NONE, 1.0f, V_NONE, 1.0f);
 		else
-			UI_DrawString(0, y, 1024*uiStatic.scaleX, h, string, colorWhite, false, w, h, 1, true);
+			UI_DrawString(0, y, 1024*uiStatic.scaleX, h, string, colorWhite, false, w, h, H_NONE, 1.0f, V_NONE, 1.0f);
 	}
 
 	if (y < 0)

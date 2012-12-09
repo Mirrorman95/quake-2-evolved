@@ -509,8 +509,12 @@ void SG_Init (){
 	SG_SetupFramework();
 
 	// Extract the game module from a pack file
-	if (!sv_loadGame->integerValue && !FS_ExtractLibrary("q2e_game", path)){
+	if (sv_loadGame->integerValue){
 		if (!FS_ExtractLibrary("game", path))
+			Com_Error(ERR_FATAL, "Could not extract server game module");
+	}
+	else {
+		if (!FS_ExtractLibrary("q2e_game", path))
 			Com_Error(ERR_FATAL, "Could not extract server game module");
 	}
 

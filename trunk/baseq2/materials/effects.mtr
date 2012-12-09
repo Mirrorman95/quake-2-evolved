@@ -1,0 +1,125 @@
+
+//
+// Rocket Explosion
+//
+
+rocketExplosion
+{
+	twoSided
+	{
+		if ((time * 8) % 8 == 0)
+
+		map		gfx/effects/explosions/rlboom_1.tga
+		blend		add
+		rgb 		inverseSawtoothTable[time * 8]
+	}
+	{
+		if ((time * 8) % 8 == 1)
+
+		map		gfx/effects/explosions/rlboom_2.tga
+		blend		add
+		rgb 		inverseSawtoothTable[time * 8]
+	}
+	{
+		if ((time * 8) % 8 == 2)
+
+		map		gfx/effects/explosions/rlboom_3.tga
+		blend		add
+		rgb 		inverseSawtoothTable[time * 8]
+	}
+	{
+		if ((time * 8) % 8 == 3)
+
+		map		gfx/effects/explosions/rlboom_4.tga
+		blend		add
+		rgb 		inverseSawtoothTable[time * 8]
+	}
+	{
+		if ((time * 8) % 8 == 4)
+
+		map		gfx/effects/explosions/rlboom_5.tga
+		blend		add
+		rgb 		inverseSawtoothTable[time * 8]
+	}
+	{
+		if ((time * 8) % 8 == 5)
+
+		map		gfx/effects/explosions/rlboom_6.tga
+		blend		add
+		rgb 		inverseSawtoothTable[time * 8]
+	}
+	{
+		if ((time * 8) % 8 == 6)
+
+		map		gfx/effects/explosions/rlboom_7.tga
+		blend		add
+		rgb 		inverseSawtoothTable[time * 8]
+	}
+	{
+		if ((time * 8) % 8 == 7)
+
+		map		gfx/effects/explosions/rlboom_8.tga
+		blend		add
+		rgb 		inverseSawtoothTable[time * 8]
+	}
+}
+
+rocketExplosionWater
+{
+	sort			underwater
+	twoSided
+	{
+		map		gfx/effects/explosions/rlboomw.tga
+		colored
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+//
+// Grenade Explosion
+//
+
+grenadeExplosion
+{
+	twoSided
+	{
+		map		gfx/effects/explosions/rlboom_1.tga
+		blend 		add
+		rgb 		inverseSawtoothTable[time * 16]
+	}
+	{
+		map		gfx/effects/explosions/rlboom_2.tga
+		blend 		add
+		rgb 		sawtoothTable[time * 16]
+	}
+}
+
+grenadeExplosionWater
+{
+	sort			underwater
+	twoSided
+	{
+		map		gfx/effects/explosions/rlboomw.tga
+		colored
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
+//
+// BFG Explosion
+//
+
+bfgExplosion
+{
+	twoSided
+	{
+		map		gfx/effects/explosions/bfg_1.tga
+		blend 		add
+		rgb 		inverseSawtoothTable[time * 16]
+	}
+	{
+		map		gfx/effects/explosions/bfg_2.tga
+		blend 		add
+		rgb 		sawtoothTable[time * 16]
+	}
+}

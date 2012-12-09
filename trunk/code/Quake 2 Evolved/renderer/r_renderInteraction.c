@@ -52,7 +52,7 @@ static void RB_DrawInteraction_Generic (const interaction_t *i){
 
 	// Set up the program uniforms
 	parms = &backEnd.interactionParms[INTERACTION_GENERIC][backEnd.light->type];
-
+#if 0
 	R_UniformVector3(parms->viewOrigin, backEnd.localParms.viewOrigin);
 
 	if (backEnd.light->type != RL_DIRECTIONAL)
@@ -86,7 +86,7 @@ static void RB_DrawInteraction_Generic (const interaction_t *i){
 
 	if (backEnd.light->type == RL_CUBIC)
 		GL_BindMultitexture(i->lightCubeTexture, TMU_LIGHTCUBE);
-
+#endif
 	// Draw it
 	RB_DrawElementsWithCounters(&rg.pc.interactionIndices, &rg.pc.interactionVertices);
 }
@@ -168,14 +168,17 @@ void RB_DrawInteraction (interaction_t *i){
 	// Make sure we always have a specular stage
 	if (i->specularTexture == NULL){
 		VectorSet(i->specularColor, 1.0f, 1.0f, 1.0f);
-		VectorSet(i->specularParms, 16.0f, 12.0f, 1.0f);
+		i->specularParms[0] = 16.0f;
+		i->specularParms[1] = 2.0f;
 		Matrix4_Identity(i->specularMatrix);
 		i->specularTexture = rg.blackTexture;
 	}
 
 	// Dispatch to the appropriate render path
-	if (backEnd.lightMaterial->lightType == LT_AMBIENT)
+	if (backEnd.lightMaterial->lightType == LT_AMBIENT){
 		RB_DrawAmbientInteraction_Generic(i);
+		return;
+	}
 
 	RB_DrawInteraction_Generic(i);
 }

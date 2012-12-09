@@ -248,7 +248,7 @@ static program_t *R_LoadProgram (const char *name, shader_t *vertexShader, shade
 	if (r_numPrograms == MAX_PROGRAMS)
 		Com_Error(ERR_DROP, "R_LoadProgram: MAX_PROGRAMS hit");
 
-	r_programs[r_numPrograms++] = program = (program_t *)Mem_ClearedAlloc(sizeof(program_t), TAG_RENDERER);
+	r_programs[r_numPrograms++] = program = (program_t *)Mem_Alloc(sizeof(program_t), TAG_RENDERER);
 
 	// Fill it in
 	Str_Copy(program->name, name, sizeof(program->name));

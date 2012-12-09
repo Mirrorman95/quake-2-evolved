@@ -105,6 +105,15 @@ void VectorToAngles (const vec3_t vec, vec3_t angles){
 
 /*
  ==================
+ 
+ ==================
+*/
+void VectorToMatrix (const vec3_t vec, vec3_t matrix[3]){
+
+}
+
+/*
+ ==================
  DotProduct
  ==================
 */
@@ -138,7 +147,23 @@ vec_t Distance (const vec3_t v1, const vec3_t v2){
 	v[1] = v2[1] - v1[1];
 	v[2] = v2[2] - v1[2];
 
-	return sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+	return Sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
+/*
+ ==================
+ DistanceFast
+ ==================
+*/
+vec_t DistanceFast (const vec3_t v1, const vec3_t v2){
+
+	vec3_t	v;
+
+	v[0] = v2[0] - v1[0];
+	v[1] = v2[1] - v1[1];
+	v[2] = v2[2] - v1[2];
+
+	return SqrtFast(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
 }
 
 /*
@@ -407,7 +432,7 @@ vec_t VectorNormalize (vec3_t v){
 
 	float	length, invLength;
 
-	length = sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+	length = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
 
 	if (length){
 		invLength = 1.0f / length;
@@ -464,4 +489,27 @@ void VectorNormalizeFast (vec3_t v){
 	v[0] *= invLength;
 	v[1] *= invLength;
 	v[2] *= invLength;
+}
+
+
+/*
+ ==============================================================================
+
+ 4D VECTOR
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ Vector4Copy
+ ==================
+*/
+void Vector4Copy (const vec4_t in, vec4_t out){
+
+	out[0] = in[0];
+	out[1] = in[1];
+	out[2] = in[2];
+	out[3] = in[3];
 }

@@ -49,9 +49,11 @@ extern vec3_t				vec3_origin;
 
 void			ProjectPointOnPlane (vec3_t dst, const vec3_t p, const vec3_t normal);
 void			VectorToAngles (const vec3_t vec, vec3_t angles);
+void			VectorToMatrix (const vec3_t vec, vec3_t matrix[3]);
 vec_t			DotProduct (const vec3_t v1, const vec3_t v2);
 void			CrossProduct (const vec3_t v1, const vec3_t v2, vec3_t cross);
 vec_t			Distance (const vec3_t v1, const vec3_t v2);
+vec_t			DistanceFast (const vec3_t v1, const vec3_t v2);
 vec_t			DistanceSquared (const vec3_t v1, const vec3_t v2);
 void			SnapVector (vec3_t v);
 void			VectorCopy (const vec3_t in, vec3_t out);
@@ -76,6 +78,16 @@ void			VectorReflect (const vec3_t v, const vec3_t normal, vec3_t out);
 vec_t			VectorNormalize (vec3_t v);
 vec_t			VectorNormalize2 (const vec3_t v, vec3_t out);
 void			VectorNormalizeFast (vec3_t v);
+
+/*
+ ==============================================================================
+
+ 4D VECTOR
+
+ ==============================================================================
+*/
+
+void			Vector4Copy (const vec4_t in, vec4_t out);
 
 
 #endif	// __MATH_VECTOR_H__

@@ -22,24 +22,8 @@
 
 
 //
-// bounds.h - Bounds math
+// r_lightCache.c - Light cache data
 //
 
 
-#ifndef __MATH_BOUNDS_H__
-#define __MATH_BOUNDS_H__
-
-
-void			ClearBounds (vec3_t mins, vec3_t maxs);
-bool			BoundsIsCleared (vec3_t mins, vec3_t maxs);
-void			AddPointToBounds (const vec3_t v, vec3_t mins, vec3_t maxs);
-void			BoundsToPoints (const vec3_t mins, const vec3_t maxs, vec3_t points[8]);
-void			BoundsFromPoints (vec3_t mins, vec3_t maxs, const vec3_t points[8]);
-float			RadiusFromBounds (const vec3_t mins, const vec3_t maxs);
-bool			BoundsIntersect (const vec3_t mins1, const vec3_t maxs1, const vec3_t mins2, const vec3_t maxs2);
-bool			BoundsAndSphereIntersect (const vec3_t mins, const vec3_t maxs, const vec3_t origin, float radius);
-bool			BoundsAndPointIntersect (const vec3_t mins, const vec3_t maxs, const vec3_t point);
-bool			BoundsContainsPoint (const vec3_t mins, const vec3_t maxs, const vec3_t point);
-
-
-#endif	// __MATH_BOUNDS_H__
+#include "r_local.h"

@@ -25,19 +25,6 @@
 // r_main.c - Primary renderer file
 //
 
-// TODO:
-// - something has happend with map loading, game some how removes the full map name
-// - Real-time per-pixel lightning with volumeric stencil shadows
-//	 - requiers shaders
-//	 - a rewritten light system
-//	 - new batch functions for shadows
-//   - needs some changes in the client for lights
-//	 - needs some rendering passes
-//	 - needs editor stuff
-//	 - needs some new qgl functions and RB_DrawElement changes
-//	 - how should we load static lights?
-//	   - parse light files on the client and precache them in cl_load, then send them to the renderer
-
 
 #include "r_local.h"
 
@@ -102,16 +89,27 @@ cvar_t *					r_offsetUnits;
 cvar_t *					r_forceImagePrograms;
 cvar_t *					r_writeImagePrograms;
 cvar_t *					r_colorMipLevels;
+cvar_t *					r_maxDebugPolygons;
+cvar_t *					r_maxDebugLines;
+cvar_t *					r_maxDebugText;
 cvar_t *					r_singleMaterial;
 cvar_t *					r_singleEntity;
 cvar_t *					r_singleLight;
 cvar_t *					r_showCluster;
+cvar_t *					r_showFarClip;
 cvar_t *					r_showCull;
 cvar_t *					r_showScene;
+cvar_t *					r_showSurfaces;
 cvar_t *					r_showDeforms;
 cvar_t *					r_showTextureUsage;
 cvar_t *					r_showTextures;
 cvar_t *					r_showDepth;
+cvar_t *					r_showLightCount;
+cvar_t *					r_showLightVolumes;
+cvar_t *					r_showLightScissors;
+cvar_t *					r_showShadowTris;
+cvar_t *					r_showShadowVolumes;
+cvar_t *					r_showShadowSilhouettes;
 cvar_t *					r_showVertexColors;
 cvar_t *					r_showTextureCoords;
 cvar_t *					r_showTangentSpace;
@@ -121,9 +119,12 @@ cvar_t *					r_showTextureVectors;
 cvar_t *					r_showBatchSize;
 cvar_t *					r_showModelBounds;
 cvar_t *					r_skipVisibility;
+cvar_t *					r_skipSuppress;
 cvar_t *					r_skipCulling;
 cvar_t *					r_skipEntityCulling;
+cvar_t *					r_skipLightCulling;
 cvar_t *					r_skipScissors;
+cvar_t *					r_skipLightScissors;
 cvar_t *					r_skipSorting;
 cvar_t *					r_skipEntities;
 cvar_t *					r_skipLights;
@@ -131,6 +132,7 @@ cvar_t *					r_skipParticles;
 cvar_t *					r_skipDecals;
 cvar_t *					r_skipExpressions;
 cvar_t *					r_skipConstantExpressions;
+cvar_t *					r_skipLightCache;
 cvar_t *					r_skipDeforms;
 cvar_t *					r_skipAmbient;
 cvar_t *					r_skipBump;
@@ -167,12 +169,13 @@ cvar_t *					r_contrast;
 cvar_t *					r_brightness;
 cvar_t *					r_vertexBuffers;
 cvar_t *					r_shaderQuality;
+cvar_t *					r_lightScale;
+cvar_t *					r_lightDetailLevel;
 cvar_t *					r_shadows;
 cvar_t *					r_playerShadow;
 cvar_t *					r_dynamicLights;
 cvar_t *					r_modulate;
 cvar_t *					r_caustics;
-cvar_t *					r_depthClamp;
 cvar_t *					r_seamlessCubeMaps;
 cvar_t *					r_inGameVideos;
 cvar_t *					r_precompressedImages;
@@ -483,16 +486,27 @@ static void R_Register (){
 	r_forceImagePrograms = CVar_Register("r_forceImagePrograms", "0", CVAR_BOOL, CVAR_CHEAT, "Force processing of image programs", 0, 0);
 	r_writeImagePrograms = CVar_Register("r_writeImagePrograms", "0", CVAR_BOOL, CVAR_CHEAT, "Write final images to disk after processing image programs", 0, 0);	
 	r_colorMipLevels = CVar_Register("r_colorMipLevels", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_LATCH, "Color mip levels for testing mipmap usage", 0, 0);
+	r_maxDebugPolygons = CVar_Register("r_maxDebugPolygons", "8192", CVAR_INTEGER, CVAR_CHEAT, "Maximum number of debug polygons", 0, 0);
+	r_maxDebugLines = CVar_Register("r_maxDebugLines", "16384", CVAR_INTEGER, CVAR_CHEAT, "Maximum number of debug lines", 0, 0);
+	r_maxDebugText = CVar_Register("r_maxDebugText", "512", CVAR_INTEGER, CVAR_CHEAT, "Maximum number of debug text strings", 0, 0);	
 	r_singleMaterial = CVar_Register("r_singleMaterial", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_LATCH, "Use a single default material on every surface", 0, 0);
 	r_singleEntity = CVar_Register("r_singleEntity", "-1", CVAR_INTEGER, CVAR_CHEAT, "Only draw the specified entity", -1, MAX_RENDER_ENTITIES - 1);
 	r_singleLight = CVar_Register("r_singleLight", "-1", CVAR_INTEGER, CVAR_CHEAT, "Only draw the specified light", -1, MAX_RENDER_LIGHTS - 1);
 	r_showCluster = CVar_Register("r_showCluster", "0", CVAR_BOOL, CVAR_CHEAT, "Show the current view cluster", 0, 0);
+	r_showFarClip = CVar_Register("r_showFarClip", "0", CVAR_BOOL, CVAR_CHEAT, "Show the calculated far clip plane distance", 0, 0);
 	r_showCull = CVar_Register("r_showCull", "0", CVAR_BOOL, CVAR_CHEAT, "Show culling statistics", 0, 0);
 	r_showScene = CVar_Register("r_showScene", "0", CVAR_BOOL, CVAR_CHEAT, "Show number of entities, lights, particles, and decals in view", 0, 0);
+	r_showSurfaces = CVar_Register("r_showSurfaces", "0", CVAR_BOOL, CVAR_CHEAT, "Show number of surfaces in view", 0, 0);
 	r_showDeforms = CVar_Register("r_showDeforms", "0", CVAR_BOOL, CVAR_CHEAT, "Show material deform statistics", 0, 0);
 	r_showTextureUsage = CVar_Register("r_showTextureUsage", "0", CVAR_BOOL, CVAR_CHEAT, "Show texture memory usage", 0, 0);
 	r_showTextures = CVar_Register("r_showTextures", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw all textures instead of rendering (2 = draw in proportional size)", 0, 2);
 	r_showDepth = CVar_Register("r_showDepth", "0", CVAR_BOOL, CVAR_CHEAT, "Draw the contents of the depth buffer", 0, 0);
+	r_showLightCount = CVar_Register("r_showLightCount", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw triangles colored by light count (1 = count visible ones, 2 = count everything through walls)", 0, 2);
+	r_showLightVolumes = CVar_Register("r_showLightVolumes", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw light volumes (1 = draw planes, 2 = draw edges, 3 = draw planes and edges)", 0, 3);
+	r_showLightScissors = CVar_Register("r_showLightScissors", "0", CVAR_BOOL, CVAR_CHEAT, "Draw light scissor rectangles", 0, 0);
+	r_showShadowTris = CVar_Register("r_showShadowTris", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw shadows in wireframe mode (1 = draw visible ones, 2 = draw everything through walls)", 0, 2);
+	r_showShadowVolumes = CVar_Register("r_showShadowVolumes", "0", CVAR_BOOL, CVAR_CHEAT, "Draw shadow planes", 0, 0);
+	r_showShadowSilhouettes = CVar_Register("r_showShadowSilhouettes", "0", CVAR_BOOL, CVAR_CHEAT, "Draw shadow silhouettes", 0, 0);	
 	r_showVertexColors = CVar_Register("r_showVertexColors", "0", CVAR_BOOL, CVAR_CHEAT, "Draw triangles colored by vertex colors", 0, 0);
 	r_showTextureCoords = CVar_Register("r_showTextureCoords", "0", CVAR_BOOL, CVAR_CHEAT, "Draw triangles colored by texture coords", 0, 0);
 	r_showTangentSpace = CVar_Register("r_showTangentSpace", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw triangles colored by tangent space (1 = 1st tangent, 2 = 2nd tangent, 3 = normal)", 0, 3);
@@ -502,9 +516,12 @@ static void R_Register (){
 	r_showBatchSize = CVar_Register("r_showBatchSize", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw triangles colored by batch size (1 = draw visible ones, 2 = draw everything through walls)", 0, 2);
 	r_showModelBounds = CVar_Register("r_showModelBounds", "0", CVAR_BOOL, CVAR_CHEAT, "Draw model bounds", 0, 0);
 	r_skipVisibility = CVar_Register("r_skipVisibility", "0", CVAR_BOOL, CVAR_CHEAT, "Skip visibility determination tests", 0, 0);
+	r_skipSuppress = CVar_Register("r_skipSuppress", "0", CVAR_BOOL, CVAR_CHEAT, "Skip per-view suppressions", 0, 0);
 	r_skipCulling = CVar_Register("r_skipCulling", "0", CVAR_BOOL, CVAR_CHEAT, "Skip culling", 0, 0);
 	r_skipEntityCulling = CVar_Register("r_skipEntityCulling", "0", CVAR_BOOL, CVAR_CHEAT, "Skip entity culling", 0, 0);
+	r_skipLightCulling = CVar_Register("r_skipLightCulling", "0", CVAR_BOOL, CVAR_CHEAT, "Skip light culling", 0, 0);
 	r_skipScissors = CVar_Register("r_skipScissors", "0", CVAR_BOOL, CVAR_CHEAT, "Skip scissor testing", 0, 0);
+	r_skipLightScissors = CVar_Register("r_skipLightScissors", "0", CVAR_BOOL, CVAR_CHEAT, "Skip scissor testing for lights", 0, 0);
 	r_skipSorting = CVar_Register("r_skipSorting", "0", CVAR_BOOL, CVAR_CHEAT, "Skip surface sorting", 0, 0);
 	r_skipEntities = CVar_Register("r_skipEntities", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering entities", 0, 0);
 	r_skipLights = CVar_Register("r_skipLights", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering lights", 0, 0);
@@ -512,6 +529,7 @@ static void R_Register (){
 	r_skipDecals = CVar_Register("r_skipDecals", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering decals", 0, 0);
 	r_skipExpressions = CVar_Register("r_skipExpressions", "0", CVAR_BOOL, CVAR_CHEAT, "Skip expression evaluation in materials, making everything static", 0, 0);
 	r_skipConstantExpressions = CVar_Register("r_skipConstantExpressions", "0", CVAR_BOOL, CVAR_CHEAT, "Skip constant expressions in materials, re-evaluating everything each frame", 0, 0);	
+	r_skipLightCache = CVar_Register("r_skipLightCache", "0", CVAR_BOOL, CVAR_CHEAT, "Skip precached shadow and interaction lists and generate them dynamically", 0, 0);
 	r_skipDeforms = CVar_Register("r_skipDeforms", "0", CVAR_BOOL, CVAR_CHEAT, "Skip material deforms", 0, 0);
 	r_skipAmbient = CVar_Register("r_skipAmbient", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering ambient stages", 0, 0);
 	r_skipBump = CVar_Register("r_skipBump", "0", CVAR_BOOL, CVAR_CHEAT, "Skip rendering bump stages", 0, 0);
@@ -540,19 +558,20 @@ static void R_Register (){
 	r_displayRefresh = CVar_Register("r_displayRefresh", "0", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Display refresh rate (0 = default)", 0, 1000);
 	r_multiSamples = CVar_Register("r_multiSamples", "0", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Number of samples for multisample antialiasing", 0, 0);	
 	r_alphaToCoverage = CVar_Register("r_alphaToCoverage", "0", CVAR_BOOL, CVAR_ARCHIVE, "Sample alpha to coverage when multisampling", 0, 0);
-	r_swapInterval = CVar_Register("r_swapInterval", "0", CVAR_INTEGER, CVAR_ARCHIVE, "Synchronize buffer swaps with the display's refresh (if negative, allow tearing when needed)", -10, 10);
+	r_swapInterval = CVar_Register("r_swapInterval", "0", CVAR_INTEGER, CVAR_ARCHIVE, "Synchronize buffer swaps with the display's refresh (1 = v-sync, 2 = tear when needed)", 0, 2);
 	r_finish = CVar_Register("r_finish", "0", CVAR_BOOL, CVAR_ARCHIVE, "Synchronize CPU and GPU every frame", 0, 0);
 	r_gamma = CVar_Register("r_gamma", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Adjust display gamma", 0.5f, 3.0f);
 	r_contrast = CVar_Register("r_contrast", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Adjust display contrast", 0.5f, 2.0f);
 	r_brightness = CVar_Register("r_brightness", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Adjust display brightness", 0.5f, 2.0f);
 	r_vertexBuffers = CVar_Register("r_vertexBuffers", "2", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Store geometry in vertex buffers (1 = static geometry, 2 = also dynamic geometry)", 0, 2);
 	r_shaderQuality = CVar_Register("r_shaderQuality", "1", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Shader quality (0 = low, 1 = medium, 2 = high)", 0, 2);
+	r_lightScale = CVar_Register("r_lightScale", "2.0", CVAR_FLOAT, CVAR_ARCHIVE, "Light intensity scale factor", 0.5f, 5.0f);
+	r_lightDetailLevel = CVar_Register("r_lightDetailLevel", "1", CVAR_INTEGER, CVAR_ARCHIVE, "Light detail level (0 = low, 1 = medium, 2 = high)", 0, 2);
 	r_shadows = CVar_Register("r_shadows", "1", CVAR_BOOL, CVAR_ARCHIVE, "Render stencil shadows", 0, 0);
 	r_playerShadow = CVar_Register("r_playerShadow", "0", CVAR_BOOL, CVAR_ARCHIVE, "Render stencil shadows for the player", 0, 0);
 	r_dynamicLights = CVar_Register("r_dynamicLights", "1", CVAR_BOOL, CVAR_ARCHIVE, "Render dynamic lights", 0, 0);	
 	r_modulate = CVar_Register("r_modulate", "1.0", CVAR_FLOAT, CVAR_ARCHIVE | CVAR_LATCH, "Modulates lightmap colors", 0.0f, 1.0f);
 	r_caustics = CVar_Register("r_caustics", "1", CVAR_BOOL, CVAR_ARCHIVE, "Render underwater caustics", 0, 0);
-	r_depthClamp = CVar_Register("r_depthClamp", "0", CVAR_BOOL, CVAR_ARCHIVE, "Clamp depth values to the depth range", 0, 0);
 	r_seamlessCubeMaps = CVar_Register("r_seamlessCubeMaps", "0", CVAR_BOOL, CVAR_ARCHIVE, "Sample multiple faces from cube map textures", 0, 0);
 	r_inGameVideos = CVar_Register("r_inGameVideos", "1", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Play in-game videos", 0, 0);
 	r_precompressedImages = CVar_Register("r_precompressedImages", "1", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Always load precompressed images if present", 0, 0);
@@ -621,6 +640,9 @@ void R_Init (bool all){
 	// Build gamma table and set device gamma ramp
 	R_SetGamma();
 
+	// Allocate light mesh interactions
+	R_AllocLightMeshes();
+
 	// Allocate mesh and light lists
 	R_AllocMeshes();
 	R_AllocLights();
@@ -634,7 +656,7 @@ void R_Init (bool all){
 	R_InitFonts();
 	R_InitArrayBuffers();
 	R_InitModels();
-	R_InitLights();
+	R_InitLightEditor();
 
 	RB_InitBackEnd();
 
@@ -657,7 +679,7 @@ void R_Shutdown (bool all){
 	// Shutdown all the renderer modules
 	RB_ShutdownBackEnd();
 
-	R_ShutdownLights();
+	R_ShutdownLightEditor();
 	R_ShutdownModels();
 	R_ShutdownArrayBuffers();
 	R_ShutdownFonts();

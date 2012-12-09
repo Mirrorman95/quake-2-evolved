@@ -239,9 +239,9 @@ static int		cm_leafTopNode;
 */
 static void CM_RecursiveBoxLeafNums (int nodeNum){
 
-	clipNode_t		*node;
+	clipNode_t	*node;
 	cplane_t	*plane;
-	int			s;
+	int			side;
 
 	while (1){
 		if (nodeNum < 0){
@@ -255,11 +255,11 @@ static void CM_RecursiveBoxLeafNums (int nodeNum){
 		node = &cm.nodes[nodeNum];
 		plane = node->plane;
 
-		s = BoxOnPlaneSide(cm_leafMins, cm_leafMaxs, plane);
+		side = BoxOnPlaneSide(cm_leafMins, cm_leafMaxs, plane);
 
-		if (s == 1)
+		if (side == PLANESIDE_FRONT)
 			nodeNum = node->children[0];
-		else if (s == 2)
+		else if (side == PLANESIDE_BACK)
 			nodeNum = node->children[1];
 		else {
 			// Go down both

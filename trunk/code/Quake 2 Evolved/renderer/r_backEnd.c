@@ -291,6 +291,9 @@ static const void *RB_RenderView (const void *data){
 	// Switch to 3D projection
 	GL_Setup3D(cmd->time);
 
+	// Set up the scissor
+	GL_Scissor(backEnd.scissor.x, backEnd.scissor.y, backEnd.scissor.width, backEnd.scissor.height);
+
 	// Z-Fill pass
 	RB_FillDepthBuffer(cmd->viewParms.numMeshes[0], cmd->viewParms.meshes[0]);
 
@@ -463,7 +466,7 @@ static const void *RB_DrawStretchPic (const void *data){
 		RB_EvaluateRegisters(cmd->material, backEnd.floatTime, backEnd.parms2D);
 
 		// Create a new batch
-		RB_SetupBatch(NULL, cmd->material, RB_DrawMaterial2D);
+		RB_SetupBatch(rg.worldEntity, cmd->material, false, false, RB_DrawMaterial2D);
 	}
 
 	// Skip if condition evaluated to false
@@ -828,6 +831,39 @@ void RB_ExecuteRenderCommands (const void *data){
 */
 static void RB_SetupInteractionShaders (){
 
+	shader_t	*vertexShader, *fragmentShader;
+
+	// Load pointGeneric
+	vertexShader = R_FindShader("interaction/pointGeneric", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("interaction/pointGeneric", GL_FRAGMENT_SHADER);
+
+	rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT] = R_FindProgram("interaction/pointGeneric", vertexShader, fragmentShader);
+	if (!rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT])
+		Com_Error(ERR_FATAL, "RB_SetupInteractionShaders: invalid program '%s'", "interaction/pointGeneric");
+#if 0
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].viewOrigin = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_ViewOrigin", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].lightOrigin = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_LightOrigin", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].bumpMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_BumpMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].diffuseMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_DiffuseMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].specularMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_SpecularMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].lightMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_LightMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].colorScaleAndBias = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_ColorScaleAndBias", 1, GL_FLOAT_VEC2);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].diffuseColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_DiffuseColor", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].specularColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_SpecularColor", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].specularParms = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_SpecularParms", 1, GL_FLOAT_VEC2);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].lightColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_LightColor", 1, GL_FLOAT_VEC3);
+
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_BumpMap", 1, GL_SAMPLER_2D, TMU_BUMP);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_DiffuseMap", 1, GL_SAMPLER_2D, TMU_DIFFUSE);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_SpecularMap", 1, GL_SAMPLER_2D, TMU_SPECULAR);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_LightProjectionMap", 1, GL_SAMPLER_2D, TMU_LIGHTPROJECTION);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_LightFalloffMap", 1, GL_SAMPLER_2D, TMU_LIGHTFALLOFF);
+#endif
+	// Load cubicGeneric
+
+	// Load projectedGeneric
+
+	// Load directionalGeneric
 }
 
 /*
@@ -934,6 +970,9 @@ void RB_InitBackEnd (){
 	// Allocate index and vertex arrays
 	backEnd.indices = (glIndex_t *)Mem_Alloc(MAX_INDICES * sizeof(glIndex_t), TAG_RENDERER);
 	backEnd.vertices = (glVertex_t *)Mem_Alloc16(MAX_VERTICES * sizeof(glVertex_t), TAG_RENDERER);
+
+	backEnd.shadowIndices = (glIndex_t *)Mem_Alloc(MAX_SHADOW_INDICES * sizeof(glIndex_t), TAG_RENDERER);
+	backEnd.shadowVertices = (glShadowVertex_t *)Mem_Alloc16(MAX_SHADOW_VERTICES * sizeof(glVertex_t), TAG_RENDERER);
 
 	// Allocate dynamic vertex buffer
 	backEnd.vertexBuffer = R_AllocVertexBuffer("streamBuffer1", true, MAX_DYNAMIC_VERTICES * sizeof(arrayBuffer_t));

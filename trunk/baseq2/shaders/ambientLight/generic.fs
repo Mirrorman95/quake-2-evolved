@@ -25,11 +25,11 @@ void main (){
 	// Modulate the diffuse map by the diffuse color
 	diffuse = texture(u_DiffuseMap, v_DiffuseTexCoord).rgb * u_DiffuseColor;
 
-	// Compute ambient light contribution
-	diffuse *= (localNormal.z * localNormal.z);
-
 	// Compute light attenuation
 	light = textureProj(u_LightProjectionMap, v_LightTexCoord.stq).rgb * texture(u_LightFalloffMap, vec2(v_LightTexCoord.p, 0.5)).rgb * u_LightColor;
+
+	// Compute ambient light contribution
+	light *= (localNormal.z * localNormal.z);
 
 	// Compute lighting and modulate by the vertex color
 	gl_FragColor.rgb = diffuse * light * v_VertexColor;

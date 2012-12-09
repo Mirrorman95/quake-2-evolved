@@ -22,24 +22,37 @@
 
 
 //
-// bounds.h - Bounds math
+// rect.c - Rectangle math
 //
 
 
-#ifndef __MATH_BOUNDS_H__
-#define __MATH_BOUNDS_H__
+#include "../../common/common.h"
 
 
-void			ClearBounds (vec3_t mins, vec3_t maxs);
-bool			BoundsIsCleared (vec3_t mins, vec3_t maxs);
-void			AddPointToBounds (const vec3_t v, vec3_t mins, vec3_t maxs);
-void			BoundsToPoints (const vec3_t mins, const vec3_t maxs, vec3_t points[8]);
-void			BoundsFromPoints (vec3_t mins, vec3_t maxs, const vec3_t points[8]);
-float			RadiusFromBounds (const vec3_t mins, const vec3_t maxs);
-bool			BoundsIntersect (const vec3_t mins1, const vec3_t maxs1, const vec3_t mins2, const vec3_t maxs2);
-bool			BoundsAndSphereIntersect (const vec3_t mins, const vec3_t maxs, const vec3_t origin, float radius);
-bool			BoundsAndPointIntersect (const vec3_t mins, const vec3_t maxs, const vec3_t point);
-bool			BoundsContainsPoint (const vec3_t mins, const vec3_t maxs, const vec3_t point);
+/*
+ ==================
+ RectToBounds
+ ==================
+*/
+void RectToBounds (rect_t rect, vec3_t mins, vec3_t maxs){
 
+	mins[0] = rect.x;
+	mins[1] = rect.y;
+	mins[2] = 0.0f;
+	maxs[0] = rect.width;
+	maxs[1] = rect.height;
+	maxs[2] = 1.0f;
+}
 
-#endif	// __MATH_BOUNDS_H__
+/*
+ ==================
+ RectFromBounds
+ ==================
+*/
+void RectFromBounds (rect_t rect, const vec3_t mins, const vec3_t maxs){
+
+	rect.x = FloatToShort(mins[0]);
+	rect.y = FloatToShort(mins[1]);
+	rect.width = FloatToShort(maxs[0]);
+	rect.height = FloatToShort(maxs[1]);
+}

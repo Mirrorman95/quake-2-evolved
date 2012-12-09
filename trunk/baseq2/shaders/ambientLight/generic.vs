@@ -18,6 +18,13 @@ void main (){
 	// Position invariant
 	gl_Position = ftransform();
 
+#ifndef GLSL_ATI
+
+	// Support clipping planes
+	gl_ClipVertex = gl_ModelViewMatrix * gl_Vertex;
+
+#endif
+
 	// Transform the bump map texture coord
 	v_BumpTexCoord.s = dot(va_TexCoord, u_BumpMatrix[0]);
 	v_BumpTexCoord.t = dot(va_TexCoord, u_BumpMatrix[1]);

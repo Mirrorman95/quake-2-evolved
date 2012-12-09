@@ -22,7 +22,7 @@
 
 
 //
-// editor.h - ...
+// editor.h - Editors used by varius modules
 //
 
 
@@ -30,9 +30,61 @@
 #define __EDITOR_H__
 
 
+/*
+ ==============================================================================
+
+ INTEGRATED LIGHT EDITOR
+
+ ==============================================================================
+*/
+
+#define MAX_LIGHT_NAME_LENGTH		64
+
 typedef struct {
-	int todo;
+	char					name[MAX_LIGHT_NAME_LENGTH];
+
+	int						type;
+
+	// Transformation matrix
+	vec3_t					origin;
+	vec3_t					center;
+	vec3_t					angles;
+
+	// Bounding volume for point, cubic, and directional lights
+	vec3_t					radius;
+
+	// Frustum definition for projected lights
+	float					xMin;
+	float					xMax;
+
+	float					yMin;
+	float					yMax;
+
+	float					zNear;
+	float					zFar;
+
+	// Shadowing parameters
+	bool					noShadows;
+
+	// Fogging parameters
+	float					fogDistance;
+	float					fogHeight;
+
+	// Light attributes
+	int						detailLevel;
+
+	// Material
+	char					material[MAX_PATH_LENGTH];
+	float					materialParms[MAX_MATERIAL_PARMS];
 } lightParms_t;
+
+void			R_LightEditorUpdateCallback (int index, lightParms_t *parms);
+void			R_LightEditorRemoveCallback (int index);
+void			R_LightEditorCloseCallback ();
+
+void *			WIN_CreateLightEditorWindow ();
+void			WIN_DestroyLightEditorWindow ();
+void			WIN_EditLightParameters (int index, lightParms_t *parms);
 
 
 #endif	// __EDITOR_H__
