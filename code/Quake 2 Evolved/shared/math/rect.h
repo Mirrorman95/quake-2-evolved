@@ -22,24 +22,55 @@
 
 
 //
-// bounds.h - Bounds math
+// rect.h - Rectangle math
 //
 
 
-#ifndef __MATH_BOUNDS_H__
-#define __MATH_BOUNDS_H__
+#ifndef __MATH_RECT_H__
+#define __MATH_RECT_H__
 
 
-void			ClearBounds (vec3_t mins, vec3_t maxs);
-bool			BoundsIsCleared (vec3_t mins, vec3_t maxs);
-void			AddPointToBounds (const vec3_t v, vec3_t mins, vec3_t maxs);
-void			BoundsToPoints (const vec3_t mins, const vec3_t maxs, vec3_t points[8]);
-void			BoundsFromPoints (vec3_t mins, vec3_t maxs, const vec3_t points[8]);
-float			RadiusFromBounds (const vec3_t mins, const vec3_t maxs);
-bool			BoundsIntersect (const vec3_t mins1, const vec3_t maxs1, const vec3_t mins2, const vec3_t maxs2);
-bool			BoundsAndSphereIntersect (const vec3_t mins, const vec3_t maxs, const vec3_t origin, float radius);
-bool			BoundsAndPointIntersect (const vec3_t mins, const vec3_t maxs, const vec3_t point);
-bool			BoundsContainsPoint (const vec3_t mins, const vec3_t maxs, const vec3_t point);
+typedef struct {
+	short					x;
+	short					y;
+	short					width;
+	short					height;
+} rect_t;
+
+INLINE bool RectIsCleared (rect_t rect){
+
+	if (rect.x <= rect.width || rect.y <= rect.height)
+		return false;
+
+	return true;
+}
+
+INLINE void RectExpandSelf (rect_t rect, const short size){
+
+	rect.x -= size;
+	rect.y -= size;
+	rect.width += size;
+	rect.height += size;
+}
+
+INLINE void RectClip (rect_t rect, short x, short y, short width, short height){
+
+	x = Max(x, rect.x);
+	y = Max(y, rect.y);
+	width = Min(width, rect.width);
+	height = Min(height, rect.height);
+}
+
+INLINE int RectSize (rect_t rect){
+
+	if (rect.x > rect.width || rect.y > rect.height)
+		return 0;
+
+	return (rect.width - rect.x) * (rect.height - rect.y);
+}
+
+void RectToBounds (rect_t rect, vec3_t mins, vec3_t maxs);
+void RectFromBounds (rect_t rect, const vec3_t mins, const vec3_t maxs);
 
 
-#endif	// __MATH_BOUNDS_H__
+#endif	// __MATH_RECT_H__

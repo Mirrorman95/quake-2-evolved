@@ -1,0 +1,21 @@
+Please refer to this style when working with the Quake 2 Evolved project, so we can keep it clean, easy to read, and unified.
+
+
+
+Variables Inside Functions
+----------------------------
+
+Comments Inside Structures
+----------------------------
+
+Declarations
+----------------------------
+
+Definitions
+----------------------------
+
+Structure Variables
+----------------------------
+
+Enums
+----------------------------

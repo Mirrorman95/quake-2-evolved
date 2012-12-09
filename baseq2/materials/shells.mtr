@@ -1,10 +1,10 @@
 
-gfx/effects/shells/powerScreen
+gfx/shells/powerScreen
 {
 	noShadows
 	twoSided
 	{
-		map		gfx/effects/shell/power_screen.tga
+		map		gfx/shell/power_screen.tga
 		blend		add
 		scroll		time * 1, time * 0.1
 		rotate		time * 30
@@ -12,53 +12,39 @@ gfx/effects/shells/powerScreen
 	}
 }
 
-gfx/effects/shells/invulnerability
+gfx/shells/invulnerability
 {
 	noShadows
 	twoSided
 	deform 			expand 0.5
 	{
-		map		gfx/effects/shell/red.tga
+		map		gfx/shells/red.tga
 		blend		add
 		scroll		time * 1, time * 0.1
 		rotate		time * 30
 	}
 }
 
-gfx/effects/shells/quadDamage
+gfx/shells/quadDamage
 {
 	noShadows
 	twoSided
 	deform 			expand 0.5
 	{
-		map		gfx/effects/shell/blue.tga
+		map		gfx/shells/blue.tga
 		blend		add
 		scroll		time * 1, time * 0.1
 		rotate		time * 30
 	}
 }
 
-gfx/effects/shells/doubleDamage
+gfx/shells/doubleDamage
 {
 	noShadows
 	twoSided
 	deform 			expand 0.5
 	{
-		map		gfx/effects/shell/generic.tga
-		blend		add
-		scroll		time * 1, time * 0.1
-		rotate		time * 30
-		colored
-	}
-}
-
-gfx/effects/shells/halfDamage
-{
-	noShadows
-	twoSided
-	deform 			expand 0.5
-	{
-		map		gfx/effects/shell/generic.tga
+		map		gfx/shells/generic.tga
 		blend		add
 		scroll		time * 1, time * 0.1
 		rotate		time * 30
@@ -66,13 +52,27 @@ gfx/effects/shells/halfDamage
 	}
 }
 
-gfx/effects/shells/generic
+gfx/shells/halfDamage
 {
 	noShadows
 	twoSided
 	deform 			expand 0.5
 	{
-		map		gfx/effects/shell/generic.tga
+		map		gfx/shells/generic.tga
+		blend		add
+		scroll		time * 1, time * 0.1
+		rotate		time * 30
+		colored
+	}
+}
+
+gfx/shells/generic
+{
+	noShadows
+	twoSided
+	deform 			expand 0.5
+	{
+		map		gfx/shells/generic.tga
 		blend		add
 		scroll		time * 1, time * 0.1
 		rotate		time * 30

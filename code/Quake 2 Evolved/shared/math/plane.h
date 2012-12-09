@@ -55,6 +55,7 @@ typedef struct cplane_s {
 bool			PlaneFromPoints (cplane_t *plane, const vec3_t a, const vec3_t b, const vec3_t c);
 void			SetPlaneSignbits (cplane_t *plane);
 int				PlaneTypeForNormal (const vec3_t normal);
+float			PlaneDistance (const vec3_t normal, const float dist, const vec3_t point);
 int				BoxOnPlaneSide (const vec3_t mins, const vec3_t maxs, cplane_t *p);
 int				SphereOnPlaneSide (const vec3_t center, float radius, const cplane_t *plane);
 int				PointOnPlaneSide (const vec3_t point, float epsilon, const cplane_t *plane);

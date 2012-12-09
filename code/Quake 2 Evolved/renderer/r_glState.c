@@ -395,6 +395,8 @@ void GL_Viewport (int x, int y, int width, int height){
 /*
  ==================
  GL_Scissor
+
+ TODO: use rec_t
  ==================
 */
 void GL_Scissor (int x, int y, int width, int height){
@@ -863,21 +865,30 @@ void GL_StencilMaskSeparate (uint maskFront, uint maskBack){
 /*
  ==================
  GL_Setup3D
+
+ TODO: time is messed up
  ==================
 */
 void GL_Setup3D (int time){
+
+	double	clipPlane[4];
 
 	QGL_LogPrintf("---------- RB_Setup3D ----------\n");
 
 	backEnd.projection2D = false;
 
 	backEnd.time = time;
-	backEnd.floatTime = MS2SEC(time);
+	backEnd.floatTime = MS2SEC(Sys_Milliseconds());
 
-	backEnd.viewport.x = 0;
-	backEnd.viewport.y = 0;
-	backEnd.viewport.width = backEnd.cropWidth;
-	backEnd.viewport.height = backEnd.cropHeight;
+	backEnd.viewport.x = backEnd.viewParms.viewport.x;
+	backEnd.viewport.y = backEnd.viewParms.viewport.y;
+	backEnd.viewport.width = backEnd.viewParms.viewport.width;
+	backEnd.viewport.height = backEnd.viewParms.viewport.height;
+
+	backEnd.scissor.x = backEnd.viewParms.scissor.x;
+	backEnd.scissor.y = backEnd.viewParms.scissor.y;
+	backEnd.scissor.width = backEnd.viewParms.scissor.width;
+	backEnd.scissor.height = backEnd.viewParms.scissor.height;
 
 	backEnd.coordScale[0] = 1.0f / backEnd.viewport.width;
 	backEnd.coordScale[1] = 1.0f / backEnd.viewport.height;
@@ -892,6 +903,9 @@ void GL_Setup3D (int time){
 
 	// Set up the viewport
 	GL_Viewport(backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height);
+
+	// Set up the scissor
+	GL_Scissor(backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height);
 
 	// Set the projection matrix
 	GL_LoadMatrix(GL_PROJECTION, backEnd.viewParms.projectionMatrix);
@@ -915,11 +929,18 @@ void GL_Setup3D (int time){
 	GL_DepthMask(GL_TRUE);
 	GL_StencilMask(255);
 
-	// Enable depth clamp if desired
-	if (r_depthClamp->integerValue)
-		qglEnable(GL_DEPTH_CLAMP);
-	else
-		qglDisable(GL_DEPTH_CLAMP);
+	// Enable the clip plane if needed
+	if (backEnd.viewParms.viewType != VIEW_MIRROR)
+		qglDisable(GL_CLIP_PLANE0);
+	else {
+		clipPlane[0] = -DotProduct(backEnd.viewParms.axis[1], backEnd.viewParms.clipPlane.normal);
+		clipPlane[1] = DotProduct(backEnd.viewParms.axis[2], backEnd.viewParms.clipPlane.normal);
+		clipPlane[2] = -DotProduct(backEnd.viewParms.axis[0], backEnd.viewParms.clipPlane.normal);
+		clipPlane[3] = DotProduct(backEnd.viewParms.origin, backEnd.viewParms.clipPlane.normal) - backEnd.viewParms.clipPlane.dist;
+
+		qglEnable(GL_CLIP_PLANE0);
+		qglClipPlane(GL_CLIP_PLANE0, clipPlane);
+	}
 
 	// Enable multisampling if available
 	if (glConfig.multiSamples > 1)
@@ -945,6 +966,8 @@ void GL_Setup3D (int time){
 /*
  ==================
  GL_Setup2D
+
+ TODO: time is messed up
  ==================
 */
 void GL_Setup2D (int time){
@@ -956,12 +979,17 @@ void GL_Setup2D (int time){
 	backEnd.projection2D = true;
 
 	backEnd.time = time;
-	backEnd.floatTime = MS2SEC(time);
+	backEnd.floatTime = MS2SEC(Sys_Milliseconds());
 
 	backEnd.viewport.x = 0;
 	backEnd.viewport.y = 0;
 	backEnd.viewport.width = backEnd.cropWidth;
 	backEnd.viewport.height = backEnd.cropHeight;
+
+	backEnd.scissor.x = 0;
+	backEnd.scissor.y = 0;
+	backEnd.scissor.width = backEnd.cropWidth;
+	backEnd.scissor.height = backEnd.cropHeight;
 
 	backEnd.coordScale[0] = 1.0f / backEnd.viewport.width;
 	backEnd.coordScale[1] = 1.0f / backEnd.viewport.height;
@@ -976,6 +1004,9 @@ void GL_Setup2D (int time){
 
 	// Set up the viewport
 	GL_Viewport(backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height);
+
+	// Set up the scissor
+	GL_Scissor(backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height);
 
 	// Set the projection matrix
 	GL_LoadMatrix(GL_PROJECTION, projectionMatrix);
@@ -999,8 +1030,8 @@ void GL_Setup2D (int time){
 	GL_DepthMask(GL_FALSE);
 	GL_StencilMask(0);
 
-	// Disable depth clamp
-	qglDisable(GL_DEPTH_CLAMP);
+	// Disable the clip plane
+	qglDisable(GL_CLIP_PLANE0);
 
 	// Disable multisampling if available
 	if (glConfig.multiSamples > 1)
@@ -1213,6 +1244,8 @@ void GL_SetDefaultState (){
 	qglStencilMask(255);
 
 	qglDisable(GL_DEPTH_CLAMP);
+
+	qglDisable(GL_CLIP_PLANE0);
 
 	if (glConfig.multiSamples > 1){
 		qglDisable(GL_MULTISAMPLE);

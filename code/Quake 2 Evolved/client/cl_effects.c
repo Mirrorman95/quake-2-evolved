@@ -222,7 +222,21 @@ void CL_AddDynamicLights (){
 		}
 
 		// Create a new light
+		light.type = RL_POINT;
+
 		VectorCopy(dl->origin, light.origin);
+		VectorClear(light.center);
+		Matrix3_Identity(light.axis);
+
+		VectorSet(light.radius, intensity, intensity, intensity);
+
+		light.fogDistance = 500.0f;
+		light.fogHeight = 500.0f;
+
+		light.style = 0;
+		light.detailLevel = 0;
+
+		light.allowInView = VIEW_MAIN;
 
 		light.material = NULL;
 
@@ -230,10 +244,10 @@ void CL_AddDynamicLights (){
 		light.materialParms[MATERIALPARM_GREEN] = dl->color[1];
 		light.materialParms[MATERIALPARM_BLUE] = dl->color[2];
 		light.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-		light.materialParms[MATERIALPARM_TIMEOFFSET] = MS2SEC(dl->start);
+		light.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(dl->start);
 		light.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
 		light.materialParms[MATERIALPARM_MISC] = 0.0f;
-		light.materialParms[MATERIALPARM_MODE] = 1.0f;
+		light.materialParms[MATERIALPARM_MODE] = 0.0f;
 
 		// Send it to the renderer
 		R_AddLightToScene(&light);
@@ -255,7 +269,23 @@ void CL_DynamicLight (const vec3_t origin, float intensity, float r, float g, fl
 	// A duration of 0 means a temporary light, so we should just send
 	// it to the renderer and forget about it
 	if (duration == 0){
+		Mem_Fill(&light, 0, sizeof(renderLight_t));
+
+		light.type = RL_POINT;
+
 		VectorCopy(origin, light.origin);
+		VectorClear(light.center);
+		Matrix3_Identity(light.axis);
+
+		VectorSet(light.radius, intensity, intensity, intensity);
+
+		light.fogDistance = 500.0f;
+		light.fogHeight = 500.0f;
+
+		light.style = 0;
+		light.detailLevel = 0;
+
+		light.allowInView = VIEW_MAIN;
 
 		light.material = NULL;
 
@@ -263,10 +293,10 @@ void CL_DynamicLight (const vec3_t origin, float intensity, float r, float g, fl
 		light.materialParms[MATERIALPARM_GREEN] = g;
 		light.materialParms[MATERIALPARM_BLUE] = b;
 		light.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-		light.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
+		light.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(cl.time);
 		light.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
 		light.materialParms[MATERIALPARM_MISC] = 0.0f;
-		light.materialParms[MATERIALPARM_MODE] = 1.0f;
+		light.materialParms[MATERIALPARM_MODE] = 0.0f;
 
 		// Send it to the renderer
 		R_AddLightToScene(&light);

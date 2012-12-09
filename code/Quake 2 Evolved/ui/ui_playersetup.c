@@ -27,7 +27,6 @@
 
 // TODO:
 // - finish railgun options
-// - skin list crashes, some kind of memory error (pcx texture loading?)
 
 
 #include "ui_local.h"
@@ -412,6 +411,9 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 		Str_SPrintf(path, sizeof(path), "players/%s/tris.md2", uiPlayerSetup.currentModel);
 		renderEntity.model = R_RegisterModel(path);
 
+		renderEntity.allowInView = VIEW_MAIN;
+		renderEntity.allowShadowInView = VIEW_MAIN;
+
 		Str_SPrintf(path, sizeof(path), "players/%s/%s", uiPlayerSetup.currentModel, uiPlayerSetup.currentSkin);
 		renderEntity.material = R_RegisterMaterial(path, true);
 
@@ -419,10 +421,10 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 		renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
 		renderEntity.materialParms[MATERIALPARM_BLUE] = 1.0f;
 		renderEntity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-		renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
+		renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(uiStatic.realTime);
 		renderEntity.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
 		renderEntity.materialParms[MATERIALPARM_MISC] = 0.0f;
-		renderEntity.materialParms[MATERIALPARM_MODE] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_MODE] = 0.0f;
 
 		R_AddEntityToScene(&renderEntity);
 
@@ -439,6 +441,9 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 		Str_SPrintf(path, sizeof(path), "players/%s/weapon.md2", uiPlayerSetup.currentModel);
 		renderEntity.model = R_RegisterModel(path);
 
+		renderEntity.allowInView = VIEW_MAIN;
+		renderEntity.allowShadowInView = VIEW_MAIN;
+
 		Str_SPrintf(path, sizeof(path), "players/%s/weapon", uiPlayerSetup.currentModel);
 		renderEntity.material = R_RegisterMaterial(path, true);
 
@@ -446,10 +451,10 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 		renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
 		renderEntity.materialParms[MATERIALPARM_BLUE] = 1.0f;
 		renderEntity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-		renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
+		renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(uiStatic.realTime);
 		renderEntity.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
 		renderEntity.materialParms[MATERIALPARM_MISC] = 0.0f;
-		renderEntity.materialParms[MATERIALPARM_MODE] = 1.0f;
+		renderEntity.materialParms[MATERIALPARM_MODE] = 0.0f;
 
 		R_AddEntityToScene(&renderEntity);
 
@@ -476,10 +481,10 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 		renderLight.materialParms[MATERIALPARM_GREEN] = 1.0f;
 		renderLight.materialParms[MATERIALPARM_BLUE] = 1.0f;
 		renderLight.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-		renderLight.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
+		renderLight.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(uiStatic.realTime);
 		renderLight.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
 		renderLight.materialParms[MATERIALPARM_MISC] = 0.0f;
-		renderLight.materialParms[MATERIALPARM_MODE] = 1.0f;
+		renderLight.materialParms[MATERIALPARM_MODE] = 0.0f;
 
 		R_AddLightToScene(&renderLight);
 

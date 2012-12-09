@@ -131,49 +131,49 @@ typedef struct {
 } uiControlsBind_t;
 
 uiControlsBind_t			uiControlsBindings[] = {
-	{ID_LOOKUP,					"+lookup",				-1,	-1},
-	{ID_LOOKDOWN,				"+lookdown",			-1,	-1},
-	{ID_MOUSELOOK,				"+mlook",				-1,	-1},
-	{ID_CENTERVIEW,				"centerview",			-1,	-1},
-	{ID_ZOOMVIEW,				"+zoom",				-1, -1},
-	{ID_RUN,					"+speed",				-1,	-1},
-	{ID_FORWARD,				"+forward",				-1,	-1},
-	{ID_BACKWARD,				"+back",				-1,	-1},
-	{ID_STEPLEFT,				"+moveleft",			-1,	-1},
-	{ID_STEPRIGHT,				"+moveright",			-1,	-1},
-	{ID_JUMP,					"+moveup",				-1,	-1},
-	{ID_CROUCH,					"+movedown",			-1,	-1},
-	{ID_LEFT,					"+left",				-1,	-1},
-	{ID_RIGHT,					"+right",				-1,	-1},
-	{ID_SIDESTEP,				"+strafe",				-1,	-1},
-	{ID_ATTACK,					"+attack",				-1,	-1},
-	{ID_NEXTWEAP,				"weapnext",				-1,	-1},
-	{ID_PREVWEAP,				"weapprev",				-1,	-1},
-	{ID_BLASTER,				"use Blaster",			-1,	-1},
-	{ID_SHOTGUN,				"use Shotgun",			-1,	-1},
-	{ID_SUPERSHOTGUN,			"use Super Shotgun",	-1,	-1},
-	{ID_MACHINEGUN,				"use Machinegun",		-1,	-1},
-	{ID_CHAINGUN,				"use Chaingun",			-1,	-1},
-	{ID_GRENADELAUNCHER,		"use Grenade Launcher",	-1,	-1},
-	{ID_ROCKETLAUNCHER,			"use Rocket Launcher",	-1,	-1},
-	{ID_HYPERBLASTER,			"use HyperBlaster",		-1,	-1},
-	{ID_RAILGUN,				"use Railgun",			-1,	-1},
-	{ID_BFG,					"use BFG10K",			-1,	-1},
-	{ID_SHOWSCORES,				"cmd score",			-1,	-1},
-	{ID_USEITEM,				"invuse",				-1,	-1},
-	{ID_NEXTITEM,				"invnext",				-1,	-1},
-	{ID_PREVITEM,				"invprev",				-1,	-1},
-	{ID_DROPITEM,				"invdrop",				-1,	-1},
-	{ID_FIELDCOMPUTER,			"cmd help",				-1,	-1},
-	{ID_INVENTORY,				"inven",				-1,	-1},
-	{ID_FLIPOFF,				"wave 0",				-1,	-1},
-	{ID_SALUTE,					"wave 1",				-1,	-1},
-	{ID_TAUNT,					"wave 2",				-1,	-1},
-	{ID_WAVE,					"wave 3",				-1,	-1},
-	{ID_POINT,					"wave 4",				-1,	-1},
-	{ID_CHAT,					"messagemode",			-1,	-1},
-	{ID_CHATTEAM,				"messagemode2",			-1,	-1},
-	{-1,						NULL,					-1,	-1}
+	{ID_LOOKUP,						"+lookUp",				-1,	-1},
+	{ID_LOOKDOWN,					"+lookDown",			-1,	-1},
+	{ID_MOUSELOOK,					"+mLook",				-1,	-1},
+	{ID_CENTERVIEW,					"centerView",			-1,	-1},
+	{ID_ZOOMVIEW,					"+zoom",				-1, -1},
+	{ID_RUN,						"+speed",				-1,	-1},
+	{ID_FORWARD,					"+forward",				-1,	-1},
+	{ID_BACKWARD,					"+back",				-1,	-1},
+	{ID_STEPLEFT,					"+moveLeft",			-1,	-1},
+	{ID_STEPRIGHT,					"+moveRight",			-1,	-1},
+	{ID_JUMP,						"+moveUp",				-1,	-1},
+	{ID_CROUCH,						"+moveDown",			-1,	-1},
+	{ID_LEFT,						"+left",				-1,	-1},
+	{ID_RIGHT,						"+right",				-1,	-1},
+	{ID_SIDESTEP,					"+strafe",				-1,	-1},
+	{ID_ATTACK,						"+attack",				-1,	-1},
+	{ID_NEXTWEAP,					"weapnext",				-1,	-1},
+	{ID_PREVWEAP,					"weapprev",				-1,	-1},
+	{ID_BLASTER,					"use Blaster",			-1,	-1},
+	{ID_SHOTGUN,					"use Shotgun",			-1,	-1},
+	{ID_SUPERSHOTGUN,				"use Super Shotgun",	-1,	-1},
+	{ID_MACHINEGUN,					"use Machinegun",		-1,	-1},
+	{ID_CHAINGUN,					"use Chaingun",			-1,	-1},
+	{ID_GRENADELAUNCHER,			"use Grenade Launcher",	-1,	-1},
+	{ID_ROCKETLAUNCHER,				"use Rocket Launcher",	-1,	-1},
+	{ID_HYPERBLASTER,				"use HyperBlaster",		-1,	-1},
+	{ID_RAILGUN,					"use Railgun",			-1,	-1},
+	{ID_BFG,						"use BFG10K",			-1,	-1},
+	{ID_SHOWSCORES,					"cmd score",			-1,	-1},
+	{ID_USEITEM,					"invuse",				-1,	-1},
+	{ID_NEXTITEM,					"invnext",				-1,	-1},
+	{ID_PREVITEM,					"invprev",				-1,	-1},
+	{ID_DROPITEM,					"invdrop",				-1,	-1},
+	{ID_FIELDCOMPUTER,				"cmd help",				-1,	-1},
+	{ID_INVENTORY,					"inven",				-1,	-1},
+	{ID_FLIPOFF,					"wave 0",				-1,	-1},
+	{ID_SALUTE,						"wave 1",				-1,	-1},
+	{ID_TAUNT,						"wave 2",				-1,	-1},
+	{ID_WAVE,						"wave 3",				-1,	-1},
+	{ID_POINT,						"wave 4",				-1,	-1},
+	{ID_CHAT,						"messageMode",			-1,	-1},
+	{ID_CHATTEAM,					"messageMode2",			-1,	-1},
+	{-1,							NULL,					-1,	-1}
 };
 
 typedef enum {
@@ -289,7 +289,7 @@ static void UI_Controls_GetKeyBindings (const char *command, int *twoKeys){
 
 	twoKeys[0] = twoKeys[1] = -1;
 
-	for (i = 0; i < 256; i++){
+	for (i = 0; i < MAX_KEYS; i++){
 		button = Key_GetBinding(i);
 		if (!button[0])
 			continue;
@@ -462,12 +462,99 @@ static void UI_Controls_UpdateConfig (){
 
 /*
  ==================
- 
+ UI_Controls_KeyFunc
+
+ TODO: since we support for keys like MOUSE1-8, should we make a case for them?
  ==================
 */
 static const char *UI_Controls_KeyFunc (int key){
 
-	return 0;
+	menuCommon_t		*item = (menuCommon_t *)(uiControls.menu.items[uiControls.menu.cursor]);
+	uiControlsBind_t	*binding;
+
+	if (item->type == QMTYPE_ACTION){
+		if (!uiControls.waitingForKey){
+			switch (key){
+			case K_ENTER:
+			case K_MOUSE1:
+				uiControls.waitingForKey = true;
+
+				UI_Controls_UpdateConfig();
+				UI_Controls_SetConfig();
+
+				return uiSoundMove;
+			case K_BACKSPACE:
+			case K_DELETE:
+				binding = UI_Controls_BindingForControl(item->id);
+
+				if (binding->bind1 != -1){
+					Key_SetBinding(binding->bind1, "");
+					binding->bind1 = -1;
+				}
+				if (binding->bind2 != -1){
+					Key_SetBinding(binding->bind2, "");
+					binding->bind2 = -1;
+				}
+
+				UI_Controls_UpdateConfig();
+				UI_Controls_SetConfig();
+
+				return uiSoundOut;
+			default:
+				return UI_DefaultKey(&uiControls.menu, key);
+			}
+		}
+		else {
+			switch (key){
+			case K_ESCAPE:
+				uiControls.waitingForKey = false;
+
+				UI_Controls_UpdateConfig();
+				UI_Controls_SetConfig();
+
+				return uiSoundOut;
+			case '`':
+			case '~':
+
+				return UI_DefaultKey(&uiControls.menu, key);
+			default:
+				// Remove from any other bind
+				for (binding = uiControlsBindings; binding->id != -1; binding++){
+					if (binding->bind2 == key){
+						Key_SetBinding(binding->bind2, "");
+						binding->bind2 = -1;
+					}
+					if (binding->bind1 == key){
+						Key_SetBinding(binding->bind1, "");
+						binding->bind1 = binding->bind2;
+						binding->bind2 = -1;
+					}
+				}
+
+				// Bind key to this control
+				binding = UI_Controls_BindingForControl(item->id);
+				if (binding->bind1 == -1)
+					binding->bind1 = key;
+				else if (binding->bind1 != key && binding->bind2 == -1)
+					binding->bind2 = key;
+				else {
+					Key_SetBinding(binding->bind1, "");
+					Key_SetBinding(binding->bind2, "");
+					binding->bind1 = key;
+					binding->bind2 = -1;
+				}
+
+				uiControls.waitingForKey = false;
+
+				UI_Controls_UpdateConfig();
+				UI_Controls_SetConfig();
+
+				return uiSoundMove;
+			}
+		}
+	}
+
+	return UI_DefaultKey(&uiControls.menu, key);
 }
 
 /*
@@ -515,7 +602,9 @@ static void UI_Controls_Callback (void *self, int event){
  ==================
  UI_Controls_Ownerdraw
 
- TODO: string rewrite
+ TODO: strings need to be centered
+ TODO: what do we do with itemWidth/Height?
+ TOD: true/false isnt beeing drawn
  ==================
 */
 static void UI_Controls_Ownerdraw (void *self){
@@ -523,7 +612,7 @@ static void UI_Controls_Ownerdraw (void *self){
 	menuCommon_t		*item = (menuCommon_t *)self;
 	uiControlsBind_t	*binding;
 	char				name[32], name2[32];
-	color_t				color;
+	vec4_t				color;
 
 	if (item->type == QMTYPE_ACTION){
 		// Get the text for this control
@@ -546,21 +635,21 @@ static void UI_Controls_Ownerdraw (void *self){
 		UI_DrawPic(item->x, item->y, item->width, item->height, colorWhite, ((menuAction_t *)self)->background);
 
 		if (item->flags & QMF_GRAYED){
-			UI_DrawStringOLD(item->x, item->y, item->width, item->height, name, uiColorDarkGray, true, item->charWidth, item->charHeight, 1, true);
+			UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, uiColorDarkGray, true, 1.5f, 2.25f, H_NONE, 1.0f, V_NONE, 1.0f);
 			return;		// Grayed
 		}
 
 		if (item != (menuCommon_t *)UI_ItemAtCursor(item->parent)){
-			UI_DrawStringOLD(item->x, item->y, item->width, item->height, name, item->color, false, item->charWidth, item->charHeight, 1, true);
+			UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, item->color, false, 1.5f, 2.25f, H_NONE, 1.0f, V_NONE, 1.0f);
 			return;		// No focus
 		}
 
-		UI_DrawStringOLD(item->x, item->y, item->width, item->height, name, item->color, false, item->charWidth, item->charHeight, 1, true);
+		UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, item->color, false, 1.5f, 2.25f, H_NONE, 1.0f, V_NONE, 1.0f);
 
-		*(unsigned *)color = *(unsigned *)colorWhite;
-		color[3] = 255 * (0.5f + 0.5f * sin(uiStatic.realTime / UI_PULSE_DIVISOR));
+		Vector4Copy(colorWhite, color);
+		color[3] = 1.0f * (0.5f + 0.5f * sin(uiStatic.realTime / UI_PULSE_DIVISOR));
 
-		UI_DrawStringOLD(item->x, item->y, item->width, item->height, name, color, false, item->charWidth, item->charHeight, 1, true);
+		UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, color, false, 1.5f, 2.25f, H_NONE, 1.0f, V_NONE, 1.0f);
 	}
 	else {
 		if (uiControls.menu.items[uiControls.menu.cursor] == self)
@@ -694,9 +783,9 @@ static void UI_Controls_Init (){
 	uiControls.mouseSpeed.generic.height		= 30;
 	uiControls.mouseSpeed.generic.callback		= UI_Controls_Callback;
 	uiControls.mouseSpeed.generic.statusText	= "Select your mouse speed";
-	uiControls.mouseSpeed.minValue				= 1;
-	uiControls.mouseSpeed.maxValue				= 30;
-	uiControls.mouseSpeed.range					= 1;
+	uiControls.mouseSpeed.minValue				= 1.0f;
+	uiControls.mouseSpeed.maxValue				= 30.0f;
+	uiControls.mouseSpeed.range					= 1.0f;
 
 	uiControls.smoothMouse.generic.id			= ID_SMOOTHMOUSE;
 	uiControls.smoothMouse.generic.type			= QMTYPE_SPINCONTROL;
@@ -707,9 +796,9 @@ static void UI_Controls_Init (){
 	uiControls.smoothMouse.generic.height		= 30;
 	uiControls.smoothMouse.generic.callback		= UI_Controls_Callback;
 	uiControls.smoothMouse.generic.statusText	= "Enable/Disable smooth mouse movement";
-	uiControls.smoothMouse.minValue				= 0;
-	uiControls.smoothMouse.maxValue				= 1;
-	uiControls.smoothMouse.range				= 1;
+	uiControls.smoothMouse.minValue				= 0.0f;
+	uiControls.smoothMouse.maxValue				= 1.0f;
+	uiControls.smoothMouse.range				= 1.0f;
 
 	uiControls.invertMouse.generic.id			= ID_INVERTMOUSE;
 	uiControls.invertMouse.generic.type			= QMTYPE_SPINCONTROL;
@@ -760,9 +849,9 @@ static void UI_Controls_Init (){
 	uiControls.freeLook.generic.height			= 30;
 	uiControls.freeLook.generic.callback		= UI_Controls_Callback;
 	uiControls.freeLook.generic.statusText		= "Enable/Disable free mouse looking";
-	uiControls.freeLook.minValue				= 0;
-	uiControls.freeLook.maxValue				= 1;
-	uiControls.freeLook.range					= 1;
+	uiControls.freeLook.minValue				= 0.0f;
+	uiControls.freeLook.maxValue				= 1.0f;
+	uiControls.freeLook.range					= 1.0f;
 
 	uiControls.centerView.generic.id			= ID_CENTERVIEW;
 	uiControls.centerView.generic.type			= QMTYPE_ACTION;
@@ -791,9 +880,9 @@ static void UI_Controls_Init (){
 	uiControls.alwaysRun.generic.height			= 30;
 	uiControls.alwaysRun.generic.callback		= UI_Controls_Callback;
 	uiControls.alwaysRun.generic.statusText		= "Always run in-game";
-	uiControls.alwaysRun.minValue				= 0;
-	uiControls.alwaysRun.maxValue				= 1;
-	uiControls.alwaysRun.range					= 1;
+	uiControls.alwaysRun.minValue				= 0.0f;
+	uiControls.alwaysRun.maxValue				= 1.0f;
+	uiControls.alwaysRun.range					= 1.0f;
 
 	uiControls.run.generic.id					= ID_RUN;
 	uiControls.run.generic.type					= QMTYPE_ACTION;

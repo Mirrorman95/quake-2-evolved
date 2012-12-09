@@ -403,7 +403,7 @@ static void R_LoadTexInfo (const byte *data, const bspLump_t *lump){
 		}
 
 		// Get surfaceParm
-		if (out->flags & (SURF_WARP|SURF_TRANS33|SURF_TRANS66)){
+		if (out->flags & (SURF_WARP | SURF_TRANS33 | SURF_TRANS66)){
 			surfaceParm = 0;
 
 			if (out->flags & SURF_WARP)
@@ -711,6 +711,7 @@ static void R_LoadFaces (const byte *data, const bspLump_t *lump){
 		out->texInfo = rg.worldModel->texInfo + LittleShort(in->texInfo);
 
 		// Clear counters
+		out->viewCount = 0;
 		out->worldCount = 0;
 		out->fragmentCount = 0;
 
@@ -799,6 +800,7 @@ static void R_LoadLeafs (const byte *data, const bspLump_t *lump){
 		}
 
 		// Clear counters
+		out->viewCount = 0;
 		out->visCount = 0;
 
 		// Leaf specific
@@ -867,6 +869,7 @@ static void R_LoadNodes (const byte *data, const bspLump_t *lump){
 		}
 	
 		// Clear counters
+		out->viewCount = 0;
 		out->visCount = 0;
 
 		// Node specific
@@ -996,6 +999,7 @@ void R_LoadMap (const char *name, const char *skyName, float skyRotate, const ve
 	// Fill it in
 	Str_Copy(rg.worldModel->name, name, sizeof(rg.worldModel->name));
 	rg.worldModel->type = MODEL_INLINE;
+	rg.worldModel->size = 0;
 
 	// Byte swap the header fields and sanity check
 	header = (bspHeader_t *)data;
@@ -1025,8 +1029,6 @@ void R_LoadMap (const char *name, const char *skyName, float skyRotate, const ve
 	R_LoadInlineModels(data, &header->lumps[LUMP_INLINEMODELS]);
 
 	FS_FreeFile(data);
-
-	// Load external files
 
 	// Set the world model
 	rg.worldEntity->model = rg.worldModel;
@@ -2128,7 +2130,7 @@ void R_InitModels (){
 	// Create the default model
 	R_CreateDefaultModel();
 
-	// Clear vis data
+	// Fill PVS data
 	Mem_Fill(r_noMapVis, 255, sizeof(r_noMapVis));
 
 	// Set up the world entity
@@ -2144,6 +2146,11 @@ void R_InitModels (){
 	VectorClear(rg.worldEntity->origin);
 	Matrix3_Identity(rg.worldEntity->axis);
 
+	rg.worldEntity->depthHack = false;
+
+	rg.worldEntity->allowInView = VIEW_ALL;
+	rg.worldEntity->allowShadowInView = VIEW_ALL;
+
 	rg.worldEntity->material = NULL;
 
 	rg.worldEntity->materialParms[MATERIALPARM_RED] = 1.0f;
@@ -2153,7 +2160,7 @@ void R_InitModels (){
 	rg.worldEntity->materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
 	rg.worldEntity->materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
 	rg.worldEntity->materialParms[MATERIALPARM_MISC] = 0.0f;
-	rg.worldEntity->materialParms[MATERIALPARM_MODE] = 1.0f;
+	rg.worldEntity->materialParms[MATERIALPARM_MODE] = 0.0f;
 }
 
 /*

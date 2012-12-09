@@ -55,7 +55,7 @@ static void RB_ShowDepth (){
 	GL_StencilMask(0);
 
 	// Read the depth buffer
-	buffer = (float *)Mem_ClearedAlloc(backEnd.viewport.width * backEnd.viewport.height * sizeof(float), TAG_TEMPORARY);
+	buffer = (float *)Mem_Alloc(RectSize(backEnd.viewport) * sizeof(float), TAG_TEMPORARY);
 
 	qglReadPixels(backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height, GL_DEPTH_COMPONENT, GL_FLOAT, buffer);
 
@@ -68,6 +68,445 @@ static void RB_ShowDepth (){
 	// Check for errors
 	if (!r_ignoreGLErrors->integerValue)
 		GL_CheckForErrors();
+}
+
+/*
+ ==================
+ RB_ShowLightCount
+ ==================
+*/
+static void RB_ShowLightCount (int numMeshes, mesh_t *meshes){
+
+	mesh_t	*mesh;
+	int		i;
+
+	if (!numMeshes)
+		return;
+
+	// Set the GL state
+	GL_DisableTexture();
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+
+	GL_Disable(GL_BLEND);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Enable(GL_DEPTH_TEST);
+	GL_DepthFunc(GL_EQUAL);
+
+	GL_Enable(GL_STENCIL_TEST);
+	GL_StencilFunc(GL_ALWAYS, 0, 255);
+
+	if (r_showLightCount->integerValue == 1)
+		GL_StencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+	else
+		GL_StencilOp(GL_KEEP, GL_INCR, GL_INCR);
+
+	GL_ColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(255);
+
+	// Run through the surfaces
+	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
+		// Evaluate registers
+		RB_EvaluateRegisters(mesh->material, backEnd.floatTime, mesh->entity->materialParms);
+
+		// Skip if condition evaluated to false
+		if (!mesh->material->expressionRegisters[mesh->material->conditionRegister])
+			continue;
+
+		// Set the entity state
+		RB_EntityState(mesh->entity);
+
+		// Set the batch state
+		backEnd.entity = mesh->entity;
+		backEnd.material = mesh->material;
+
+		// Batch the surface geometry
+		RB_BatchGeometry(mesh->type, mesh->data);
+
+		// Add to light count
+		RB_Deform(backEnd.material);
+
+		qglVertexPointer(3, GL_FLOAT, sizeof(glVertex_t), backEnd.vertices);
+
+		RB_PolygonOffset(backEnd.material);
+
+		qglDrawElements(GL_TRIANGLES, backEnd.numIndices, GL_INDEX_TYPE, backEnd.indices);
+
+		// Check for errors
+		if (!r_ignoreGLErrors->integerValue)
+			GL_CheckForErrors();
+
+		// Clear the arrays
+		backEnd.numIndices = 0;
+		backEnd.numVertices = 0;
+	}
+}
+
+/*
+ ==================
+ RB_ShowLightVolume
+ ==================
+*/
+static void RB_ShowLightVolume (){
+
+	// Set the GL state
+	GL_LoadMatrix(GL_MODELVIEW, backEnd.viewParms.modelviewMatrix);
+
+	GL_DisableTexture();
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_DepthRange(0.0f, 1.0f);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	if (r_showLightVolumes->integerValue != 2){
+		// Set the GL state
+		GL_Enable(GL_POLYGON_OFFSET_FILL);
+		GL_PolygonOffset(r_offsetFactor->floatValue, r_offsetUnits->floatValue);
+
+		GL_Enable(GL_BLEND);
+		GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		GL_BlendEquation(GL_FUNC_ADD);
+
+		GL_Enable(GL_DEPTH_TEST);
+		GL_DepthFunc(GL_LEQUAL);
+
+		// Set the color
+		qglColor4f(backEnd.light->materialParms[0], backEnd.light->materialParms[1], backEnd.light->materialParms[2], 0.5f);
+
+		// Draw it
+		qglBegin(GL_QUADS);
+		qglVertex3fv(backEnd.light->corners[3]);
+		qglVertex3fv(backEnd.light->corners[2]);
+		qglVertex3fv(backEnd.light->corners[6]);
+		qglVertex3fv(backEnd.light->corners[7]);
+		qglVertex3fv(backEnd.light->corners[0]);
+		qglVertex3fv(backEnd.light->corners[1]);
+		qglVertex3fv(backEnd.light->corners[5]);
+		qglVertex3fv(backEnd.light->corners[4]);
+		qglVertex3fv(backEnd.light->corners[2]);
+		qglVertex3fv(backEnd.light->corners[3]);
+		qglVertex3fv(backEnd.light->corners[1]);
+		qglVertex3fv(backEnd.light->corners[0]);
+		qglVertex3fv(backEnd.light->corners[4]);
+		qglVertex3fv(backEnd.light->corners[5]);
+		qglVertex3fv(backEnd.light->corners[7]);
+		qglVertex3fv(backEnd.light->corners[6]);
+		qglVertex3fv(backEnd.light->corners[1]);
+		qglVertex3fv(backEnd.light->corners[3]);
+		qglVertex3fv(backEnd.light->corners[7]);
+		qglVertex3fv(backEnd.light->corners[5]);
+		qglVertex3fv(backEnd.light->corners[2]);
+		qglVertex3fv(backEnd.light->corners[0]);
+		qglVertex3fv(backEnd.light->corners[4]);
+		qglVertex3fv(backEnd.light->corners[6]);
+		qglEnd();
+	}
+
+	if (r_showLightVolumes->integerValue != 1){
+		// Set the GL state
+		GL_Disable(GL_POLYGON_OFFSET_FILL);
+
+		GL_Disable(GL_BLEND);
+
+		GL_Disable(GL_DEPTH_TEST);
+
+		// Set the color
+		qglColor3f(backEnd.light->materialParms[0], backEnd.light->materialParms[1], backEnd.light->materialParms[2]);
+
+		// Draw it
+		qglBegin(GL_LINE_LOOP);
+		qglVertex3fv(backEnd.light->corners[0]);
+		qglVertex3fv(backEnd.light->corners[2]);
+		qglVertex3fv(backEnd.light->corners[3]);
+		qglVertex3fv(backEnd.light->corners[1]);
+		qglEnd();
+
+		qglBegin(GL_LINE_LOOP);
+		qglVertex3fv(backEnd.light->corners[4]);
+		qglVertex3fv(backEnd.light->corners[6]);
+		qglVertex3fv(backEnd.light->corners[7]);
+		qglVertex3fv(backEnd.light->corners[5]);
+		qglEnd();
+
+		qglBegin(GL_LINES);
+		qglVertex3fv(backEnd.light->corners[0]);
+		qglVertex3fv(backEnd.light->corners[4]);
+		qglVertex3fv(backEnd.light->corners[1]);
+		qglVertex3fv(backEnd.light->corners[5]);
+		qglVertex3fv(backEnd.light->corners[2]);
+		qglVertex3fv(backEnd.light->corners[6]);
+		qglVertex3fv(backEnd.light->corners[3]);
+		qglVertex3fv(backEnd.light->corners[7]);
+		qglEnd();
+	}
+
+	// Check for errors
+	if (!r_ignoreGLErrors->integerValue)
+		GL_CheckForErrors();
+}
+
+/*
+ ==================
+ RB_ShowLightScissor
+ ==================
+*/
+static void RB_ShowLightScissor (light_t *light){
+
+	float	x, y, width, height;
+
+	// Transform scissor into normalized device coordinates
+	x = (light->scissor.x * backEnd.coordScale[0] + backEnd.coordBias[0]) * 2.0f - 1.0f;
+	y = (light->scissor.y * backEnd.coordScale[1] + backEnd.coordBias[1]) * 2.0f - 1.0f;
+	width = (light->scissor.width * backEnd.coordScale[0] + backEnd.coordBias[0]) * 2.0f - 1.0f;
+	height = (light->scissor.height * backEnd.coordScale[1] + backEnd.coordBias[1]) * 2.0f - 1.0f;
+
+	// Set the GL state
+	GL_LoadIdentity(GL_PROJECTION);
+	GL_LoadIdentity(GL_MODELVIEW);
+
+	GL_DisableTexture();
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+	GL_Disable(GL_POLYGON_OFFSET_FILL);
+	GL_Disable(GL_BLEND);
+	GL_Disable(GL_ALPHA_TEST);
+	GL_Disable(GL_DEPTH_TEST);
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_DepthRange(0.0f, 1.0f);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	// Disable the clip plane if needed
+	if (backEnd.viewParms.viewType == VIEW_MIRROR)
+		qglDisable(GL_CLIP_PLANE0);
+
+	// Set the color
+	qglColor3f(backEnd.light->materialParms[0], backEnd.light->materialParms[1], backEnd.light->materialParms[2]);
+
+	// Draw it
+	qglBegin(GL_LINE_LOOP);
+	qglVertex2f(x, y);
+	qglVertex2f(width, y);
+	qglVertex2f(width, height);
+	qglVertex2f(x, height);
+	qglEnd();
+
+	// Restore the GL state
+	GL_LoadMatrix(GL_PROJECTION, backEnd.viewParms.projectionMatrix);
+
+	// Enable the clip plane if needed
+	if (backEnd.viewParms.viewType == VIEW_MIRROR)
+		qglEnable(GL_CLIP_PLANE0);
+
+	// Check for errors
+	if (!r_ignoreGLErrors->integerValue)
+		GL_CheckForErrors();
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_ShowShadowTris (int numMeshes, mesh_t *meshes){
+
+	if (!numMeshes)
+		return;
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_ShowShadowVolumes (int numMeshes, mesh_t *meshes){
+
+	mesh_t				*mesh;
+	glIndex_t			*indices;
+	glShadowVertex_t	*vertices;
+	int					i, j;
+
+	if (!numMeshes)
+		return;
+
+	// Set the GL state
+	GL_DisableTexture();
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+
+	GL_Enable(GL_BLEND);
+	GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GL_BlendEquation(GL_FUNC_ADD);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Enable(GL_DEPTH_TEST);
+	GL_DepthFunc(GL_LEQUAL);
+
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(255);
+
+	qglColor4f(0.0f, 1.0f, 1.0f, 0.5f);
+
+	// Run through the meshes
+	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
+		// Evaluate registers
+		RB_EvaluateRegisters(mesh->material, backEnd.floatTime, mesh->entity->materialParms);
+
+		// Skip if condition evaluated to false
+		if (!mesh->material->expressionRegisters[mesh->material->conditionRegister])
+			continue;
+
+		// Set the entity state
+		RB_EntityState(mesh->entity);
+
+		// TODO: light state?
+
+		// Set the batch state
+		backEnd.entity = mesh->entity;
+		backEnd.material = mesh->material;
+
+		backEnd.stencilShadow = true;
+		backEnd.shadowCaps = mesh->caps;
+
+		// Batch the mesh geometry
+		RB_BatchShadowGeometry(mesh->type, mesh->data);
+
+		// Draw the shadow volumes
+		indices = backEnd.shadowIndices;
+		vertices = backEnd.shadowVertices;
+
+		RB_Deform(backEnd.material);
+
+		RB_PolygonOffset(backEnd.material);
+
+		qglBegin(GL_TRIANGLES);
+		for (j = 0; j < backEnd.numIndices; j += 3){
+			qglVertex4fv(vertices[indices[0]].xyzw);
+			qglVertex4fv(vertices[indices[1]].xyzw);
+			qglVertex4fv(vertices[indices[2]].xyzw);
+
+			indices += 3;
+		}
+		qglEnd();
+
+		// Check for errors
+		if (!r_ignoreGLErrors->integerValue)
+			GL_CheckForErrors();
+
+		// Clear the arrays
+		backEnd.numIndices = 0;
+		backEnd.numVertices = 0;
+	}
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_ShowShadowSilhouettes (int numMeshes, mesh_t *meshes){
+
+	mesh_t				*mesh;
+	glIndex_t			*indices;
+	glShadowVertex_t	*vertices;
+	int					i, j;
+
+	if (!numMeshes)
+		return;
+
+	// Set the GL state
+	GL_DisableTexture();
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+	GL_Disable(GL_POLYGON_OFFSET_FILL);
+	GL_Disable(GL_BLEND);
+	GL_Disable(GL_ALPHA_TEST);
+	GL_Disable(GL_DEPTH_TEST);
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(255);
+
+	qglColor3f(1.0f, 1.0f, 0.0f);
+
+	// Run through the meshes
+	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
+		// Evaluate registers
+		RB_EvaluateRegisters(mesh->material, backEnd.floatTime, mesh->entity->materialParms);
+
+		// Skip if condition evaluated to false
+		if (!mesh->material->expressionRegisters[mesh->material->conditionRegister])
+			continue;
+
+		// Set the entity state
+		RB_EntityState(mesh->entity);
+
+		// TODO: light state?
+
+		// Set the batch state
+		backEnd.entity = mesh->entity;
+		backEnd.material = mesh->material;
+
+		backEnd.stencilShadow = true;
+		backEnd.shadowCaps = false;
+
+		// Batch the mesh geometry
+		RB_BatchShadowGeometry(mesh->type, mesh->data);
+
+		// Draw the shadow volumes
+		indices = backEnd.shadowIndices;
+		vertices = backEnd.shadowVertices;
+
+		RB_Deform(backEnd.material);
+
+//		RB_PolygonOffset(backEnd.material);
+
+		qglBegin(GL_LINES);
+		for (j = 0; j < backEnd.numIndices; j += 6){
+			qglVertex4fv(vertices[indices[0]].xyzw);
+			qglVertex4fv(vertices[indices[1]].xyzw);
+
+			indices += 6;
+		}
+		qglEnd();
+
+		// Check for errors
+		if (!r_ignoreGLErrors->integerValue)
+			GL_CheckForErrors();
+
+		// Clear the arrays
+		backEnd.numIndices = 0;
+		backEnd.numVertices = 0;
+	}
 }
 
 /*
@@ -775,7 +1214,7 @@ static void RB_ShowBatchSize (int numMeshes, mesh_t *meshes){
 				RB_EntityState(mesh->entity);
 
 			// Create a new batch
-			RB_SetupBatch(mesh->entity, mesh->material, RB_ShowBatchSizeColored);
+			RB_SetupBatch(mesh->entity, mesh->material, false, false, RB_ShowBatchSizeColored);
 
 			skip = false;
 		}
@@ -851,7 +1290,7 @@ static void RB_ShowModelBounds (int numMeshes, mesh_t *meshes){
 		// Draw the model bounds
 		model = backEnd.entity->model;
 
-		switch (mesh->type){
+		switch (model->type){
 		case MODEL_INLINE:
 			for (j = 0; j < 8; j++){
 				corners[j][0] = (j & 1) ? model->mins[0] : model->maxs[0];
@@ -864,6 +1303,8 @@ static void RB_ShowModelBounds (int numMeshes, mesh_t *meshes){
 			break;
 		case MODEL_MD2:
 		case MODEL_MD3:
+			alias = model->alias;
+
 			// Compute axially aligned mins and maxs
 			curFrame = alias->frames + backEnd.entity->frame;
 			oldFrame = alias->frames + backEnd.entity->oldFrame;
@@ -924,6 +1365,523 @@ static void RB_ShowModelBounds (int numMeshes, mesh_t *meshes){
 	}
 }
 
+/*
+ ==================
+ RB_ShowStencil
+ ==================
+*/
+static float RB_ShowStencil (){
+
+	byte	*buffer;
+	int		overdraw = 0;
+	int		i;
+
+	// Set the GL state
+	GL_LoadIdentity(GL_PROJECTION);
+	GL_LoadIdentity(GL_MODELVIEW);
+
+	GL_DisableTexture();
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+
+	GL_Disable(GL_POLYGON_OFFSET_FILL);
+
+	GL_Disable(GL_BLEND);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Disable(GL_DEPTH_TEST);
+
+	GL_Enable(GL_STENCIL_TEST);
+	GL_StencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	GL_DepthRange(0.0f, 1.0f);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	// Draw fullscreen quads
+	for (i = 0; i <= COLOR_WHITE; i++){
+		if (i != COLOR_WHITE)
+			GL_StencilFunc(GL_EQUAL, i, 255);
+		else
+			GL_StencilFunc(GL_LEQUAL, i, 255);
+
+		qglColor4fv(color_table[i]);
+
+		qglBegin(GL_QUADS);
+		qglVertex2f(-1.0f, -1.0f);
+		qglVertex2f( 1.0f, -1.0f);
+		qglVertex2f( 1.0f,  1.0f);
+		qglVertex2f(-1.0f,  1.0f);
+		qglEnd();
+	}
+
+	// Restore the GL state
+	GL_LoadMatrix(GL_PROJECTION, backEnd.viewParms.projectionMatrix);
+
+	// Read the stencil buffer
+	buffer = (byte *)Mem_Alloc(RectSize(backEnd.viewport), TAG_TEMPORARY);
+
+	qglPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+	qglReadPixels(backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height, GL_STENCIL_INDEX, GL_UNSIGNED_BYTE, buffer);
+
+	qglPixelStorei(GL_PACK_ALIGNMENT, 4);
+
+	// Measure overdraw
+	for (i = 0; i < RectSize(backEnd.viewport); i++)
+		overdraw += buffer[i];
+
+	Mem_Free(buffer);
+
+	// Check for errors
+	if (!r_ignoreGLErrors->integerValue)
+		GL_CheckForErrors();
+
+	return (float)overdraw / RectSize(backEnd.viewport);
+}
+
+
+/*
+ ==============================================================================
+
+ DEBUG VISUALIZATION FUNCTIONS
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ RB_AddDebugPolygon
+ ==================
+*/
+void RB_AddDebugPolygon (const vec4_t color, int numPoints, const vec3_t *points, bool fill, bool depthTest, int allowInView){
+
+	debugPolygon_t	*debugPolygon;
+
+	if (backEnd.numDebugPolygons == backEnd.maxDebugPolygons)
+		return;		// Silently ignore
+
+	// Add a debug polygon
+	debugPolygon = &backEnd.debugPolygons[backEnd.numDebugPolygons++];
+
+	debugPolygon->allowInView = allowInView;
+	debugPolygon->fill = fill;
+	debugPolygon->depthTest = depthTest;
+	MakeRGBA(debugPolygon->color, color[0], color[1], color[2], color[3]);
+	debugPolygon->numPoints = numPoints;
+	Mem_Copy(debugPolygon->points, points, Min(numPoints, MAX_POLYGON_POINTS >> 2) * sizeof(vec3_t));
+}
+
+/*
+ ==================
+ RB_ClearDebugPolygons
+ ==================
+*/
+void RB_ClearDebugPolygons (){
+
+	backEnd.numDebugPolygons = 0;
+
+	// Reallocate the debug polygons buffer if needed
+	if (backEnd.maxDebugPolygons == r_maxDebugPolygons->integerValue)
+		return;
+
+	backEnd.maxDebugPolygons = r_maxDebugPolygons->integerValue;
+
+	if (backEnd.debugPolygons){
+		Mem_Free(backEnd.debugPolygons);
+		backEnd.debugPolygons = NULL;
+	}
+
+	if (backEnd.maxDebugPolygons <= 0)
+		return;
+
+	backEnd.debugPolygons = (debugPolygon_t *)Mem_Alloc(backEnd.maxDebugPolygons * sizeof(debugPolygon_t), TAG_RENDERER);
+}
+
+/*
+ ==================
+ RB_DrawDebugPolygons
+ ==================
+*/
+static void RB_DrawDebugPolygons (){
+
+	debugPolygon_t	*debugPolygon;
+	int				i, j;
+
+	if (!backEnd.numDebugPolygons)
+		return;
+
+	// Set the GL state
+	GL_LoadMatrix(GL_MODELVIEW, backEnd.viewParms.modelviewMatrix);
+
+	GL_DisableTexture();
+
+	GL_Disable(GL_CULL_FACE);
+
+	GL_Enable(GL_POLYGON_OFFSET_FILL);
+	GL_Enable(GL_POLYGON_OFFSET_LINE);
+	GL_PolygonOffset(r_offsetFactor->floatValue, r_offsetUnits->floatValue);
+
+	GL_Disable(GL_BLEND);
+
+	GL_Disable(GL_ALPHA_TEST);
+	GL_Disable(GL_DEPTH_TEST);
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_DepthRange(0.0f, 1.0f);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	// Draw all the debug polygons
+	for (i = 0, debugPolygon = backEnd.debugPolygons; i < backEnd.numDebugPolygons; i++, debugPolygon++){
+		// Check for view suppression
+		if (!r_skipSuppress->integerValue){
+			if (!(debugPolygon->allowInView & backEnd.viewParms.viewType))
+				continue;
+		}
+
+		// Set the GL state
+		if (debugPolygon->fill){
+			GL_PolygonMode(GL_FILL);
+
+			GL_Enable(GL_BLEND);
+			GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			GL_BlendEquation(GL_FUNC_ADD);
+
+			GL_DepthMask(GL_TRUE);
+		}
+		else {
+			GL_PolygonMode(GL_LINE);
+
+			GL_Disable(GL_BLEND);
+
+			GL_DepthMask(GL_FALSE);
+		}
+
+		if (debugPolygon->depthTest){
+			GL_Enable(GL_DEPTH_TEST);
+			GL_DepthFunc(GL_LEQUAL);
+		}
+		else
+			GL_Disable(GL_DEPTH_TEST);
+
+		// Set the color
+		qglColor4f(debugPolygon->color[0], debugPolygon->color[1], debugPolygon->color[2], 0.5f);
+
+		// Draw it
+		qglBegin(GL_POLYGON);
+		for (j = 0; j < debugPolygon->numPoints; j++)
+			qglVertex3fv(debugPolygon->points[j]);
+		qglEnd();
+	}
+
+	// Check for errors
+	if (!r_ignoreGLErrors->integerValue)
+		GL_CheckForErrors();
+}
+
+/*
+ ==================
+ RB_AddDebugLine
+ ==================
+*/
+void RB_AddDebugLine (const vec4_t color, const vec3_t start, const vec3_t end, bool depthTest, int allowInView){
+
+	debugLine_t	*debugLine;
+
+	if (backEnd.numDebugLines == backEnd.maxDebugLines)
+		return;		// Silently ignore
+
+	// Add a debug line
+	debugLine = &backEnd.debugLines[backEnd.numDebugLines++];
+
+	debugLine->allowInView = allowInView;
+	debugLine->depthTest = depthTest;
+	MakeRGBA(debugLine->color, color[0], color[1], color[2], color[3]);
+	VectorCopy(start, debugLine->start);
+	VectorCopy(end, debugLine->end);
+}
+
+/*
+ ==================
+ RB_ClearDebugLines
+ ==================
+*/
+void RB_ClearDebugLines (){
+
+	backEnd.numDebugLines = 0;
+
+	// Reallocate the debug lines buffer if needed
+	if (backEnd.maxDebugLines == r_maxDebugLines->integerValue)
+		return;
+
+	backEnd.maxDebugLines = r_maxDebugLines->integerValue;
+
+	if (backEnd.debugLines){
+		Mem_Free(backEnd.debugLines);
+		backEnd.debugLines = NULL;
+	}
+
+	if (backEnd.maxDebugLines <= 0)
+		return;
+
+	backEnd.debugLines = (debugLine_t *)Mem_Alloc(backEnd.maxDebugLines * sizeof(debugLine_t), TAG_RENDERER);
+}
+
+/*
+ ==================
+ RB_DrawDebugLines
+ ==================
+*/
+static void RB_DrawDebugLines (){
+
+	debugLine_t	*debugLine;
+	int			i;
+
+	if (!backEnd.numDebugLines)
+		return;
+
+	// Set the GL state
+	GL_LoadMatrix(GL_MODELVIEW, backEnd.viewParms.modelviewMatrix);
+
+	GL_DisableTexture();
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+
+	GL_Enable(GL_POLYGON_OFFSET_LINE);
+	GL_PolygonOffset(r_offsetFactor->floatValue, r_offsetUnits->floatValue);
+
+	GL_Disable(GL_BLEND);
+
+	GL_Disable(GL_ALPHA_TEST);
+	GL_Disable(GL_DEPTH_TEST);
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_DepthRange(0.0f, 1.0f);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	// Draw all the debug lines
+	for (i = 0, debugLine = backEnd.debugLines; i < backEnd.numDebugLines; i++, debugLine++){
+		// Check for view suppression
+		if (!r_skipSuppress->integerValue){
+			if (!(debugLine->allowInView & backEnd.viewParms.viewType))
+				continue;
+		}
+
+		// Set the GL state
+		if (debugLine->depthTest){
+			GL_Enable(GL_DEPTH_TEST);
+			GL_DepthFunc(GL_LEQUAL);
+		}
+		else
+			GL_Disable(GL_DEPTH_TEST);
+
+		// Set the color
+		qglColor3f(debugLine->color[0], debugLine->color[1], debugLine->color[2]);
+
+		// Draw it
+		qglBegin(GL_LINES);
+		qglVertex3fv(debugLine->start);
+		qglVertex3fv(debugLine->end);
+		qglEnd();
+	}
+
+	// Check for errors
+	if (!r_ignoreGLErrors->integerValue)
+		GL_CheckForErrors();
+}
+
+/*
+ ==================
+ RB_AddDebugText
+ ==================
+*/
+void RB_AddDebugText (const vec4_t color, bool forceColor, const vec3_t origin, float cw, float ch, const char *text, bool depthTest, int allowInView){
+
+	debugText_t	*debugText;
+
+	if (backEnd.numDebugText == backEnd.maxDebugText)
+		return;		// Silently ignore
+
+	// Add a debug text string
+	debugText = &backEnd.debugText[backEnd.numDebugText++];
+
+	debugText->allowInView = allowInView;
+	debugText->depthTest = depthTest;
+	MakeRGBA(debugText->color, color[0], color[1], color[2], color[3]);
+	debugText->forceColor = forceColor;
+	VectorCopy(origin, debugText->origin);
+	debugText->cw = cw;
+	debugText->ch = ch;
+	Str_Copy(debugText->text, text, MAX_STRING_LENGTH);
+}
+
+/*
+ ==================
+ RB_ClearDebugText
+ ==================
+*/
+void RB_ClearDebugText (){
+
+	backEnd.numDebugText = 0;
+
+	// Reallocate the debug text buffer if needed
+	if (backEnd.maxDebugText == r_maxDebugText->integerValue)
+		return;
+
+	backEnd.maxDebugText = r_maxDebugText->integerValue;
+
+	if (backEnd.debugText){
+		Mem_Free(backEnd.debugText);
+		backEnd.debugText = NULL;
+	}
+
+	if (backEnd.maxDebugText <= 0)
+		return;
+
+	backEnd.debugText = (debugText_t *)Mem_Alloc(backEnd.maxDebugText * sizeof(debugText_t), TAG_RENDERER);
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_DrawDebugText (){
+
+	debugText_t	*debugText;
+	texture_t	*texture;
+	const char	*text;
+	vec3_t		axis[3];
+	vec3_t		points[4];
+	vec3_t		origin, offset;
+	float		col, row;
+	int			index;
+	int			i, c;
+
+	if (!backEnd.numDebugText)
+		return;
+
+	// Use the default character set, which should be already loaded
+	texture = R_GetTexture("gfx/charset");
+	if (!texture)
+		return;
+
+	// Set the GL state
+	GL_LoadMatrix(GL_MODELVIEW, backEnd.viewParms.modelviewMatrix);
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+
+	GL_Disable(GL_POLYGON_OFFSET_FILL);
+	
+	GL_Disable(GL_BLEND);
+
+	GL_Enable(GL_ALPHA_TEST);
+	GL_AlphaFunc(GL_GREATER, 0.75f);
+
+	GL_Disable(GL_DEPTH_TEST);
+
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_DepthRange(0.0f, 1.0f);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	// Set up the texture
+	GL_EnableTexture(texture->target);
+	GL_BindTexture(texture);
+
+	GL_LoadIdentity(GL_TEXTURE);
+	GL_TexEnv(GL_MODULATE);
+
+	// Draw all the debug text
+	for (i = 0, debugText = backEnd.debugText; i < backEnd.numDebugText; i++, debugText++){
+		// Check for view suppression
+		if (!r_skipSuppress->integerValue){
+			if (!(debugText->allowInView & backEnd.viewParms.viewType))
+				continue;
+		}
+
+		// Set the GL state
+		if (debugText->depthTest){
+			GL_Enable(GL_DEPTH_TEST);
+			GL_DepthFunc(GL_LEQUAL);
+		}
+		else
+			GL_Disable(GL_DEPTH_TEST);
+
+		// Set the color
+		qglColor3f(debugText->color[0], debugText->color[1], debugText->color[2]);
+
+		// Draw it
+		text = debugText->text;
+
+		VectorMA(debugText->origin, (Str_Length(debugText->text) * debugText->cw * 0.5f), backEnd.viewParms.axis[1], origin);
+
+		VectorNegate(backEnd.viewParms.axis[1], axis[1]);
+		VectorScale(axis[1], debugText->cw, offset);
+
+		// TODO: points
+
+		while (*text){
+			if (Str_IsColor(text)){
+				if (!debugText->forceColor){
+					index = Str_ColorIndexForChar(text[1]);
+
+					qglColor3f(color_table[index][0], color_table[index][1], color_table[index][2]);
+				}
+
+				text += 2;
+				continue;
+			}
+
+			c = *(const byte *)text++;
+
+			if (c != ' '){
+				col = (c & 15) * 0.0625f;
+				row = (c >> 4) * 0.0625f;
+
+				qglBegin(GL_QUADS);
+				qglTexCoord2f(col, row);
+				qglVertex3fv(points[0]);
+				qglTexCoord2f(col + 0.0625f, row);
+				qglVertex3fv(points[1]);
+				qglTexCoord2f(col + 0.0625f, row + 0.0625f);
+				qglVertex3fv(points[2]);
+				qglTexCoord2f(col, row + 0.0625f);
+				qglVertex3fv(points[3]);
+				qglEnd();
+			}
+
+			points[0][0] += offset[0];
+			points[1][1] += offset[1];
+			points[2][2] += offset[2];
+			points[3][3] += offset[3];
+		}
+	}
+
+	// Check for errors
+	if (!r_ignoreGLErrors->integerValue)
+		GL_CheckForErrors();
+}
+
 
 // ============================================================================
 
@@ -935,10 +1893,121 @@ static void RB_ShowModelBounds (int numMeshes, mesh_t *meshes){
 */
 void RB_RenderDebugTools (){
 
+	light_t	*light;
+	int		i, j;
+
 	QGL_LogPrintf("---------- RB_RenderDebugTools ----------\n");
 
 	if (r_showDepth->integerValue)
 		RB_ShowDepth();
+
+	if (r_showLightCount->integerValue){
+		// Clear the stencil buffer
+		GL_StencilMask(255);
+
+		qglClearStencil(0);
+		qglClear(GL_STENCIL_BUFFER_BIT);
+
+		for (i = 0; i < 4; i++){
+			// Run through the lights
+			for (j = 0, light = backEnd.viewParms.lights[i]; j < backEnd.viewParms.numLights[i]; j++, light++){
+				if (!light->numInteractionMeshes)
+					continue;
+
+				// Set the light
+				backEnd.light = light;
+				backEnd.lightMaterial = light->material;
+
+				// Evaluate registers
+				RB_EvaluateRegisters(light->material, backEnd.floatTime, light->materialParms);
+
+				// Skip if condition evaluated to false
+				if (!light->material->expressionRegisters[light->material->conditionRegister])
+					continue;
+
+				// Set up the scissor
+				GL_Scissor(light->scissor.x, light->scissor.y, light->scissor.width, light->scissor.height);
+
+				// Run through the surfaces
+				RB_ShowLightCount(light->numInteractionMeshes, light->interactionMeshes);
+			}
+		}
+
+		// Restore the scissor
+		GL_Scissor(backEnd.scissor.x, backEnd.scissor.y, backEnd.scissor.width, backEnd.scissor.height);
+
+		// Draw the stencil buffer contents
+		rg.pc.overdrawLights += RB_ShowStencil();
+	}
+
+	if (r_showLightVolumes->integerValue){
+		for (i = 0; i < 4; i++){
+			// Run through the lights
+			for (j = 0, light = backEnd.viewParms.lights[i]; j < backEnd.viewParms.numLights[i]; j++, light++){
+				// Set the light
+				backEnd.light = light;
+				backEnd.lightMaterial = light->material;
+
+				// Evaluate registers
+				RB_EvaluateRegisters(light->material, backEnd.floatTime, light->materialParms);
+
+				// Skip if condition evaluated to false
+				if (!light->material->expressionRegisters[light->material->conditionRegister])
+					continue;
+
+				// Draw the light volume
+				RB_ShowLightVolume();
+			}
+		}
+	}
+
+	if (r_showLightScissors->integerValue){
+		for (i = 0; i < 4; i++){
+			// Run through the lights
+			for (j = 0, light = backEnd.viewParms.lights[i]; j < backEnd.viewParms.numLights[i]; j++, light++){
+				// Set the light
+				backEnd.light = light;
+				backEnd.lightMaterial = light->material;
+
+				// Evaluate registers
+				RB_EvaluateRegisters(light->material, backEnd.floatTime, light->materialParms);
+
+				// Skip if condition evaluated to false
+				if (!light->material->expressionRegisters[light->material->conditionRegister])
+					continue;
+
+				// Draw the light scissor
+				RB_ShowLightScissor(light);
+			}
+		}
+	}
+
+	if (r_showShadowTris->integerValue || r_showShadowVolumes->integerValue || r_showShadowSilhouettes->integerValue){
+		for (i = 0; i < 4; i++){
+			// Run through the lights
+			for (j = 0, light = backEnd.viewParms.lights[i]; j < backEnd.viewParms.numLights[i]; j++, light++){
+				// Set the light
+				backEnd.light = light;
+				backEnd.lightMaterial = light->material;
+
+				// Evaluate registers
+				RB_EvaluateRegisters(light->material, backEnd.floatTime, light->materialParms);
+
+				// Skip if condition evaluated to false
+				if (!light->material->expressionRegisters[light->material->conditionRegister])
+					continue;
+
+				if (r_showShadowTris->integerValue)
+					RB_ShowShadowTris(light->numShadowMeshes, light->shadowMeshes);
+
+				if (r_showShadowVolumes->integerValue)
+					RB_ShowShadowVolumes(light->numShadowMeshes, light->shadowMeshes);
+
+				if (r_showShadowSilhouettes->integerValue)
+					RB_ShowShadowSilhouettes(light->numShadowMeshes, light->shadowMeshes);
+			}
+		}
+	}
 
 	if (r_showVertexColors->integerValue){
 		RB_ShowVertexColors(backEnd.viewParms.numMeshes[0], backEnd.viewParms.meshes[0]);
@@ -994,6 +2063,15 @@ void RB_RenderDebugTools (){
 		RB_ShowModelBounds(backEnd.viewParms.numMeshes[1], backEnd.viewParms.meshes[1]);
 		RB_ShowModelBounds(backEnd.viewParms.numMeshes[2], backEnd.viewParms.meshes[2]);
 		RB_ShowModelBounds(backEnd.viewParms.numMeshes[3], backEnd.viewParms.meshes[3]);
+	}
+
+	R_RefreshLightEditor();
+
+	// If a primary view, draw any debug polygons, lines, and text
+	if (backEnd.viewParms.primaryView){
+		RB_DrawDebugPolygons();
+		RB_DrawDebugLines();
+		RB_DrawDebugText();
 	}
 
 	QGL_LogPrintf("--------------------\n");

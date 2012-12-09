@@ -1049,7 +1049,7 @@ void SV_Init (){
 	sv_zombieTimeOut = CVar_Register("sv_zombieTimeOut", "2.0", CVAR_FLOAT, 0, "Zombie time-out time in seconds", 1.0f, 300.0f);
 	sv_reconnectLimit = CVar_Register("sv_reconnectLimit", "3.0", CVAR_FLOAT, 0, "Time in seconds before a client is allowed to reconnect", 1.0f, 300.0f);
 	sv_rconPassword = CVar_Register("rconPassword", "", CVAR_STRING, 0, "Remote console password", 0, 0);
-	sv_loadGame = CVar_Register("sv_loadGame", "0", CVAR_BOOL, 0, "Loads the extended Quake 2 Evolved game DLL", 0, 0);
+	sv_loadGame = CVar_Register("sv_loadGame", "0", CVAR_INTEGER, 0, "Loads the desired game DLL (0 = extended, 1 = original)", 0, 1);
 
 	// Add commands
 	Cmd_AddCommand("loadgame", SV_LoadGame_f, NULL, NULL);

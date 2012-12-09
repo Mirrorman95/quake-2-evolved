@@ -25,10 +25,6 @@
 // cl_load.c - Assets loading and caching
 //
 
-// TODO:
-// - rewrite most of the mess
-// - Replace Com_StripExtension
-
 
 #include "client.h"
 
@@ -36,7 +32,7 @@
 /*
  ==============================================================================
 
- UPDATE LOADING SCREEN
+ LOADING SCREEN
 
  ==============================================================================
 */
@@ -60,7 +56,7 @@ static void CL_UpdateLoading (const char *string){
 /*
  ==============================================================================
 
- MEDIA REGISTRATION
+ LEVEL LOADING
 
  ==============================================================================
 */
@@ -68,14 +64,47 @@ static void CL_UpdateLoading (const char *string){
 
 /*
  ==================
- CL_RegisterCollisionMap
+ CL_RegisterLoadingInfo
  ==================
 */
-static void CL_RegisterCollisionMap (){
+static void CL_RegisterLoadingInfo (){
 
-	uint	checkCount;
+	char	levelshot[MAX_OSPATH];
+	int		i, j;
 
-	CL_UpdateLoading("COLLISION MAP");
+	// Get the map name
+	Str_Copy(cls.loadingInfo.map, cl.configStrings[CS_MODELS + 1] + 5, sizeof(cls.loadingInfo.map));
+	Str_StripFileExtension(cls.loadingInfo.map);
+
+	// Check if a levelshot for this map exists
+	Str_SPrintf(levelshot, sizeof(levelshot), "ui/assets/levelshots/%s.tga", cls.loadingInfo.map);
+
+	if (FS_FileExists(levelshot))
+		Str_SPrintf(levelshot, sizeof(levelshot), "ui/assets/levelshots/%s", cls.loadingInfo.map);
+	else
+		Str_SPrintf(levelshot, sizeof(levelshot), "ui/assets/levelshots/unknownmap");
+
+	// Load a few needed materials for the loading screen
+	cl.media.levelshot = R_RegisterMaterialNoMip(levelshot);
+	cl.media.levelshotDetail = R_RegisterMaterialNoMip("ui/assets/loading/loading_detail");
+	cl.media.loadingLogo = R_RegisterMaterialNoMip("ui/assets/title_screen/q2e_logo");
+	cl.media.loadingDetail[0] = R_RegisterMaterialNoMip("ui/assets/loading/load_main2");
+	cl.media.loadingDetail[1] = R_RegisterMaterialNoMip("ui/assets/loading/load_main");
+
+	for (i = 0, j = 5; i < 20; i++, j += 5)
+		cl.media.loadingPercent[i] = R_RegisterMaterialNoMip(Str_VarArgs("ui/assets/loading/percent/load_%i", j));
+}
+
+/*
+ ==================
+ CL_RegisterClipMap
+ ==================
+*/
+static void CL_RegisterClipMap (){
+
+	uint checkCount;
+
+	CL_UpdateLoading("clip map");
 
 	CM_LoadMap(cl.configStrings[CS_MODELS + 1], true, &checkCount);
 
@@ -93,29 +122,29 @@ static void CL_RegisterSounds (){
 	int		i;
 
 	// Register sounds
-	CL_UpdateLoading("SOUNDS");
+	CL_UpdateLoading("sounds");
 
-	cl.media.sfxRichotecs[0] = S_RegisterSound("world/ric1.wav", 0);
-	cl.media.sfxRichotecs[1] = S_RegisterSound("world/ric2.wav", 0);
-	cl.media.sfxRichotecs[2] = S_RegisterSound("world/ric3.wav", 0);
-	cl.media.sfxSparks[0] = S_RegisterSound("world/spark5.wav", 0);
-	cl.media.sfxSparks[1] = S_RegisterSound("world/spark6.wav", 0);
-	cl.media.sfxSparks[2] = S_RegisterSound("world/spark7.wav", 0);
-	cl.media.sfxFootSteps[0] = S_RegisterSound("player/step1.wav", 0);
-	cl.media.sfxFootSteps[1] = S_RegisterSound("player/step2.wav", 0);
-	cl.media.sfxFootSteps[2] = S_RegisterSound("player/step3.wav", 0);
-	cl.media.sfxFootSteps[3] = S_RegisterSound("player/step4.wav", 0);
-	cl.media.sfxLaserHit = S_RegisterSound("weapons/lashit.wav", 0);
-	cl.media.sfxRailgun = S_RegisterSound("weapons/railgf1a.wav", 0);
-	cl.media.sfxRocketExplosion = S_RegisterSound("weapons/rocklx1a.wav", 0);
-	cl.media.sfxGrenadeExplosion = S_RegisterSound("weapons/grenlx1a.wav", 0);
-	cl.media.sfxWaterExplosion = S_RegisterSound("weapons/xpld_wat.wav", 0);
-	cl.media.sfxMachinegunBrass = S_RegisterSound("weapons/brass_bullet.wav", 0);
-	cl.media.sfxShotgunBrass = S_RegisterSound("weapons/brass_shell.wav", 0);
+	cl.media.richotecSounds[0] = S_RegisterSound("world/ric1.wav", 0);
+	cl.media.richotecSounds[1] = S_RegisterSound("world/ric2.wav", 0);
+	cl.media.richotecSounds[2] = S_RegisterSound("world/ric3.wav", 0);
+	cl.media.sparkSounds[0] = S_RegisterSound("world/spark5.wav", 0);
+	cl.media.sparkSounds[1] = S_RegisterSound("world/spark6.wav", 0);
+	cl.media.sparkSounds[2] = S_RegisterSound("world/spark7.wav", 0);
+	cl.media.footStepSounds[0] = S_RegisterSound("player/step1.wav", 0);
+	cl.media.footStepSounds[1] = S_RegisterSound("player/step2.wav", 0);
+	cl.media.footStepSounds[2] = S_RegisterSound("player/step3.wav", 0);
+	cl.media.footStepSounds[3] = S_RegisterSound("player/step4.wav", 0);
+	cl.media.laserHitSound = S_RegisterSound("weapons/lashit.wav", 0);
+	cl.media.railgunSound = S_RegisterSound("weapons/railgf1a.wav", 0);
+	cl.media.rocketExplosionSound = S_RegisterSound("weapons/rocklx1a.wav", 0);
+	cl.media.grenadeExplosionSound = S_RegisterSound("weapons/grenlx1a.wav", 0);
+	cl.media.waterExplosionSound = S_RegisterSound("weapons/xpld_wat.wav", 0);
+	cl.media.machinegunBrassSound = S_RegisterSound("weapons/brass_bullet.wav", 0);
+	cl.media.shotgunBrassSound = S_RegisterSound("weapons/brass_shell.wav", 0);
 
 	if (!Str_ICompare(cl.gameDir, "rogue")){
-		cl.media.sfxLightning = S_RegisterSound("weapons/tesla.wav", 0);
-		cl.media.sfxDisruptorExplosion = S_RegisterSound("weapons/disrupthit.wav", 0);
+		cl.media.lightningSound = S_RegisterSound("weapons/tesla.wav", 0);
+		cl.media.disruptorExplosionSound = S_RegisterSound("weapons/disrupthit.wav", 0);
 	}
 
 	S_RegisterSound("player/land1.wav", 0);
@@ -123,33 +152,30 @@ static void CL_RegisterSounds (){
 	S_RegisterSound("player/fall1.wav", 0);
 
 	// Register the sounds that the server references
-	CL_UpdateLoading("GAME SOUNDS");
+	CL_UpdateLoading("game sounds");
 
 	for (i = 1; i < MAX_SOUNDS; i++){
-		if (!cl.configStrings[CS_SOUNDS+i][0])
+		if (!cl.configStrings[CS_SOUNDS + i][0])
 			break;
-	
-		cl.media.gameSounds[i] = S_RegisterSound(cl.configStrings[CS_SOUNDS+i], 0);
+
+		cl.media.gameSounds[i] = S_RegisterSound(cl.configStrings[CS_SOUNDS + i], 0);
 	}
 }
 
 /*
  ==================
  CL_RegisterGraphics
-
- TODO: replace Com_StripExtension
- TODO: some material names needs to be changed
  ==================
 */
 static void CL_RegisterGraphics (){
 
-	int		i;
+	char	name[MAX_QPATH];
 	float	skyRotate;
 	vec3_t	skyAxis;
-	char	name[MAX_QPATH];
+	int		i;
 
-	// Load the map
-	CL_UpdateLoading("MAP");
+	// Load the world map
+	CL_UpdateLoading("world map");
 
 	skyRotate = Str_ToFloat(cl.configStrings[CS_SKYROTATE]);
 	sscanf(cl.configStrings[CS_SKYAXIS], "%f %f %f", &skyAxis[0], &skyAxis[1], &skyAxis[2]);
@@ -157,7 +183,7 @@ static void CL_RegisterGraphics (){
 	R_LoadMap(cl.configStrings[CS_MODELS+1], cl.configStrings[CS_SKY], skyRotate, skyAxis);
 
 	// Register models
-	CL_UpdateLoading("MODELS");
+	CL_UpdateLoading("models");
 
 	cl.media.parasiteBeamModel = R_RegisterModel("models/monsters/parasite/segment/tris.md2");
 	cl.media.powerScreenShellModel = R_RegisterModel("models/items/armor/effect/tris.md2");
@@ -174,7 +200,7 @@ static void CL_RegisterGraphics (){
 	R_RegisterModel("models/objects/gibs/bone2/tris.md2");
 
 	// Register the models that the server references
-	CL_UpdateLoading("GAME MODELS");
+	CL_UpdateLoading("game models");
 
 	Str_Copy(cl.weaponModels[0], "weapon", sizeof(cl.weaponModels[0]));
 	cl.numWeaponModels = 1;
@@ -186,10 +212,12 @@ static void CL_RegisterGraphics (){
 		if (cl.configStrings[CS_MODELS + i][0] == '#'){
 			// Special player weapon model
 			if (cl.numWeaponModels < MAX_CLIENTWEAPONMODELS){
-				Com_StripExtension(cl.configStrings[CS_MODELS + i] + 1, cl.weaponModels[cl.numWeaponModels], sizeof(cl.weaponModels[cl.numWeaponModels]));
+				Str_Copy(cl.weaponModels[cl.numWeaponModels], cl.configStrings[CS_MODELS + i] + 1, sizeof(cl.weaponModels[cl.numWeaponModels]));
+				Str_StripFileExtension(cl.weaponModels[cl.numWeaponModels]);
+
 				cl.numWeaponModels++;
 			}
-		} 
+		}
 		else {
 			cl.media.gameModels[i] = R_RegisterModel(cl.configStrings[CS_MODELS + i]);
 
@@ -201,7 +229,7 @@ static void CL_RegisterGraphics (){
 	}
 
 	// Register materials
-	CL_UpdateLoading("MATERIALS");
+	CL_UpdateLoading("materials");
 
 	cl.media.lagometerMaterial = R_RegisterMaterialNoMip("lagometer");
 	cl.media.disconnectedMaterial = R_RegisterMaterialNoMip("disconnected");
@@ -246,12 +274,12 @@ static void CL_RegisterGraphics (){
 	cl.media.bloodCloudMaterial[0] = R_RegisterMaterial("bloodCloud", false);
 	cl.media.bloodCloudMaterial[1] = R_RegisterMaterial("greenBloodCloud", false);
 
-	cl.media.powerScreenShellMaterial = R_RegisterMaterial("gfx/effects/shells/powerScreen", false);
-	cl.media.invulnerabilityShellMaterial = R_RegisterMaterial("gfx/effects/shells/invulnerability", false);
-	cl.media.quadDamageShellMaterial = R_RegisterMaterial("gfx/effects/shells/quadDamage", false);
-	cl.media.doubleDamageShellMaterial = R_RegisterMaterial("gfx/effects/shells/doubleDamage", false);
-	cl.media.halfDamageShellMaterial = R_RegisterMaterial("gfx/effects/shells/halfDamage", false);
-	cl.media.genericShellMaterial = R_RegisterMaterial("gfx/effects/shells/generic", false);
+	cl.media.powerScreenShellMaterial = R_RegisterMaterial("gfx/shells/powerScreen", false);
+	cl.media.invulnerabilityShellMaterial = R_RegisterMaterial("gfx/shells/invulnerability", false);
+	cl.media.quadDamageShellMaterial = R_RegisterMaterial("gfx/shells/quadDamage", false);
+	cl.media.doubleDamageShellMaterial = R_RegisterMaterial("gfx/shells/doubleDamage", false);
+	cl.media.halfDamageShellMaterial = R_RegisterMaterial("gfx/shells/halfDamage", false);
+	cl.media.genericShellMaterial = R_RegisterMaterial("gfx/shells/generic", false);
 
 	cl.media.laserBeamMaterial = R_RegisterMaterial("gfx/beams/laser", false);
 	cl.media.grappleBeamMaterial = R_RegisterMaterial("gfx/beams/grapple", false);
@@ -293,7 +321,7 @@ static void CL_RegisterGraphics (){
 	R_RegisterMaterialNoMip("pics/a_grenades");
 
 	// Register the materials that the server references
-	CL_UpdateLoading("GAME MATERIALS");
+	CL_UpdateLoading("game materials");
 
 	for (i = 1; i < MAX_IMAGES; i++){
 		if (!cl.configStrings[CS_IMAGES + i][0])
@@ -301,8 +329,10 @@ static void CL_RegisterGraphics (){
 
 		if (!Str_FindChar(cl.configStrings[CS_IMAGES + i], '/'))
 			Str_SPrintf(name, sizeof(name), "pics/%s", cl.configStrings[CS_IMAGES + i]);
-		else
-			Com_StripExtension(cl.configStrings[CS_IMAGES + i], name, sizeof(name));
+		else {
+			Str_Copy(name, cl.configStrings[CS_IMAGES + i], sizeof(name));
+			Str_StripFileExtension(name);
+		}
 
 		cl.media.gameMaterials[i] = R_RegisterMaterialNoMip(name);
 	}
@@ -317,8 +347,8 @@ static void CL_RegisterClients (){
 
 	int		i;
 
-	// Register all the clients in the server
-	CL_UpdateLoading("CLIENTS");
+	// Register all the clients that are present on the server
+	CL_UpdateLoading("clients");
 
 	CL_LoadClientInfo(&cl.baseClientInfo, "unnamed\\male/grunt");
 
@@ -330,28 +360,124 @@ static void CL_RegisterClients (){
 	}
 }
 
+/*
+ ==================
+ CL_LoadAssets
+ ==================
+*/
+static void CL_LoadAssets (){
+
+	int		time;
+
+	time = Sys_Milliseconds();
+
+	Com_Printf("------------ Level Loading ------------\n");
+	Com_Printf("Loading %s\n", cls.loadingInfo.name);
+
+	CL_RegisterLoadingInfo();
+	CL_RegisterClipMap();
+	CL_RegisterSounds();
+	CL_RegisterGraphics();
+	CL_RegisterClients();
+
+	Com_Printf("---------------------------------------\n");
+	Com_Printf("Level loaded in %.2f seconds\n", MS2SEC(Sys_Milliseconds() - time));
+}
 
 /*
- ==============================================================================
+ ==================
 
- LOADING AND DRAWING
-
- ==============================================================================
+ ==================
 */
+static void CL_PrecacheLights (){
+
+}
+
+/*
+ ==================
+ CL_Load
+ ==================
+*/
+static void CL_Load (){
+
+	// Load the assets
+	CL_LoadAssets();
+
+	// Precache all the lights
+	CL_PrecacheLights();
+}
+
+/*
+ ==================
+ CL_LoadLevel
+ ==================
+*/
+void CL_LoadLevel (){
+
+	// Need to precache files
+	cls.state = CA_LOADING;
+
+	// Free any loaded data
+	CL_FreeLevel();
+
+	// Load the level
+	CL_Load();
+
+	// All precaches are now complete
+	cls.state = CA_PRIMED;
+
+	// Free all temporary allocations
+	Mem_FreeAll(TAG_TEMPORARY, true);
+
+	// Make sure everything is paged in
+//	Mem_TouchMemory();
+
+	// Force menu and console off
+	UI_SetActiveMenu(UI_CLOSEMENU);
+	Con_Close();
+}
+
+/*
+ ==================
+ CL_FreeLevel
+ ==================
+*/
+void CL_FreeLevel (){
+
+	// Clear local effects because they now point to invalid files
+	CL_ClearTempEntities();
+	CL_ClearLocalEntities();
+	CL_ClearDynamicLights();
+	CL_ClearParticles();
+
+	// Clear the testing utilities
+	CL_ClearTestModel();
+	CL_ClearTestSprite();
+	CL_ClearTestBeam();
+	CL_ClearTestSound ();
+}
+
+
+// ============================================================================
 
 
 /*
  ==================
- CL_Loading
+ CL_LoadingState
  ==================
 */
-void CL_Loading (){
+void CL_LoadingState (){
 
 	if (cls.loading)
 		return;
 
 	cls.loading = true;
+
+	// Clear loading information
 	Mem_Fill(&cls.loadingInfo, 0, sizeof(loadingInfo_t));
+
+	// If playing a cinematic, stop it
+	CL_StopCinematic();
 
 	// Make sure sounds aren't playing
 	S_StopAllSounds();
@@ -368,10 +494,10 @@ void CL_Loading (){
 */
 void CL_LoadClientInfo (clientInfo_t *clientInfo, const char *string){
 
-	char	model[MAX_QPATH], skin[MAX_QPATH], name[MAX_QPATH];
-	char	checkMD3[MAX_QPATH], checkMD2[MAX_QPATH];
-	char	checkTGA[MAX_QPATH], checkPCX[MAX_QPATH];
 	char	*ch;
+	char	model[MAX_OSPATH], skin[MAX_OSPATH], name[MAX_OSPATH];
+	char	checkMD3[MAX_OSPATH], checkMD2[MAX_OSPATH];
+	char	checkTGA[MAX_OSPATH], checkPCX[MAX_OSPATH];
 	int		i;
 
 	Mem_Fill(clientInfo, 0, sizeof(clientInfo_t));
@@ -381,25 +507,26 @@ void CL_LoadClientInfo (clientInfo_t *clientInfo, const char *string){
 
 	ch = Str_FindChar(string, '\\');
 	if (ch){
-		clientInfo->name[ch - string] = 0;
-		string = ch + 1;
+		clientInfo->name[ch-string] = 0;
+		string = ch+1;
 	}
 
+	// If no custom skins or bad info string, so just use male/grunt
 	if (cl_noSkins->integerValue || *string == 0){
-		// No custom skins or bad info string, so just use male/grunt
 		clientInfo->model = R_RegisterModel("players/male/tris.md2");
 		clientInfo->skin = R_RegisterMaterial("players/male/grunt", true);
 		clientInfo->icon = R_RegisterMaterialNoMip("players/male/grunt_i");
 		clientInfo->weaponModel[0] = R_RegisterModel("players/male/weapon.md2");
 
-		// Save model/skin in the info string
+		// Save the model/skin in the info string
 		Str_SPrintf(clientInfo->info, sizeof(clientInfo->info), "male/grunt");
 
 		clientInfo->valid = true;
+
 		return;
 	}
 
-	// Isolate model and skin name
+	// Isolate the model and skin name
 	Str_Copy(model, string, sizeof(model));
 
 	ch = Str_FindChar(model, '/');
@@ -443,9 +570,6 @@ void CL_LoadClientInfo (clientInfo_t *clientInfo, const char *string){
 			Str_Copy(skin, "grunt", sizeof(skin));
 			break;
 		}
-
-		if (!cl_visibleWeapons->integerValue)
-			break;		// Only one if no visible weapons
 	}
 
 	// We can now load everything
@@ -461,82 +585,10 @@ void CL_LoadClientInfo (clientInfo_t *clientInfo, const char *string){
 	for (i = 0; i < cl.numWeaponModels; i++){
 		Str_SPrintf(name, sizeof(name), "players/%s/%s.md2", model, cl.weaponModels[i]);
 		clientInfo->weaponModel[i] = R_RegisterModel(name);
-
-		if (!cl_visibleWeapons->integerValue)
-			break;		// Only one if no visible weapons
 	}
 
 	// Save model/skin in the info string
 	Str_SPrintf(clientInfo->info, sizeof(clientInfo->info), "%s/%s", model, skin);
 
 	clientInfo->valid = true;
-}
-
-/*
- ==================
- CL_LoadGameMedia
- ==================
-*/
-void CL_LoadGameMedia (){
-
-	char	checkTGA[MAX_QPATH];
-	char	levelshot[MAX_QPATH];
-	int		i, n;
-	int		time;
-
-	time = Sys_Milliseconds();
-
-	// Need to precache files
-	cls.state = CA_LOADING;
-
-	// Clear all local effects (except for light styles) because they
-	// now point to invalid files
-	CL_ClearTempEntities();
-	CL_ClearLocalEntities();
-	CL_ClearDynamicLights();
-	CL_ClearParticles();
-
-	// Get map name
-	Com_StripExtension(cl.configStrings[CS_MODELS + 1] + 5, cls.loadingInfo.map, sizeof(cls.loadingInfo.map));
-	Str_Copy(cls.loadingInfo.name, cl.configStrings[CS_NAME], sizeof(cls.loadingInfo.name));
-
-	// Check if a levelshot for this map exists
-	Str_SPrintf(checkTGA, sizeof(checkTGA), "ui/assets/levelshots/%s.tga", cls.loadingInfo.map);
-	if (!FS_FileExists(checkTGA))
-		Str_SPrintf(levelshot, sizeof(levelshot), "ui/assets/levelshots/unknownmap");
-	else
-		Str_SPrintf(levelshot, sizeof(levelshot), "ui/assets/levelshots/%s", cls.loadingInfo.map);
-
-	// Load a few needed shaders for the loading screen
-	cl.media.levelshot = R_RegisterMaterialNoMip(levelshot);
-	cl.media.levelshotDetail = R_RegisterMaterialNoMip("ui/assets/loading/loading_detail");
-	cl.media.loadingLogo = R_RegisterMaterialNoMip("ui/assets/title_screen/q2e_logo");
-	cl.media.loadingDetail[0] = R_RegisterMaterialNoMip("ui/assets/loading/load_main2");
-	cl.media.loadingDetail[1] = R_RegisterMaterialNoMip("ui/assets/loading/load_main");
-
-	for (i = 0, n = 5; i < 20; i++, n += 5)
-		cl.media.loadingPercent[i] = R_RegisterMaterialNoMip(Str_VarArgs("ui/assets/loading/percent/load_%i", n));
-
-	// Register all the files for this level
-	CL_RegisterCollisionMap();
-	CL_RegisterSounds();
-	CL_RegisterGraphics();
-	CL_RegisterClients();
-
-	// Start the background track
-	CL_PlayBackgroundTrack();
-
-	// All precaches are now complete
-	cls.state = CA_PRIMED;
-
-	Com_Printf("CL_LoadGameMedia: %.2f seconds\n", (float)(Sys_Milliseconds() - time) / 1000.0f);
-
-	CL_UpdateLoading("");
-
-	// Touch all the memory used for this level
-	Mem_TouchMemory();
-
-	// Force menu and console off
-	UI_SetActiveMenu(UI_CLOSEMENU);
-	Con_Close();
 }

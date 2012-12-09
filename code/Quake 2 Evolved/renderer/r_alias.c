@@ -87,7 +87,7 @@ static bool R_CullAliasModel (renderEntity_t *entity, mdl_t *alias){
 	for (i = 0; i < 8; i++){
 		mask = 0;
 
-		for (j = 0, plane = rg.viewParms.frustum; j < 4; j++, plane++){
+		for (j = 0, plane = rg.viewParms.frustum; j < NUM_FRUSTUM_PLANES; j++, plane++){
 			if (DotProduct(bbox[i], plane->normal) - plane->dist < 0.0f)
 				mask |= BIT(j);
 		}
@@ -125,9 +125,12 @@ void R_AddAliasModel (renderEntity_t *entity){
 		entity->oldFrame = 0;
 	}
 
-	// Cull bounds
+	// Cull
 	if (R_CullAliasModel(entity, alias))
 		return;
+
+	// Mark as visible for this view
+	entity->viewCount = rg.viewCount;
 
 	rg.pc.entities++;
 

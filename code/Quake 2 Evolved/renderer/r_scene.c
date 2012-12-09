@@ -85,6 +85,7 @@ void R_AddLightToScene (const renderLight_t *renderLight){
 	light = &rg.scene.lights[rg.scene.numLights++];
 
 	*light = *renderLight;
+	light->index = rg.scene.numLights - 1;
 }
 
 

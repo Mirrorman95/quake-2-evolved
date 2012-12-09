@@ -294,7 +294,7 @@ void			UI_ScaleCoords (int *x, int *y, int *w, int *h);
 bool			UI_CursorInRect (int x, int y, int w, int h);
 void			UI_DrawPic (float x, float y, float w, float h, const vec4_t color, const char *pic);
 void			UI_FillRect (float x, float y, float w, float h, const vec4_t color);
-void			UI_DrawString (float x, float y, float w, float h, const char *string, const vec4_t color, bool forceColor, float charW, float charH, int justify, bool shadow);
+void			UI_DrawString (float x, float y, float w, float h, const char *string, const vec4_t color, bool forceColor, float xShadow, float yShadow, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent);
 void			UI_DrawPicOLD (int x, int y, int w, int h, const vec4_t color, const char *pic);
 void			UI_DrawStringOLD (int x, int y, int w, int h, const char *string, const color_t color, bool forceColor, int charW, int charH, int justify, bool shadow);
 void			UI_StartSound (const char *sound);

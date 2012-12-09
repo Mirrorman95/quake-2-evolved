@@ -26,327 +26,12 @@
 //
 
 // TODO:
-// - add testSound and testLight
+// - add testSound
 // - model testing and 3rd person view
 // - view blends
 
 
 #include "client.h"
-
-
-/*
- ==============================================================================
-
- SPRITE TESTING
-
- ==============================================================================
-*/
-
-
-/*
- ==================
- CL_ClearTestSprite
- ==================
-*/
-static void CL_ClearTestSprite (){
-
-	// Clear the test beam
-	Mem_Fill(&cl.testSprite, 0, sizeof(testSprite_t));
-}
-
-/*
- ==================
- CL_TestSprite_f
- ==================
-*/
-void CL_TestSprite_f (){
-
-	if (Cmd_Argc() > 3){
-		Com_Printf("Usage: testSprite [material] [radius]\n");
-		return;
-	}
-
-	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || cl.demoPlayback){
-		Com_Printf("You must be in a level to test a beam\n");
-		return;
-	}
-
-	if (!CVar_AllowCheats()){
-		Com_Printf("You must enable cheats to test a beam\n");
-		return;
-	}
-
-	// Clear the old sprite, if any
-	CL_ClearTestSprite();
-
-	if (Cmd_Argc() < 2)
-		return;
-
-	// Test the specified material on a sprite
-	cl.testSprite.active = true;
-
-	// Set up the render entity
-	cl.testSprite.renderEntity.type = RE_SPRITE;
-
-	VectorMA(cl.renderView.origin, 100.0f, cl.renderView.axis[0], cl.testSprite.renderEntity.origin);
-	Matrix3_Identity(cl.testSprite.renderEntity.axis);
-
-	cl.testSprite.renderEntity.spriteOriented = false;
-
-	if (Cmd_Argc() == 2)
-		cl.testSprite.renderEntity.spriteRadius = 25.0f;
-	else {
-		cl.testSprite.renderEntity.spriteRadius = Str_ToFloat(Cmd_Argv(2));
-		if (cl.testSprite.renderEntity.spriteRadius <= 0.0f)
-			cl.testSprite.renderEntity.spriteRadius = 25.0f;
-	}
-
-	cl.testSprite.renderEntity.spriteRotation = 0.0f;
-
-	cl.testSprite.renderEntity.material = R_RegisterMaterial(Cmd_Argv(1), false);
-
-	cl.testSprite.renderEntity.materialParms[MATERIALPARM_RED] = 1.0f;
-	cl.testSprite.renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
-	cl.testSprite.renderEntity.materialParms[MATERIALPARM_BLUE] = 1.0f;
-	cl.testSprite.renderEntity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-	cl.testSprite.renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(cl.time);
-	cl.testSprite.renderEntity.materialParms[MATERIALPARM_DIVERSITY] = crand();
-	cl.testSprite.renderEntity.materialParms[MATERIALPARM_MISC] = 0.0f;
-	cl.testSprite.renderEntity.materialParms[MATERIALPARM_MODE] = 0.0f;
-}
-
-/*
- ==================
- CL_UpdateTestSprite
- ==================
-*/
-static void CL_UpdateTestSprite (){
-
-	if (!cl.testSprite.active)
-		return;
-
-	// Add or update the render entity
-	R_AddEntityToScene(&cl.testSprite.renderEntity);
-}
-
-
-/*
- ==============================================================================
-
- BEAM TESTING
-
- ==============================================================================
-*/
-
-
-/*
- ==================
- CL_ClearTestBeam
- ==================
-*/
-static void CL_ClearTestBeam (){
-
-	// Clear the test beam
-	Mem_Fill(&cl.testBeam, 0, sizeof(testBeam_t));
-}
-
-/*
- ==================
- CL_TestBeam_f
- ==================
-*/
-void CL_TestBeam_f (){
-
-	float	length;
-	int		axis, segments;
-
-	if (Cmd_Argc() > 6){
-		Com_Printf("Usage: testBeam [material] [axis] [length] [width] [segments]\n");
-		return;
-	}
-
-	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || cl.demoPlayback){
-		Com_Printf("You must be in a level to test a beam\n");
-		return;
-	}
-
-	if (!CVar_AllowCheats()){
-		Com_Printf("You must enable cheats to test a beam\n");
-		return;
-	}
-
-	// Clear the old beam, if any
-	CL_ClearTestBeam();
-
-	if (Cmd_Argc() < 2)
-		return;
-
-	// Test the specified material on a beam
-	cl.testBeam.active = true;
-
-	// Set up the render entity
-	cl.testBeam.renderEntity.type = RE_BEAM;
-
-	VectorMA(cl.renderView.origin, 100.0f, cl.renderView.axis[0], cl.testBeam.renderEntity.origin);
-	Matrix3_Identity(cl.testBeam.renderEntity.axis);
-
-	if (Cmd_Argc() < 3)
-		axis = 0;
-	else
-		axis = Clamp(Str_ToInteger(Cmd_Argv(2)), 0, 2);
-
-	if (Cmd_Argc() < 4)
-		VectorMA(cl.testBeam.renderEntity.origin, 100.0f, cl.renderView.axis[0], cl.testBeam.renderEntity.beamEnd);
-	else {
-		length = Str_ToFloat(Cmd_Argv(3));
-		if (length <= 0.0f)
-			length = 100.0f;
-
-		VectorMA(cl.testBeam.renderEntity.origin, length, cl.renderView.axis[axis], cl.testBeam.renderEntity.beamEnd);
-	}
-
-	if (Cmd_Argc() < 5)
-		cl.testBeam.renderEntity.beamWidth = 5.0f;
-	else {
-		cl.testBeam.renderEntity.beamWidth = Str_ToFloat(Cmd_Argv(4));
-		if (cl.testBeam.renderEntity.beamWidth <= 0.0f)
-			cl.testBeam.renderEntity.beamWidth = 5.0f;
-	}
-
-	if (Cmd_Argc() < 6)
-		cl.testBeam.renderEntity.beamLength = 0.0f;
-	else {
-		segments = Str_ToInteger(Cmd_Argv(5));
-
-		if (segments <= 0)
-			cl.testBeam.renderEntity.beamLength = 0.0f;
-		else
-			cl.testBeam.renderEntity.beamLength = length / segments;
-	}
-
-	cl.testBeam.renderEntity.material = R_RegisterMaterial(Cmd_Argv(1), false);
-
-	cl.testBeam.renderEntity.materialParms[MATERIALPARM_RED] = 1.0f;
-	cl.testBeam.renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
-	cl.testBeam.renderEntity.materialParms[MATERIALPARM_BLUE] = 1.0f;
-	cl.testBeam.renderEntity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-	cl.testBeam.renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = MS2SEC(cl.time);
-	cl.testBeam.renderEntity.materialParms[MATERIALPARM_DIVERSITY] = crand();
-	cl.testBeam.renderEntity.materialParms[MATERIALPARM_MISC] = 0.0f;
-	cl.testBeam.renderEntity.materialParms[MATERIALPARM_MODE] = 0.0f;
-}
-
-/*
- ==================
- CL_UpdateTestBeam
- ==================
-*/
-static void CL_UpdateTestBeam (){
-
-	if (!cl.testBeam.active)
-		return;
-
-	// Add or update the render entity
-	R_AddEntityToScene(&cl.testBeam.renderEntity);
-}
-
-
-/*
- ==============================================================================
-
- SOUND TESTING
-
- ==============================================================================
-*/
-
-
-/*
- ==================
- 
- ==================
-*/
-static void CL_ClearTestSound (){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-void CL_TestSound_f (){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-static void CL_UpdateTestSound (){
-
-}
-
-
-/*
- ==============================================================================
-
- DECAL TESTING
-
- ==============================================================================
-*/
-
-
-/*
- ==================
- CL_TestDecal_f
- ==================
-*/
-void CL_TestDecal_f (){
-
-	material_t	*material;
-	trace_t		trace;
-	vec3_t		point;
-	float		radius;
-
-	if (Cmd_Argc() != 2 && Cmd_Argc() != 3){
-		Com_Printf("Usage: testDecal <material> [radius]\n");
-		return;
-	}
-
-	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || cl.demoPlayback){
-		Com_Printf("You must be in a level to test a decal\n");
-		return;
-	}
-
-	if (!CVar_AllowCheats()){
-		Com_Printf("You must enable cheats to test a decal\n");
-		return;
-	}
-
-	// Load the material
-	material = R_RegisterMaterial(Cmd_Argv(1), false);
-
-	// Get the radius
-	if (Cmd_Argc() < 3)
-		radius = 10.0f;
-	else {
-		radius = Str_ToFloat(Cmd_Argv(2));
-		if (radius < 1.0f)
-			radius = 1.0f;
-	}
-
-	// Trace to find an impact point
-	VectorMA(cl.renderView.origin, 1000.0f, cl.renderView.axis[0], point);
-
-	trace = CM_BoxTrace(cl.renderView.origin, point, vec3_origin, vec3_origin, 0, MASK_SOLID);
-
-	if (trace.allsolid || trace.fraction == 1.0f)
-		return;
-
-	// Project a decal onto the world
-//	R_ProjectDecalOntoWorld(trace.endpos, trace.plane.normal, rand() % 360, radius, 1.0f, 1.0f, 1.0f, 1.0f, false, material, false);
-}
 
 
 /*
@@ -363,7 +48,7 @@ void CL_TestDecal_f (){
  CL_ClearTestModel
  ==================
 */
-static void CL_ClearTestModel (){
+void CL_ClearTestModel (){
 
 	cl.testModel.isGun = false;
 	cl.testModel.active = false;
@@ -408,7 +93,7 @@ void CL_TestModel_f (){
 	cl.testModel.renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
 	cl.testModel.renderEntity.materialParms[MATERIALPARM_BLUE] = 1.0f;
 	cl.testModel.renderEntity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-	cl.testModel.renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = MS2SEC(cl.time);
+	cl.testModel.renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(cl.time);
 	cl.testModel.renderEntity.materialParms[MATERIALPARM_DIVERSITY] = crand();
 	cl.testModel.renderEntity.materialParms[MATERIALPARM_MISC] = 0.0f;
 	cl.testModel.renderEntity.materialParms[MATERIALPARM_MODE] = 0.0f;
@@ -585,7 +270,7 @@ static void CL_UpdateTestModel (){
 /*
  ==============================================================================
 
- LIGHT TESTING
+ SPRITE TESTING
 
  ==============================================================================
 */
@@ -593,36 +278,307 @@ static void CL_UpdateTestModel (){
 
 /*
  ==================
- CL_ClearTestLight
+ CL_ClearTestSprite
  ==================
 */
-static void CL_ClearTestLight (){
+void CL_ClearTestSprite (){
 
-	// Clear the test light
-	Mem_Fill(&cl.testLight, 0, sizeof(testLight_t));
+	// Clear the test beam
+	Mem_Fill(&cl.testSprite, 0, sizeof(testSprite_t));
 }
 
 /*
  ==================
-
+ CL_TestSprite_f
  ==================
 */
-static void CL_TestLight_f (){
+void CL_TestSprite_f (){
 
+	if (Cmd_Argc() > 3){
+		Com_Printf("Usage: testSprite [material] [radius]\n");
+		return;
+	}
+
+	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || cl.demoPlayback){
+		Com_Printf("You must be in a level to test a beam\n");
+		return;
+	}
+
+	if (!CVar_AllowCheats()){
+		Com_Printf("You must enable cheats to test a beam\n");
+		return;
+	}
+
+	// Clear the old sprite, if any
+	CL_ClearTestSprite();
+
+	if (Cmd_Argc() < 2)
+		return;
+
+	// Test the specified material on a sprite
+	cl.testSprite.active = true;
+
+	// Set up the render entity
+	cl.testSprite.renderEntity.type = RE_SPRITE;
+
+	VectorMA(cl.renderView.origin, 100.0f, cl.renderView.axis[0], cl.testSprite.renderEntity.origin);
+	Matrix3_Identity(cl.testSprite.renderEntity.axis);
+
+	cl.testSprite.renderEntity.spriteOriented = false;
+
+	if (Cmd_Argc() == 2)
+		cl.testSprite.renderEntity.spriteRadius = 25.0f;
+	else {
+		cl.testSprite.renderEntity.spriteRadius = Str_ToFloat(Cmd_Argv(2));
+		if (cl.testSprite.renderEntity.spriteRadius <= 0.0f)
+			cl.testSprite.renderEntity.spriteRadius = 25.0f;
+	}
+
+	cl.testSprite.renderEntity.spriteRotation = 0.0f;
+
+	cl.testSprite.renderEntity.material = R_RegisterMaterial(Cmd_Argv(1), false);
+
+	cl.testSprite.renderEntity.materialParms[MATERIALPARM_RED] = 1.0f;
+	cl.testSprite.renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
+	cl.testSprite.renderEntity.materialParms[MATERIALPARM_BLUE] = 1.0f;
+	cl.testSprite.renderEntity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
+	cl.testSprite.renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(cl.time);
+	cl.testSprite.renderEntity.materialParms[MATERIALPARM_DIVERSITY] = crand();
+	cl.testSprite.renderEntity.materialParms[MATERIALPARM_MISC] = 0.0f;
+	cl.testSprite.renderEntity.materialParms[MATERIALPARM_MODE] = 0.0f;
 }
 
 /*
  ==================
- CL_UpdateTestLight
+ CL_UpdateTestSprite
  ==================
 */
-static void CL_UpdateTestLight (){
+static void CL_UpdateTestSprite (){
 
-	if (!cl.testLight.active)
+	if (!cl.testSprite.active)
 		return;
 
 	// Add or update the render entity
-	R_AddLightToScene(&cl.testLight.renderLight);
+	R_AddEntityToScene(&cl.testSprite.renderEntity);
+}
+
+
+/*
+ ==============================================================================
+
+ BEAM TESTING
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ CL_ClearTestBeam
+ ==================
+*/
+void CL_ClearTestBeam (){
+
+	// Clear the test beam
+	Mem_Fill(&cl.testBeam, 0, sizeof(testBeam_t));
+}
+
+/*
+ ==================
+ CL_TestBeam_f
+ ==================
+*/
+void CL_TestBeam_f (){
+
+	float	length;
+	int		axis, segments;
+
+	if (Cmd_Argc() > 6){
+		Com_Printf("Usage: testBeam [material] [axis] [length] [width] [segments]\n");
+		return;
+	}
+
+	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || cl.demoPlayback){
+		Com_Printf("You must be in a level to test a beam\n");
+		return;
+	}
+
+	if (!CVar_AllowCheats()){
+		Com_Printf("You must enable cheats to test a beam\n");
+		return;
+	}
+
+	// Clear the old beam, if any
+	CL_ClearTestBeam();
+
+	if (Cmd_Argc() < 2)
+		return;
+
+	// Test the specified material on a beam
+	cl.testBeam.active = true;
+
+	// Set up the render entity
+	cl.testBeam.renderEntity.type = RE_BEAM;
+
+	VectorMA(cl.renderView.origin, 100.0f, cl.renderView.axis[0], cl.testBeam.renderEntity.origin);
+	Matrix3_Identity(cl.testBeam.renderEntity.axis);
+
+	if (Cmd_Argc() < 3)
+		axis = 0;
+	else
+		axis = Clamp(Str_ToInteger(Cmd_Argv(2)), 0, 2);
+
+	if (Cmd_Argc() < 4)
+		VectorMA(cl.testBeam.renderEntity.origin, 100.0f, cl.renderView.axis[0], cl.testBeam.renderEntity.beamEnd);
+	else {
+		length = Str_ToFloat(Cmd_Argv(3));
+		if (length <= 0.0f)
+			length = 100.0f;
+
+		VectorMA(cl.testBeam.renderEntity.origin, length, cl.renderView.axis[axis], cl.testBeam.renderEntity.beamEnd);
+	}
+
+	if (Cmd_Argc() < 5)
+		cl.testBeam.renderEntity.beamWidth = 5.0f;
+	else {
+		cl.testBeam.renderEntity.beamWidth = Str_ToFloat(Cmd_Argv(4));
+		if (cl.testBeam.renderEntity.beamWidth <= 0.0f)
+			cl.testBeam.renderEntity.beamWidth = 5.0f;
+	}
+
+	if (Cmd_Argc() < 6)
+		cl.testBeam.renderEntity.beamLength = 0.0f;
+	else {
+		segments = Str_ToInteger(Cmd_Argv(5));
+
+		if (segments <= 0)
+			cl.testBeam.renderEntity.beamLength = 0.0f;
+		else
+			cl.testBeam.renderEntity.beamLength = length / segments;
+	}
+
+	cl.testBeam.renderEntity.material = R_RegisterMaterial(Cmd_Argv(1), false);
+
+	cl.testBeam.renderEntity.materialParms[MATERIALPARM_RED] = 1.0f;
+	cl.testBeam.renderEntity.materialParms[MATERIALPARM_GREEN] = 1.0f;
+	cl.testBeam.renderEntity.materialParms[MATERIALPARM_BLUE] = 1.0f;
+	cl.testBeam.renderEntity.materialParms[MATERIALPARM_ALPHA] = 1.0f;
+	cl.testBeam.renderEntity.materialParms[MATERIALPARM_TIMEOFFSET] = MS2SEC(cl.time);
+	cl.testBeam.renderEntity.materialParms[MATERIALPARM_DIVERSITY] = crand();
+	cl.testBeam.renderEntity.materialParms[MATERIALPARM_MISC] = 0.0f;
+	cl.testBeam.renderEntity.materialParms[MATERIALPARM_MODE] = 0.0f;
+}
+
+/*
+ ==================
+ CL_UpdateTestBeam
+ ==================
+*/
+static void CL_UpdateTestBeam (){
+
+	if (!cl.testBeam.active)
+		return;
+
+	// Add or update the render entity
+	R_AddEntityToScene(&cl.testBeam.renderEntity);
+}
+
+
+/*
+ ==============================================================================
+
+ SOUND TESTING
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ 
+ ==================
+*/
+void CL_ClearTestSound (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void CL_TestSound_f (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void CL_UpdateTestSound (){
+
+}
+
+
+/*
+ ==============================================================================
+
+ DECAL TESTING
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ CL_TestDecal_f
+ ==================
+*/
+void CL_TestDecal_f (){
+
+	material_t	*material;
+	trace_t		trace;
+	vec3_t		point;
+	float		radius;
+
+	if (Cmd_Argc() != 2 && Cmd_Argc() != 3){
+		Com_Printf("Usage: testDecal <material> [radius]\n");
+		return;
+	}
+
+	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || cl.demoPlayback){
+		Com_Printf("You must be in a level to test a decal\n");
+		return;
+	}
+
+	if (!CVar_AllowCheats()){
+		Com_Printf("You must enable cheats to test a decal\n");
+		return;
+	}
+
+	// Load the material
+	material = R_RegisterMaterial(Cmd_Argv(1), false);
+
+	// Get the radius
+	if (Cmd_Argc() < 3)
+		radius = 10.0f;
+	else {
+		radius = Str_ToFloat(Cmd_Argv(2));
+		if (radius < 1.0f)
+			radius = 1.0f;
+	}
+
+	// Trace to find an impact point
+	VectorMA(cl.renderView.origin, 1000.0f, cl.renderView.axis[0], point);
+
+	trace = CM_BoxTrace(cl.renderView.origin, point, vec3_origin, vec3_origin, 0, MASK_SOLID);
+
+	if (trace.allsolid || trace.fraction == 1.0f)
+		return;
+
+	// Project a decal onto the world
+//	R_ProjectDecalOntoWorld(trace.endpos, trace.plane.normal, rand() % 360, radius, 1.0f, 1.0f, 1.0f, 1.0f, false, material, false);
 }
 
 
@@ -640,7 +596,6 @@ static void CL_UpdateTestTools (){
 	CL_UpdateTestSprite();
 	CL_UpdateTestBeam();
 	CL_UpdateTestSound();
-	CL_UpdateTestLight();
 }
 
 

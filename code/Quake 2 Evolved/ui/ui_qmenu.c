@@ -116,17 +116,152 @@ void UI_ScrollList_Init (menuScrollList_t *sl){
 
 /*
  ==================
- 
+ UI_ScrollList_Key
+
+ TODO: an integer should not be a float
  ==================
 */
 const char *UI_ScrollList_Key (menuScrollList_t *sl, int key){
 
-	return 0;
+	const char	*sound = 0;
+	int			arrowWidth, arrowHeight;
+	int			xUp, yUp, xDown, yDown;
+	int			i, y;
+
+	switch (key){
+	case K_MOUSE1:
+		if (!(sl->generic.flags & QMF_HASMOUSEFOCUS))
+			break;
+
+		// Calculate size and position for the arrows
+		arrowWidth = sl->generic.width / 4;
+		arrowHeight = sl->generic.width / 8;
+
+		xUp = sl->generic.x + (arrowWidth * 1.5);
+		yUp = sl->generic.y;
+		xDown = sl->generic.x + (arrowWidth * 1.5);
+		yDown = sl->generic.y + (sl->generic.height - arrowHeight);
+
+		// Now see if either up or down has focus
+		if (UI_CursorInRect(xUp, yUp, arrowWidth, arrowHeight)){
+			if (sl->curItem != 0){
+				sl->curItem--;
+				sound = uiSoundMove;
+			}
+			else
+				sound = uiSoundBuzz;
+
+			break;
+		}
+		else if (UI_CursorInRect(xDown, yDown, arrowWidth, arrowHeight)){
+			if (sl->curItem != sl->numItems - 1){
+				sl->curItem++;
+				sound = uiSoundMove;
+			}
+			else
+				sound = uiSoundBuzz;
+
+			break;
+		}
+
+		// See if an item has been selected
+		y = sl->generic.y2 + sl->generic.charHeight;
+		for (i = sl->topItem; i < sl->topItem + sl->numRows; i++, y += sl->generic.charHeight){
+			if (!sl->itemNames[i])
+				break;		// Done
+
+			if (UI_CursorInRect(sl->generic.x, y, sl->generic.width, sl->generic.charHeight)){
+				sl->curItem = i;
+
+				sound = uiSoundNull;
+				break;
+			}
+		}
+
+		break;
+	case K_HOME:
+		if (sl->curItem != 0){
+			sl->curItem = 0;
+			sound = uiSoundMove;
+		}
+		else
+			sound = uiSoundBuzz;
+
+		break;
+	case K_END:
+		if (sl->curItem != sl->numItems - 1){
+			sl->curItem = sl->numItems - 1;
+			sound = uiSoundMove;
+		}
+		else
+			sound = uiSoundBuzz;
+
+		break;
+	case K_PAGEUP:
+		if (sl->curItem != 0){
+			sl->curItem -= 2;
+			if (sl->curItem < 0)
+				sl->curItem = 0;
+
+			sound = uiSoundMove;
+		}
+		else
+			sound = uiSoundBuzz;
+
+		break;
+	case K_PAGEDOWN:
+		if (sl->curItem != sl->numItems - 1){
+			sl->curItem += 2;
+			if (sl->curItem > sl->numItems - 1)
+				sl->curItem = sl->numItems - 1;
+
+			sound = uiSoundMove;
+		}
+		else
+			sound = uiSoundBuzz;
+
+		break;
+	case K_UPARROW:
+		if (sl->curItem != 0){
+			sl->curItem--;
+			sound = uiSoundMove;
+		}
+		else
+			sound = uiSoundBuzz;
+
+		break;
+	case K_DOWNARROW:
+		if (sl->curItem != sl->numItems - 1){
+			sl->curItem++;
+			sound = uiSoundMove;
+		}
+		else
+			sound = uiSoundBuzz;
+
+		break;
+	}
+
+	sl->topItem = sl->curItem - sl->numRows + 1;
+	if (sl->topItem < 0)
+		sl->topItem = 0;
+	if (sl->topItem > sl->numItems - sl->numRows)
+		sl->topItem = sl->numItems - sl->numRows;
+
+	if (sound && (sl->generic.flags & QMF_SILENT))
+		sound = uiSoundNull;
+
+	if (sound && sl->generic.callback){
+		if (sound != uiSoundBuzz)
+			sl->generic.callback(sl, QM_CHANGED);
+	}
+
+	return sound;
 }
 
 /*
  ==================
  
+ TODO: string drawing
  ==================
 */
 void UI_ScrollList_Draw (menuScrollList_t *sl){
@@ -134,7 +269,7 @@ void UI_ScrollList_Draw (menuScrollList_t *sl){
 	int		justify;
 	bool	shadow;
 	int		x, y, w, h;
-	int		arrowWidth, arrowHeight, upX, upY, downX, downY;
+	int		arrowWidth, arrowHeight, xUp, yUp, xDown, yDown;
 	bool	upFocus, downFocus;
 	int		i;
 
@@ -151,34 +286,34 @@ void UI_ScrollList_Draw (menuScrollList_t *sl){
 	arrowWidth = sl->generic.width / 4;
 	arrowHeight = sl->generic.width / 8;
 
-	upX = sl->generic.x + (arrowWidth * 1.5);
-	upY = sl->generic.y;
-	downX = sl->generic.x + (arrowWidth * 1.5);
-	downY = sl->generic.y + (sl->generic.height - arrowHeight);
+	xUp = sl->generic.x + (arrowWidth * 1.5);
+	yUp = sl->generic.y;
+	xDown = sl->generic.x + (arrowWidth * 1.5);
+	yDown = sl->generic.y + (sl->generic.height - arrowHeight);
 
 	// Draw the arrows
 	if (sl->generic.flags & QMF_GRAYED){
-		UI_DrawPic(upX, upY, arrowWidth, arrowHeight, colorWhite, sl->upArrow);
-		UI_DrawPic(downX, downY, arrowWidth, arrowHeight, colorWhite, sl->downArrow);
+		UI_DrawPic(xUp, yUp, arrowWidth, arrowHeight, colorWhite, sl->upArrow);
+		UI_DrawPic(xDown, yDown, arrowWidth, arrowHeight, colorWhite, sl->downArrow);
 	}
 	else {
 		if ((menuCommon_t *)sl != (menuCommon_t *)UI_ItemAtCursor(sl->generic.parent)){
-			UI_DrawPic(upX, upY, arrowWidth, arrowHeight, sl->generic.color, sl->upArrow);
-			UI_DrawPic(downX, downY, arrowWidth, arrowHeight, sl->generic.color, sl->downArrow);
+			UI_DrawPic(xUp, yUp, arrowWidth, arrowHeight, sl->generic.color, sl->upArrow);
+			UI_DrawPic(xDown, yDown, arrowWidth, arrowHeight, sl->generic.color, sl->downArrow);
 		}
 		else {
 			// See which arrow has the mouse focus
-			upFocus = UI_CursorInRect(upX, upY, arrowWidth, arrowHeight);
-			downFocus = UI_CursorInRect(downX, downY, arrowWidth, arrowHeight);
+			upFocus = UI_CursorInRect(xUp, yUp, arrowWidth, arrowHeight);
+			downFocus = UI_CursorInRect(xDown, yDown, arrowWidth, arrowHeight);
 
 			if (!(sl->generic.flags & QMF_FOCUSBEHIND)){
-				UI_DrawPic(upX, upY, arrowWidth, arrowHeight, sl->generic.color, sl->upArrow);
-				UI_DrawPic(downX, downY, arrowWidth, arrowHeight, sl->generic.color, sl->downArrow);
+				UI_DrawPic(xUp, yUp, arrowWidth, arrowHeight, sl->generic.color, sl->upArrow);
+				UI_DrawPic(xDown, yDown, arrowWidth, arrowHeight, sl->generic.color, sl->downArrow);
 			}
 
 			if (sl->generic.flags & QMF_HIGHLIGHTIFFOCUS){
-				UI_DrawPic(upX, upY, arrowWidth, arrowHeight, (upFocus) ? sl->generic.focusColor : sl->generic.color, (upFocus) ? sl->upArrowFocus : sl->upArrow);
-				UI_DrawPic(downX, downY, arrowWidth, arrowHeight, (downFocus) ? sl->generic.focusColor : sl->generic.color, (downFocus) ? sl->downArrowFocus : sl->downArrow);
+				UI_DrawPic(xUp, yUp, arrowWidth, arrowHeight, (upFocus) ? sl->generic.focusColor : sl->generic.color, (upFocus) ? sl->upArrowFocus : sl->upArrow);
+				UI_DrawPic(xDown, yDown, arrowWidth, arrowHeight, (downFocus) ? sl->generic.focusColor : sl->generic.color, (downFocus) ? sl->downArrowFocus : sl->downArrow);
 			}
 			else if (sl->generic.flags & QMF_PULSEIFFOCUS){
 				vec4_t	color;
@@ -186,19 +321,19 @@ void UI_ScrollList_Draw (menuScrollList_t *sl){
 				VectorCopy(sl->generic.color, color);
 				color[3] = 1.0f * (0.5f + 0.5f * sin(uiStatic.realTime / UI_PULSE_DIVISOR));
 
-				UI_DrawPic(upX, upY, arrowWidth, arrowHeight, (upFocus) ? color : sl->generic.color, (upFocus) ? sl->upArrowFocus : sl->upArrow);
-				UI_DrawPic(downX, downY, arrowWidth, arrowHeight, (downFocus) ? color : sl->generic.color, (downFocus) ? sl->downArrowFocus : sl->downArrow);
+				UI_DrawPic(xUp, yUp, arrowWidth, arrowHeight, (upFocus) ? color : sl->generic.color, (upFocus) ? sl->upArrowFocus : sl->upArrow);
+				UI_DrawPic(xDown, yDown, arrowWidth, arrowHeight, (downFocus) ? color : sl->generic.color, (downFocus) ? sl->downArrowFocus : sl->downArrow);
 			}
 			else if (sl->generic.flags & QMF_BLINKIFFOCUS){
 				if ((uiStatic.realTime & UI_BLINK_MASK) < UI_BLINK_TIME){
-					UI_DrawPic(upX, upY, arrowWidth, arrowHeight, (upFocus) ? sl->generic.focusColor : sl->generic.color, (upFocus) ? sl->upArrowFocus : sl->upArrow);
-					UI_DrawPic(downX, downY, arrowWidth, arrowHeight, (downFocus) ? sl->generic.focusColor : sl->generic.color, (downFocus) ? sl->downArrowFocus : sl->downArrow);
+					UI_DrawPic(xUp, yUp, arrowWidth, arrowHeight, (upFocus) ? sl->generic.focusColor : sl->generic.color, (upFocus) ? sl->upArrowFocus : sl->upArrow);
+					UI_DrawPic(xDown, yDown, arrowWidth, arrowHeight, (downFocus) ? sl->generic.focusColor : sl->generic.color, (downFocus) ? sl->downArrowFocus : sl->downArrow);
 				}
 			}
 
 			if (sl->generic.flags & QMF_FOCUSBEHIND){
-				UI_DrawPic(upX, upY, arrowWidth, arrowHeight, sl->generic.color, sl->upArrow);
-				UI_DrawPic(downX, downY, arrowWidth, arrowHeight, sl->generic.color, sl->downArrow);
+				UI_DrawPic(xUp, yUp, arrowWidth, arrowHeight, sl->generic.color, sl->upArrow);
+				UI_DrawPic(xDown, yDown, arrowWidth, arrowHeight, sl->generic.color, sl->downArrow);
 			}
 		}
 	}
@@ -436,6 +571,7 @@ const char *UI_SpinControl_Key (menuSpinControl_t *sc, int key){
 /*
  ==================
  
+ TODO: string drawing
  ==================
 */
 void UI_SpinControl_Draw (menuSpinControl_t *sc){
@@ -600,6 +736,7 @@ const char *UI_Field_Key (menuField_t *f, int key){
 /*
  ==================
  
+ TODO: string drawing
  ==================
 */
 void UI_Field_Draw (menuField_t *f){
@@ -745,7 +882,7 @@ void UI_Action_Init (menuAction_t *a){
 	if (!a->background)
 		a->background = UI_BACKGROUNDBOX;
 
-	UI_ScaleCoords(&a->generic.x,	&a->generic.y, &a->generic.width, &a->generic.height);
+	UI_ScaleCoords(&a->generic.x, &a->generic.y, &a->generic.width, &a->generic.height);
 }
 
 /*
@@ -787,6 +924,7 @@ const char *UI_Action_Key (menuAction_t *a, int key){
 /*
  ==================
  
+ TODO: string drawing
  ==================
 */
 void UI_Action_Draw (menuAction_t *a){

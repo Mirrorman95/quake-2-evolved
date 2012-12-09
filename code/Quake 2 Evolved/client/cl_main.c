@@ -26,7 +26,6 @@
 //
 
 // TODO:
-// - replace CL_ClearMemory, CL_Startup ?
 // - File downloading
 
 
@@ -167,11 +166,138 @@ static void CL_FullRestart (){
 		UI_SetActiveMenu(UI_CLOSEMENU);
 
 	// Load all media
-	CL_Loading();
-	CL_LoadGameMedia();
+	CL_LoadingState();
+	CL_LoadLevel();
 
 	// Fully initialized
 	cls.fullyInitialized = true;
+}
+
+/*
+ ==================
+ CL_InitAll
+
+ Called before loading a level or after disconnecting from the server to
+ initialize all the necessary subsystems
+ ==================
+*/
+void CL_InitAll (){
+
+	if (cls.state == CA_UNINITIALIZED)
+		return;		// Nothing running on the client
+
+	// Initialize renderer and sound system
+	R_Init(false);
+//	S_Init(false);
+
+	// Initialize UI system
+	UI_Init();
+
+	// Load local assets
+	CL_LoadAssets();
+
+	// Set menu visibility
+	if (cls.state == CA_DISCONNECTED)
+		UI_SetActiveMenu(UI_MAINMENU);
+	else
+		UI_SetActiveMenu(UI_CLOSEMENU);
+
+	// Fully initialized
+	cls.fullyInitialized = true;
+}
+
+/*
+ ==================
+ CL_ShutdownAll
+
+ Called before loading a level or after disconnecting from the server to shut
+ down all the necessary subsystems
+ ==================
+*/
+void CL_ShutdownAll (){
+
+	if (cls.state == CA_UNINITIALIZED)
+		return;		// Nothing running on the client
+
+	// No longer fully initialized
+	cls.fullyInitialized = false;
+
+	// Shutdown UI system
+	UI_Shutdown();
+
+	// Shutdown sound system and renderer
+//	S_Shutdown(false);
+	R_Shutdown(false);
+}
+
+/*
+ ==================
+ CL_ClearState
+ ==================
+*/
+void CL_ClearState (){
+
+	// Clear all local effects
+	CL_ClearTempEntities();
+	CL_ClearLocalEntities();
+	CL_ClearDynamicLights();
+	CL_ClearParticles();
+	CL_ClearLightStyles();
+
+	// Wipe the entire clientState_t structure
+	Mem_Fill(&cl, 0, sizeof(clientState_t));
+
+	MSG_Clear(&cls.netChan.message);
+}
+
+/*
+ ==================
+ CL_FixCheatVariables
+ ==================
+*/
+static void CL_FixCheatVariables (){
+
+	// Allow cheats if disconnected
+	if (cls.state == CA_DISCONNECTED){
+		CVar_FixCheatVariables(true);
+		return;
+	}
+
+	// Allow cheats if playing a cinematic, demo or singleplayer game
+	if (cls.playingCinematic || cl.demoPlayback || !cl.multiPlayer){
+		CVar_FixCheatVariables(true);
+		return;
+	}
+
+	// Otherwise don't allow cheats at all
+	CVar_FixCheatVariables(false);
+}
+
+/*
+ ==================
+ CL_PlayBackgroundTrack
+ ==================
+*/
+void CL_PlayBackgroundTrack (){
+
+	char	name[MAX_QPATH];
+	int		track;
+
+	track = Str_ToInteger(cl.configStrings[CS_CDTRACK]);
+
+	// Stop any playing track
+	if (track == 0){
+		S_StopMusic();
+		return;
+	}
+
+	// If an OGG file exists play it, otherwise fall back to CD audio
+	Str_SPrintf(name, sizeof(name), "music/track%02i.ogg", track);
+
+	if (!FS_FileExists(name))
+		return;
+
+	S_PlayMusic(name, name, 0);
 }
 
 /*
@@ -283,6 +409,8 @@ static void CL_SendConnectPacket (){
  ==================
  CL_CheckForResend
 
+ TODO: this might need some rewritting
+
  Resend a connection request message if the last one has timed out
  ==================
 */
@@ -309,7 +437,7 @@ static void CL_CheckForResend (){
 			// We don't need a challenge on the localhost
 			cls.state = CA_CHALLENGING;
 
-			CL_Loading();
+			CL_LoadingState();
 
 			CL_SendConnectPacket();
 		}
@@ -317,7 +445,8 @@ static void CL_CheckForResend (){
 		return;
 	}
 
-	CL_Loading();
+	// Draw the loading screen
+	CL_LoadingState();
 
 	// Resend if we haven't gotten a reply yet
 	if (cls.realTime - cls.connectTime < 3000.0f)
@@ -344,87 +473,11 @@ static void CL_CheckForResend (){
 /*
  ==============================================================================
 
- CLEARING FUNCTIONS
-
- ==============================================================================
-*/
-
-
-/*
- ==================
- CL_ClearState
- ==================
-*/
-void CL_ClearState (){
-
-	// Clear all local effects
-	CL_ClearTempEntities();
-	CL_ClearLocalEntities();
-	CL_ClearDynamicLights();
-	CL_ClearParticles();
-	CL_ClearLightStyles();
-
-	// Wipe the entire clientState_t structure
-	Mem_Fill(&cl, 0, sizeof(clientState_t));
-
-	MSG_Clear(&cls.netChan.message);
-}
-
-/*
- ==================
- CL_ClearMemory
-
- This clears all the memory used by the client, but does not
- reinitialize anything
- ==================
-*/
-void CL_ClearMemory (){
-
-	UI_Shutdown();
-//	S_FreeSounds();
-	R_Shutdown(false);
-
-	// If server is not running, clear the hunk
-//	if (!Com_ServerState())
-//		Hunk_Clear();
-
-	// Do not attempt to draw
-	cls.screenDisabled = true;
-}
-
-
-/*
- ==============================================================================
-
  CLIENT DISCONNECTION
 
  ==============================================================================
 */
 
-
-/*
- ==================
- CL_Startup
-
- This reinitializes the necessary subsystems after CL_ClearMemory
- ==================
-*/
-void CL_Startup (){
-
-	R_Init(false);
-	UI_Init();
-
-	CL_LoadAssets();
-
-	// Set menu visibility
-	if (cls.state == CA_DISCONNECTED)
-		UI_SetActiveMenu(UI_MAINMENU);
-	else
-		UI_SetActiveMenu(UI_CLOSEMENU);
-
-	// Ready to draw again
-	cls.screenDisabled = false;
-}
 
 /*
  ==================
@@ -484,9 +537,9 @@ void CL_Disconnect (bool shuttingDown){
 	if (shuttingDown)
 		return;
 
-	CL_ClearMemory();
-
-	CL_Startup();
+	// Restart the subsystems
+	CL_ShutdownAll();
+	CL_InitAll();
 
 	if (com_timeDemo->integerValue){
 		if (timeDemoMsec > 0)
@@ -533,7 +586,7 @@ void CL_MapLoading (){
 		cls.state = CA_CONNECTED;
 
 		// Draw the loading screen
-		CL_Loading();
+		CL_LoadingState();
 		CL_UpdateScreen();
 
 		return;
@@ -554,7 +607,7 @@ void CL_MapLoading (){
 	cls.connectCount = 0;
 
 	// Draw the loading screen
-	CL_Loading();
+	CL_LoadingState();
 	CL_UpdateScreen();
 }
 
@@ -829,60 +882,6 @@ void CL_ReadPackets (){
 	}
 	else
 		cl.timeOutCount = 0;
-}
-
-
-// ============================================================================
-
-
-/*
- ==================
- CL_FixCheatVariables
- ==================
-*/
-static void CL_FixCheatVariables (){
-
-	// Allow cheats if disconnected
-	if (cls.state == CA_DISCONNECTED){
-		CVar_FixCheatVariables(true);
-		return;
-	}
-
-	// Allow cheats if playing a cinematic, demo or singleplayer game
-	if (cls.playingCinematic || cl.demoPlayback || !cl.multiPlayer){
-		CVar_FixCheatVariables(true);
-		return;
-	}
-
-	// Otherwise don't allow cheats at all
-	CVar_FixCheatVariables(false);
-}
-
-/*
- ==================
- CL_PlayBackgroundTrack
- ==================
-*/
-void CL_PlayBackgroundTrack (){
-
-	char	name[MAX_QPATH];
-	int		track;
-
-	track = Str_ToInteger(cl.configStrings[CS_CDTRACK]);
-
-	// Stop any playing track
-	if (track == 0){
-		S_StopMusic();
-		return;
-	}
-
-	// If an OGG file exists play it, otherwise fall back to CD audio
-	Str_SPrintf(name, sizeof(name), "music/track%02i.ogg", track);
-
-	if (!FS_FileExists(name))
-		return;
-
-	S_PlayMusic(name, name, 0);
 }
 
 
@@ -1223,7 +1222,7 @@ void CL_RequestNextDownload (){
 	}
 
 	// Load level
-	CL_LoadGameMedia();
+	CL_LoadLevel();
 
 	MSG_WriteByte(&cls.netChan.message, CLC_STRINGCMD);
 	MSG_WriteString(&cls.netChan.message, Str_VarArgs("begin %i\n", cl_precacheSpawnCount));
@@ -1252,18 +1251,28 @@ static void CL_Precache_f (){
 	if (cls.state != CA_CONNECTED)
 		return;
 
-	// Yet another hack to let old demos work with the old precache 
-	// sequence
+	if (!cl.configStrings[CS_MODELS + 1][0])
+		return;
+
+	// Restart the subsystems
+	CL_ShutdownAll();
+	CL_InitAll();
+
+	// HACK: to let old demos work with the old precache sequence
 	if (Cmd_Argc() < 2){
-		CL_LoadGameMedia();
+		CL_LoadLevel();
 		return;
 	}
 
 	cl_precacheCheck = CS_MODELS;
-	cl_precacheSpawnCount = atoi(Cmd_Argv(1));
+	cl_precacheSpawnCount = Str_ToInteger(Cmd_Argv(1));
 	cl_precacheModel = NULL;
 	cl_precacheModelSkin = -1;
+	cl_precacheMap = NULL;
 	cl_precacheTexture = 0;
+
+	if (Com_ServerState() || !cl_allowDownload->integerValue)
+		cl_precacheCheck = TEX_CNT + 1;
 
 	CL_RequestNextDownload();
 }
@@ -1283,7 +1292,7 @@ static void CL_Changing_f (){
 	// Not active anymore, but not disconnected
 	cls.state = CA_CONNECTED;
 
-	CL_Loading();
+	CL_LoadingState();
 }
 
 /*
@@ -1805,7 +1814,7 @@ static void CL_Register (){
 	cl_testModelAnimate = CVar_Register("cl_testModelAnimate", "0", CVAR_BOOL, CVAR_CHEAT, "Test model animation", 0, 0);
 	cl_testModelRotate = CVar_Register("cl_testModelRotate", "0.0", CVAR_FLOAT, CVAR_CHEAT, "Test model rotation", 0.0f, 100.0f);
 	cl_stereoSeparation = CVar_Register("cl_stereoSeparation", "0.4", CVAR_FLOAT, CVAR_ARCHIVE, NULL, 0.0f, 1.0f);
-	cl_drawCrosshair = CVar_Register("cl_drawCrosshair", "0", CVAR_BOOL, CVAR_ARCHIVE, "Draw the crosshair", 0, 0);
+	cl_drawCrosshair = CVar_Register("cl_drawCrosshair", "1", CVAR_BOOL, CVAR_ARCHIVE, "Draw the crosshair", 0, 0);
 	cl_crosshairX = CVar_Register("cl_crosshairX", "0", CVAR_INTEGER, CVAR_ARCHIVE, "Crosshair X position", 0, 100);
 	cl_crosshairY = CVar_Register("cl_crosshairY", "0", CVAR_INTEGER, CVAR_ARCHIVE, "Crosshair Y position", 0, 100);
 	cl_crosshairSize = CVar_Register("cl_crosshairSize", "24", CVAR_INTEGER, CVAR_ARCHIVE, "Crosshair size", 0, 63);

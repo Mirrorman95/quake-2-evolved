@@ -281,9 +281,6 @@ static void CL_ParseServerData (){
 	// Clear the client state
 	CL_ClearState();
 
-	// Clear all the memory used by the client
-	CL_ClearMemory();
-
 	// Parse protocol version number
 	cls.serverProtocol = MSG_ReadLong(&net_message);
 
@@ -325,10 +322,11 @@ static void CL_ParseServerData (){
 		FS_Restart();
 	}
 
-	// Start up client subsystems
-	CL_Startup();
-
 	if (!cl.clientNum){
+		// Restart the subsystems
+		CL_ShutdownAll();
+		CL_InitAll();
+
 		// Playing a cinematic or showing a pic, not a level
 		cls.state = CA_ACTIVE;
 		cls.loading = false;

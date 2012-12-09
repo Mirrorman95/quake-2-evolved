@@ -122,10 +122,10 @@ void UI_FillRect (float x, float y, float w, float h, const vec4_t color){
 
 /*
  ==================
- 
+ UI_DrawString
  ==================
 */
-void UI_DrawString (float x, float y, float w, float h, const char *string, const vec4_t color, bool forceColor, float charW, float charH, int justify, bool shadow){
+void UI_DrawString (float x, float y, float w, float h, const char *string, const vec4_t color, bool forceColor, float xShadow, float yShadow, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent){
 
 	material_t		*material;
 
@@ -134,7 +134,7 @@ void UI_DrawString (float x, float y, float w, float h, const char *string, cons
 
 	material = R_RegisterMaterialNoMip("charset");
 
-//	R_DrawString(x, y, w, h, string, color, forceColor, xShadow, yShadow, H_NONE, 1.0f, V_NONE, 1.0f, material);
+	R_DrawString(x, y, w, h, string, color, forceColor, xShadow, yShadow, horzAdjust, horzPercent, vertAdjust, vertPercent, material);
 }
 
 // TODO: remove this placeholder

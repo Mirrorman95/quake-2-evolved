@@ -652,6 +652,8 @@ void Sys_Print (const char *text){
 /*
  ==================
  Sys_Error
+
+ FIXME: this gets a messed up message when the engine crashes
  ==================
 */
 void Sys_Error (const char *fmt, ...){

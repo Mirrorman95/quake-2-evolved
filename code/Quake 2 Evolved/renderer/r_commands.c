@@ -42,11 +42,26 @@ static void R_PerformanceCounters (){
 	if (r_showScene->integerValue)
 		Com_Printf("entities: %i, lights: %i, particles: %i, decals: %i\n", rg.pc.entities, rg.pc.lights, rg.pc.particles, rg.pc.decals);
 
+	if (r_showSurfaces->integerValue)
+		Com_Printf("surfaces: %i (leafs: %i)\n", rg.pc.meshes, rg.pc.leafs);
+
+	// TODO: shadows
+
+	// TODO: lights
+
 	if (r_showDeforms->integerValue)
 		Com_Printf("tris: %i verts: %i (expand: %i, move: %i, sprite: %i, tube: %i, beam: %i)\n", rg.pc.deformIndices / 3, rg.pc.deformVertices, rg.pc.deformExpand, rg.pc.deformMove, rg.pc.deformSprite, rg.pc.deformTube, rg.pc.deformBeam);
 
+	// TODO: vertex buffer
+
 	if (r_showTextureUsage->integerValue)
 		Com_Printf("textures: %i = %.2f MB\n", rg.pc.textures, rg.pc.textureBytes * (1.0f / 1048576.0f));
+
+	// TODO: render to texture
+
+	// TODO: overdraw
+
+	// TODO: light count
 
 	// Clear for next frame
 	Mem_Fill(&rg.pc, 0, sizeof(performanceCounters_t));
@@ -90,6 +105,11 @@ static void R_IssueRenderCommands (){
 
 	// Execute the commands
 	RB_ExecuteRenderCommands(commandBuffer->data);
+
+	// Clear any debug polygons, lines, and text
+	RB_ClearDebugPolygons();
+	RB_ClearDebugLines();
+	RB_ClearDebugText();
 
 	// Look at the performance counters
 	R_PerformanceCounters();
@@ -145,6 +165,16 @@ void R_AddRenderViewCommand (){
 	cmd->viewParms.meshes[1] = rg.viewParms.meshes[1];
 	cmd->viewParms.meshes[2] = rg.viewParms.meshes[2];
 	cmd->viewParms.meshes[3] = rg.viewParms.meshes[3];
+
+	cmd->viewParms.numLights[0] = rg.viewParms.numLights[0];
+	cmd->viewParms.numLights[1] = rg.viewParms.numLights[1];
+	cmd->viewParms.numLights[2] = rg.viewParms.numLights[2];
+	cmd->viewParms.numLights[3] = rg.viewParms.numLights[3];
+
+	cmd->viewParms.lights[0] = rg.viewParms.lights[0];
+	cmd->viewParms.lights[1] = rg.viewParms.lights[1];
+	cmd->viewParms.lights[2] = rg.viewParms.lights[2];
+	cmd->viewParms.lights[3] = rg.viewParms.lights[3];
 }
 
 /*
@@ -283,7 +313,6 @@ void R_SetColor3 (float r, float g, float b){
 void R_SetColor4 (float r, float g, float b, float a){
 
 	setColorCommand_t	*cmd;
-	byte				*color[4];
 
 	// Add a set color command
 	cmd = (setColorCommand_t *)R_GetCommandBuffer(sizeof(setColorCommand_t));
@@ -760,6 +789,159 @@ void R_UnCropRenderSize (){
 }
 
 
+/*
+ ==============================================================================
+
+ DEBUG VISUALIZATION FUNCTIONS
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_DebugAxis (){
+
+}
+
+/*
+ ==================
+ R_DebugLine
+ ==================
+*/
+void R_DebugLine (const vec4_t color, const vec3_t start, const vec3_t end, bool depthTest, int allowInView){
+
+	RB_AddDebugLine(color, start, end, depthTest, allowInView);
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_DebugArrow (){
+
+}
+
+/*
+ ==================
+ R_DebugBounds
+ ==================
+*/
+void R_DebugBounds (const vec4_t color, const vec3_t mins, const vec3_t maxs, bool depthTest, int allowInView){
+
+	vec3_t	corners[8];
+
+	BoundsToPoints(mins, maxs, corners);
+
+	RB_AddDebugLine(color, corners[0], corners[4], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[1], corners[5], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[2], corners[6], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[3], corners[7], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[0], corners[2], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[1], corners[0], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[2], corners[3], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[3], corners[1], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[4], corners[6], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[5], corners[4], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[6], corners[7], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[7], corners[5], depthTest, allowInView);
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_DebugSphere (){
+
+}
+
+/*
+ ==================
+ R_DebugBox
+ ==================
+*/
+void R_DebugBox (const vec4_t color, const vec3_t origin, const vec3_t axis[3], const vec3_t mins, const vec3_t maxs, bool depthTest, int allowInView){
+
+	vec3_t	corner, corners[8];
+	vec3_t	tmp;
+	int		i;
+
+	for (i = 0; i < 8; i++){
+		corner[0] = (i & 1) ? mins[0] : maxs[0];
+		corner[1] = (i & 2) ? mins[1] : maxs[1];
+		corner[2] = (i & 4) ? mins[2] : maxs[2];
+
+		VectorRotate(tmp, axis, corners[i]);
+		VectorAdd(corner, origin, corners[i]);
+	}
+
+	RB_AddDebugLine(color, corners[0], corners[4], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[1], corners[5], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[2], corners[6], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[3], corners[7], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[0], corners[2], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[1], corners[0], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[2], corners[3], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[3], corners[1], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[4], corners[6], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[5], corners[4], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[6], corners[7], depthTest, allowInView);
+	RB_AddDebugLine(color, corners[7], corners[5], depthTest, allowInView);
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_DebugCone (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_DebugCircle (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void R_DebugFrustum (){
+
+}
+
+/*
+ ==================
+ R_DebugPolygon
+ ==================
+*/
+void R_DebugPolygon (const vec4_t color, int numPoints, const vec3_t *points, bool fill, bool depthTest, int allowInView){
+
+	RB_AddDebugPolygon(color, numPoints, points, fill, depthTest, allowInView);
+}
+
+/*
+ ==================
+ R_DebugText
+ ==================
+*/
+void R_DebugText (const vec4_t color, bool forceColor, const vec3_t origin, float cw, float ch, const char *text, bool depthTest, int allowInView){
+
+	RB_AddDebugText(color, forceColor, origin, cw, ch, text, depthTest, allowInView);
+}
+
+
 // ============================================================================
 
 
@@ -787,6 +969,9 @@ void R_BeginFrame (int time){
 
 	// Clear primary view
 	rg.primaryViewAvailable = false;
+
+	// Clear light interaction meshes
+	R_ClearLightMeshes();
 
 	// Clear mesh and light lists
 	R_ClearMeshes();

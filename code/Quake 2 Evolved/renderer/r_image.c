@@ -300,7 +300,7 @@ static bool R_LoadTGA (const char *name, byte **image, int *width, int *height){
 	// Read the image pixels
 	in = data + 18 + header.bIdLength;
 
-	*image = out = (byte *)Mem_ClearedAlloc(header.wWidth * header.wHeight * 4, TAG_TEMPORARY);
+	*image = out = (byte *)Mem_Alloc(header.wWidth * header.wHeight * 4, TAG_TEMPORARY);
 
 	*width = header.wWidth;
 	*height = header.wHeight;
@@ -563,7 +563,7 @@ static bool R_LoadDDS (const char *name, byte **image, int *width, int *height, 
 	// Read the image pixels
 	in = data + 128;
 
-	*image = out = (byte *)Mem_ClearedAlloc(size, TAG_TEMPORARY);
+	*image = out = (byte *)Mem_Alloc(size, TAG_TEMPORARY);
 
 	*width = header.dwWidth;
 	*height = header.dwHeight;

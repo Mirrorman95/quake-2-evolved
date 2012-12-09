@@ -138,7 +138,7 @@ static shader_t *R_LoadShader (const char *name, uint type, const char *code){
 	if (r_numShaders == MAX_SHADERS)
 		Com_Error(ERR_DROP, "R_LoadShader: MAX_SHADER hit");
 
-	r_shaders[r_numShaders++] = shader = (shader_t *)Mem_ClearedAlloc(sizeof(shader_t), TAG_RENDERER);
+	r_shaders[r_numShaders++] = shader = (shader_t *)Mem_Alloc(sizeof(shader_t), TAG_RENDERER);
 
 	// Fill it in
 	Str_Copy(shader->name, name, sizeof(shader->name));

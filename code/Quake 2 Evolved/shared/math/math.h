@@ -63,6 +63,7 @@
 
 #define MakeRGBA(c,r,g,b,a)			((c)[0]=(r),(c)[1]=(g),(c)[2]=(b),(c)[3]=(a))
 
+int				ClampInt (int value, int min, int max);
 void			SinCos (float x, float s, float c);
 float			Floor (float x);
 float			Frac (float x);

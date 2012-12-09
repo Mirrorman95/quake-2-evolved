@@ -153,7 +153,7 @@ void CL_FinishCinematic (){
 	cls.state = CA_CONNECTED;
 
 	// Draw the loading screen
-	CL_Loading();
+	CL_LoadingState();
 
 	// Tell the server to advance to the next map / cinematic
 	MSG_WriteByte(&cls.netChan.message, CLC_STRINGCMD);

@@ -838,6 +838,7 @@ extern BOOL				(WINAPI * qwglSwapIntervalEXT)(int interval);
 #endif
 
 extern GLvoid			(APIENTRY * qglAccum)(GLenum op, GLfloat value);
+extern GLvoid			(APIENTRY * qglActiveStencilFaceEXT)(GLenum face);
 extern GLvoid			(APIENTRY * qglActiveTexture)(GLenum texture);
 extern GLvoid			(APIENTRY * qglAlphaFunc)(GLenum func, GLclampf ref);
 extern GLboolean		(APIENTRY * qglAreTexturesResident)(GLsizei n, const GLuint *textures, GLboolean *residences);
@@ -1339,6 +1340,8 @@ extern GLvoid			(APIENTRY * qglStencilMask)(GLuint mask);
 extern GLvoid			(APIENTRY * qglStencilMaskSeparate)(GLenum face, GLuint mask);
 extern GLvoid			(APIENTRY * qglStencilOp)(GLenum fail, GLenum zfail, GLenum zpass);
 extern GLvoid			(APIENTRY * qglStencilOpSeparate)(GLenum face, GLenum fail, GLenum zfail, GLenum zpass);
+extern GLvoid			(APIENTRY * qglStencilOpSeparateATI)(GLenum face, GLenum sfail, GLenum dpfail, GLenum dppass);
+extern GLvoid			(APIENTRY * qglStencilFuncSeparateATI)(GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask);
 extern GLvoid			(APIENTRY * qglTexBuffer)(GLenum target, GLenum internalformat, GLuint buffer);
 extern GLvoid			(APIENTRY * qglTexCoord1d)(GLdouble s);
 extern GLvoid			(APIENTRY * qglTexCoord1dv)(const GLdouble *v);

@@ -853,11 +853,11 @@ static bool R_ParseGlobalSort (script_t *script, material_t *material){
 		material->sort = SORT_OPAQUE;
 	else if (!Str_ICompare(token.string, "decal"))
 		material->sort = SORT_DECAL;
-	else if (!Str_ICompare(token.string, "glare"))
-		material->sort = SORT_GLARE;
 	else if (!Str_ICompare(token.string, "refractable"))
 		material->sort = SORT_REFRACTABLE;
 	else if (!Str_ICompare(token.string, "refractive"))
+		material->sort = SORT_UNDERWATER;
+	else if (!Str_ICompare(token.string, "underwater"))
 		material->sort = SORT_REFRACTIVE;
 	else if (!Str_ICompare(token.string, "farthest"))
 		material->sort = SORT_FARTHEST;
@@ -3390,7 +3390,7 @@ static void R_ParseMaterialFile (script_t *script){
 		if (materialDef){
 			Mem_Free(materialDef->text);
 
-			materialDef->text = (char *)Mem_ClearedAlloc(length + 1, TAG_RENDERER);
+			materialDef->text = (char *)Mem_Alloc(length + 1, TAG_RENDERER);
 			materialDef->length = length;
 			Str_Copy(materialDef->source, script->name, sizeof(materialDef->source));
 			materialDef->line = token.line;
@@ -3407,7 +3407,7 @@ static void R_ParseMaterialFile (script_t *script){
 		materialDef = (materialDef_t *)Mem_ClearedAlloc(sizeof(materialDef_t), TAG_RENDERER);
 
 		Str_Copy(materialDef->name, token.string, sizeof(materialDef->name));
-		materialDef->text = (char *)Mem_ClearedAlloc(length + 1, TAG_RENDERER);
+		materialDef->text = (char *)Mem_Alloc(length + 1, TAG_RENDERER);
 		materialDef->length = length;
 		Str_Copy(materialDef->source, script->name, sizeof(materialDef->source));
 		materialDef->line = token.line;
@@ -3580,7 +3580,7 @@ static material_t *R_CreateMaterial (const char *name, materialType_t type, surf
 		if (material->surfaceParm & SURFACEPARM_LIGHTING){
 			material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s_local", material->name), TF_BUMP, TF_DEFAULT, TW_REPEAT);
 			if (!material->stages[material->numStages].textureStage.texture){
-				Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
+				Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find local texture for material '%s', using default\n", material->name);
 
 				material->stages[material->numStages].textureStage.texture = rg.flatTexture;
 			}
@@ -3590,7 +3590,7 @@ static material_t *R_CreateMaterial (const char *name, materialType_t type, surf
 			if (!material->stages[material->numStages].textureStage.texture){
 				material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s", material->name), TF_DIFFUSE, TF_DEFAULT, TW_REPEAT);
 				if (!material->stages[material->numStages].textureStage.texture){
-					Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
+					Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find diffuse texture for material '%s', using default\n", material->name);
 
 					material->stages[material->numStages].textureStage.texture = rg.whiteTexture;
 				}
@@ -3599,7 +3599,7 @@ static material_t *R_CreateMaterial (const char *name, materialType_t type, surf
 
 			material->stages[material->numStages].textureStage.texture = R_FindTexture(Str_VarArgs("%s_s", material->name), TF_SPECULAR, TF_DEFAULT, TW_REPEAT);
 			if (!material->stages[material->numStages].textureStage.texture){
-				Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
+				Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find specular texture for material '%s', using default\n", material->name);
 
 				material->stages[material->numStages].textureStage.texture = rg.blackTexture;
 			}
@@ -4042,7 +4042,7 @@ static material_t *R_LoadMaterial (material_t *newMaterial){
 	if (r_numMaterials == MAX_MATERIALS)
 		Com_Error(ERR_DROP, "R_LoadMaterial: MAX_MATERIALS hit");
 
-	r_materials[r_numMaterials++] = material = (material_t *)Mem_ClearedAlloc(sizeof(material_t), TAG_RENDERER);
+	r_materials[r_numMaterials++] = material = (material_t *)Mem_Alloc(sizeof(material_t), TAG_RENDERER);
 
 	// Copy the material
 	Mem_Copy(material, newMaterial, sizeof(material_t));

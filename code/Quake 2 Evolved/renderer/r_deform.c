@@ -108,12 +108,25 @@ static void RB_DeformSprite (material_t *material){
 		center[2] = (vertices[0].xyz[2] + vertices[1].xyz[2] + vertices[2].xyz[2] + vertices[3].xyz[2]) * 0.25f;
 
 		// Compute radius
+		radius = DistanceFast(center, vertices->xyz) * M_SQRT_1OVER2;
 
 		// Compute left and up vectors
+		VectorScale(backEnd.localParms.viewAxis[1], radius, lVector);
+		VectorScale(backEnd.localParms.viewAxis[2], radius, uVector);
 
 		// Modify indices
+		indices[0] = i;
+		indices[1] = i + 1;
+		indices[2] = i + 3;
+		indices[3] = i + 3;
+		indices[4] = i + 1;
+		indices[5] = i + 2;
+
+		indices += 6;
 
 		// Modify vertices
+
+		vertices += 4;
 	}
 }
 

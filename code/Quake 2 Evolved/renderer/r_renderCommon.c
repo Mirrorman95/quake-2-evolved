@@ -184,7 +184,7 @@ void RB_FillDepthBuffer (int numMeshes, mesh_t *meshes){
 				RB_EntityState(mesh->entity);
 
 			// Create a new batch
-			RB_SetupBatch(mesh->entity, mesh->material, RB_DrawDepth);
+			RB_SetupBatch(mesh->entity, mesh->material, false, false, RB_DrawDepth);
 
 			skip = false;
 		}
@@ -316,12 +316,6 @@ void RB_RenderMaterialPasses (int numMeshes, mesh_t *meshes, ambientPass_t pass)
 	if (r_seamlessCubeMaps->integerValue)
 		qglEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	// Enable depth clamp if desired
-	if (r_depthClamp->integerValue){
-		if (pass != AP_OPAQUE)
-			qglEnable(GL_DEPTH_CLAMP);
-	}
-
 	// Clear the batch state
 	backEnd.entity = NULL;
 	backEnd.material = NULL;
@@ -376,7 +370,7 @@ void RB_RenderMaterialPasses (int numMeshes, mesh_t *meshes, ambientPass_t pass)
 			}
 
 			// Create a new batch
-			RB_SetupBatch(mesh->entity, mesh->material, RB_DrawMaterial);
+			RB_SetupBatch(mesh->entity, mesh->material, false, false, RB_DrawMaterial);
 
 			skip = false;
 		}
@@ -395,12 +389,6 @@ void RB_RenderMaterialPasses (int numMeshes, mesh_t *meshes, ambientPass_t pass)
 	if (r_seamlessCubeMaps->integerValue)
 		qglDisable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	// Disable depth clamp if desired
-	if (r_depthClamp->integerValue){
-		if (pass != AP_OPAQUE)
-			qglDisable(GL_DEPTH_CLAMP);
-	}
-
 	QGL_LogPrintf("--------------------\n");
 }
 
@@ -416,11 +404,85 @@ void RB_RenderMaterialPasses (int numMeshes, mesh_t *meshes, ambientPass_t pass)
 
 /*
  ==================
- 
+ RB_DrawShadow
  ==================
 */
 static void RB_DrawShadow (){
 
+	// TODO: update the vertex buffer and enable GL_VERTEX_ARRAY since shadows has it's own
+	// buffer
+
+	RB_Cull(backEnd.material);
+	RB_PolygonOffset(backEnd.material);
+
+	if (backEnd.shadowCaps){
+		if (glConfig.stencilTwoSideAvailable){
+			qglActiveStencilFaceEXT(GL_BACK);
+			GL_StencilOp(GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
+			qglActiveStencilFaceEXT(GL_FRONT);
+			GL_StencilOp(GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP);
+
+			qglEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
+
+			RB_DrawElements();
+
+			qglDisable(GL_STENCIL_TEST_TWO_SIDE_EXT);
+		}
+		else if (glConfig.atiSeparateStencilAvailable){
+			qglStencilOpSeparateATI(GL_BACK, GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
+			qglStencilOpSeparateATI(GL_FRONT, GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP);
+
+			RB_DrawElements();
+
+			qglStencilOpSeparateATI(GL_BACK, GL_KEEP, GL_KEEP, GL_KEEP);
+			qglStencilOpSeparateATI(GL_FRONT, GL_KEEP, GL_KEEP, GL_KEEP);
+		}
+		else {
+			GL_CullFace(GL_BACK);
+			GL_StencilOp(GL_KEEP, GL_INCR_WRAP_EXT, GL_KEEP);
+
+			RB_DrawElements();
+
+			GL_CullFace(GL_FRONT);
+			GL_StencilOp(GL_KEEP, GL_DECR_WRAP_EXT, GL_KEEP);
+
+			RB_DrawElements();
+		}
+	}
+	else {
+		if (glConfig.stencilTwoSideAvailable){
+			qglActiveStencilFaceEXT(GL_BACK);
+			GL_StencilOp(GL_KEEP, GL_KEEP, GL_INCR_WRAP_EXT);
+			qglActiveStencilFaceEXT(GL_FRONT);
+			GL_StencilOp(GL_KEEP, GL_KEEP, GL_DECR_WRAP_EXT);
+
+			qglEnable(GL_STENCIL_TEST_TWO_SIDE_EXT);
+
+			RB_DrawElements();
+
+			qglDisable(GL_STENCIL_TEST_TWO_SIDE_EXT);
+		}
+		else if (glConfig.atiSeparateStencilAvailable){
+			qglStencilOpSeparateATI(GL_BACK, GL_KEEP, GL_KEEP, GL_INCR_WRAP_EXT);
+			qglStencilOpSeparateATI(GL_FRONT, GL_KEEP, GL_KEEP, GL_DECR_WRAP_EXT);
+
+			RB_DrawElements();
+
+			qglStencilOpSeparateATI(GL_BACK, GL_KEEP, GL_KEEP, GL_KEEP);
+			qglStencilOpSeparateATI(GL_FRONT, GL_KEEP, GL_KEEP, GL_KEEP);
+		}
+		else {
+			GL_CullFace(GL_FRONT);
+			GL_StencilOp(GL_KEEP, GL_KEEP, GL_INCR_WRAP_EXT);
+
+			RB_DrawElements();
+
+			GL_CullFace(GL_BACK);
+			GL_StencilOp(GL_KEEP, GL_KEEP, GL_DECR_WRAP_EXT);
+
+			RB_DrawElements();
+		}
+	}
 }
 
 /*
@@ -430,8 +492,72 @@ static void RB_DrawShadow (){
 */
 static void RB_RenderStencilShadows (int numMeshes, mesh_t *meshes){
 
+	mesh_t	*mesh;
+	uint	sort;
+	bool	skip;
+	int		i;
+
 	if (!numMeshes)
 		return;
+
+	// Development tool
+	if (r_skipShadows->integerValue)
+		return;
+
+	QGL_LogPrintf("---------- RB_RenderStencilShadows ----------\n");
+
+	// Set the GL state
+
+	// Clear the batch state
+	backEnd.entity = NULL;
+	backEnd.material = NULL;
+
+	sort = 0;
+
+	// Run through meshes
+	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
+		// Check if the state changed
+		if (mesh->sort != sort){
+			sort = mesh->sort;
+
+			// Draw the last batch
+			RB_RenderBatch();
+
+			// Evaluate registers if needed
+			if (mesh->entity != backEnd.entity || mesh->material != backEnd.material)
+				RB_EvaluateRegisters(mesh->material, backEnd.floatTime, mesh->entity->materialParms);
+
+			// Skip if condition evaluated to false
+			if (!mesh->material->expressionRegisters[mesh->material->conditionRegister]){
+				skip = true;
+				continue;
+			}
+
+			// Set the entity state if needed
+			if (mesh->entity != backEnd.entity){
+				RB_EntityState(mesh->entity);
+
+				// Transform the light for this entity
+				RB_TransformLightForEntity(backEnd.light, mesh->entity);
+			}
+
+			// Create a new batch
+			RB_SetupBatch(mesh->entity, mesh->material, true, mesh->caps, RB_DrawShadow);
+
+			skip = false;
+		}
+
+		if (skip)
+			continue;
+
+		// Batch the surface geometry
+		RB_BatchShadowGeometry(mesh->type, mesh->data);
+	}
+
+	// Draw the last batch
+	RB_RenderBatch();
+
+	QGL_LogPrintf("--------------------\n");
 }
 
 /*
@@ -441,6 +567,116 @@ static void RB_RenderStencilShadows (int numMeshes, mesh_t *meshes){
 */
 static void RB_DrawInteractions (){
 
+	interaction_t	in;
+	stage_t			*stage, *lightStage;
+//	cinData_t		data;
+	int				i, j;
+
+	QGL_LogPrintf("----- RB_DrawInteractions ( %s on %s ) -----\n", backEnd.lightMaterial->name, backEnd.material->name);
+
+	RB_Cull(backEnd.material);
+	RB_PolygonOffset(backEnd.material);
+
+	qglVertexAttribPointer(GL_ATTRIB_NORMAL, 3, GL_FLOAT, false, sizeof(glVertex_t), GL_VERTEX_NORMAL(backEnd.vertexPointer));
+	qglVertexAttribPointer(GL_ATTRIB_TANGENT1, 3, GL_FLOAT, false, sizeof(glVertex_t), GL_VERTEX_TANGENT1(backEnd.vertexPointer));
+	qglVertexAttribPointer(GL_ATTRIB_TANGENT2, 3, GL_FLOAT, false, sizeof(glVertex_t), GL_VERTEX_TANGENT2(backEnd.vertexPointer));
+	qglVertexAttribPointer(GL_ATTRIB_TEXCOORD, 2, GL_FLOAT, false, sizeof(glVertex_t), GL_VERTEX_TEXCOORD(backEnd.vertexPointer));
+	qglVertexAttribPointer(GL_ATTRIB_COLOR, 4, GL_UNSIGNED_BYTE, true, sizeof(glVertex_t), GL_VERTEX_COLOR(backEnd.vertexPointer));
+
+	// Run through the light stages
+	for (i = 0, lightStage = backEnd.lightMaterial->stages; i < backEnd.lightMaterial->numStages; i++, lightStage++){
+		if (!backEnd.lightMaterial->expressionRegisters[lightStage->conditionRegister])
+			continue;
+
+		// Compute the light matrix
+		RB_ComputeLightMatrix(backEnd.light, backEnd.entity, backEnd.lightMaterial, &lightStage->textureStage);
+
+		// Set up the interaction
+		in.bumpTexture = NULL;
+		in.diffuseTexture = NULL;
+		in.specularTexture = NULL;
+		in.lightProjectionTexture = lightStage->textureStage.texture;
+		in.lightFalloffTexture = backEnd.lightMaterial->lightFalloffImage;
+		in.lightCubeTexture = backEnd.lightMaterial->lightCubeImage;
+
+		in.colorScaleAndBias[0] = 0.0f;
+		in.colorScaleAndBias[1] = 1.0f;
+
+		in.lightColor[0] = backEnd.lightMaterial->expressionRegisters[lightStage->colorStage.registers[0]] * r_lightScale->floatValue;
+		in.lightColor[1] = backEnd.lightMaterial->expressionRegisters[lightStage->colorStage.registers[1]] * r_lightScale->floatValue;
+		in.lightColor[2] = backEnd.lightMaterial->expressionRegisters[lightStage->colorStage.registers[2]] * r_lightScale->floatValue;
+
+		// If we have a cinematic
+		if (lightStage->textureStage.cinematicHandle){
+
+		}
+
+		// Run through the surface stages
+		for (j = 0, stage = backEnd.material->stages; j < backEnd.material->numStages; j++, stage++){
+			if (stage->lighting == SL_AMBIENT)
+				continue;
+
+			if (!backEnd.material->expressionRegisters[stage->conditionRegister])
+				continue;
+
+			// Combine multiple stages and draw interactions
+			switch (stage->lighting){
+			case SL_BUMP:
+				if (in.bumpTexture){
+					RB_DrawInteraction(&in);
+
+					in.diffuseTexture = NULL;
+					in.specularTexture = NULL;
+				}
+
+				in.bumpTexture = stage->textureStage.texture;
+
+				RB_ComputeTextureMatrix(backEnd.material, &stage->textureStage, in.bumpMatrix);
+
+				break;
+			case SL_DIFFUSE:
+				if (in.diffuseTexture)
+					RB_DrawInteraction(&in);
+
+				in.diffuseTexture = stage->textureStage.texture;
+
+				in.colorScaleAndBias[0] = stage->colorStage.scale;
+				in.colorScaleAndBias[1] = stage->colorStage.bias;
+
+				in.diffuseColor[0] = backEnd.material->expressionRegisters[stage->colorStage.registers[0]];
+				in.diffuseColor[1] = backEnd.material->expressionRegisters[stage->colorStage.registers[1]];
+				in.diffuseColor[2] = backEnd.material->expressionRegisters[stage->colorStage.registers[2]];
+
+				RB_ComputeTextureMatrix(backEnd.material, &stage->textureStage, in.diffuseMatrix);
+
+				break;
+			case SL_SPECULAR:
+				if (in.specularTexture)
+					RB_DrawInteraction(&in);
+
+				in.specularTexture = stage->textureStage.texture;
+
+				in.specularColor[0] = backEnd.material->expressionRegisters[stage->colorStage.registers[0]];
+				in.specularColor[1] = backEnd.material->expressionRegisters[stage->colorStage.registers[1]];
+				in.specularColor[2] = backEnd.material->expressionRegisters[stage->colorStage.registers[2]];
+
+				in.specularParms[0] = stage->parms[0];
+				in.specularParms[1] = stage->parms[1];
+
+				RB_ComputeTextureMatrix(backEnd.material, &stage->textureStage, in.specularMatrix);
+
+				break;
+			}
+		}
+
+		// Draw the last interaction
+		if (!in.bumpTexture && !in.diffuseTexture && !in.specularTexture)
+			continue;
+
+		RB_DrawInteraction(&in);
+	}
+
+	QGL_LogPrintf("--------------------\n");
 }
 
 /*
@@ -530,7 +766,7 @@ static void RB_InteractionPass (int numMeshes, mesh_t *meshes){
 				GL_DepthFunc(GL_LEQUAL);
 
 			// Create a new batch
-			RB_SetupBatch(mesh->entity, mesh->material, RB_DrawInteractions);
+			RB_SetupBatch(mesh->entity, mesh->material, false, false, RB_DrawInteractions);
 
 			skip = false;
 		}
@@ -563,13 +799,69 @@ static void RB_InteractionPass (int numMeshes, mesh_t *meshes){
 
 /*
  ==================
- 
+ RB_RenderLights
+
+ FIXME: find out what causes it not to draw, everything else seems fine
+ - matrix issue?
+ - texture issue?
+ - light issue?
+ - materialParm issue?
+ - worldEntity issue?
+ - backEnd.light issue?
  ==================
 */
 void RB_RenderLights (int numLights, light_t *lights){
 
+	light_t	*light;
+	int		i;
+
 	if (!numLights)
 		return;
+
+	// Development tool
+	if (r_skipInteractions->integerValue)
+		return;
+
+	QGL_LogPrintf("---------- RB_RenderLights ----------\n");
+
+	// Run through the lights
+	for (i = 0, light = lights; i < numLights; i++, light++){
+		if (!light->numInteractionMeshes){
+			if (light->material->lightType == LT_AMBIENT)
+				continue;
+		}
+
+		// Development tool
+		if (r_skipAmbientLights->integerValue){
+			if (light->material->lightType == LT_AMBIENT)
+				continue;
+		}
+
+		// Set the light
+		backEnd.light = light;
+		backEnd.lightMaterial = light->material;
+
+		// Evaluate registers
+		RB_EvaluateRegisters(light->material, backEnd.floatTime, light->materialParms);
+
+		// Skip if condition evaluated to false
+		if (!light->material->expressionRegisters[light->material->conditionRegister])
+			continue;
+
+		// Render the stencil shadow volume if needed
+//		RB_RenderStencilShadows(light->numShadowMeshes, light->shadowMeshes);
+
+		// Set up the scissor
+		GL_Scissor(light->scissor.x, light->scissor.y, light->scissor.width, light->scissor.height);
+
+		// Draw the surfaces
+		RB_InteractionPass(light->numInteractionMeshes, light->interactionMeshes);
+	}
+
+	// Restore the scissor
+	GL_Scissor(light->scissor.x, light->scissor.y, light->scissor.width, light->scissor.height);
+
+	QGL_LogPrintf("--------------------\n");
 }
 
 
@@ -659,7 +951,7 @@ static void RB_BlendLightPass (int numMeshes, mesh_t *meshes){
 			}
 
 			// Create a new batch
-			RB_SetupBatch(mesh->entity, mesh->material, RB_DrawBlendLight);
+			RB_SetupBatch(mesh->entity, mesh->material, false, false, RB_DrawBlendLight);
 
 			skip = false;
 		}
@@ -805,7 +1097,7 @@ static void RB_FogLightPass (int numMeshes, mesh_t *meshes){
 			}
 
 			// Create a new batch
-			RB_SetupBatch(mesh->entity, mesh->material, RB_DrawFogLight);
+			RB_SetupBatch(mesh->entity, mesh->material, false, false, RB_DrawFogLight);
 
 			skip = false;
 		}
@@ -836,6 +1128,8 @@ static void RB_FogLightPass (int numMeshes, mesh_t *meshes){
 */
 void RB_RenderFogLights (int numLights, light_t *lights){
 
+	if (!numLights)
+		return;
 }
 
 

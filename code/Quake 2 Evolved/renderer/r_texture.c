@@ -180,7 +180,7 @@ static byte *R_BlendOverTexture (byte *pixels, int pixelCount, const int blend[4
 	int		premult[3];
 	int		i;
 
-	buffer = ptr = (byte *)Mem_ClearedAlloc(pixelCount * 4, TAG_TEMPORARY);
+	buffer = ptr = (byte *)Mem_Alloc(pixelCount * 4, TAG_TEMPORARY);
 
 	premult[0] = blend[0] * blend[3];
 	premult[1] = blend[1] * blend[3];
@@ -829,7 +829,7 @@ texture_t *R_LoadTexture (const char *name, byte *image, int width, int height, 
 	if (r_numTextures == MAX_TEXTURES)
 		Com_Error(ERR_DROP, "R_LoadTexture: MAX_TEXTURES hit");
 
-	r_textures[r_numTextures++] = texture = (texture_t *)Mem_ClearedAlloc(sizeof(texture_t), TAG_RENDERER);
+	r_textures[r_numTextures++] = texture = (texture_t *)Mem_Alloc(sizeof(texture_t), TAG_RENDERER);
 
 	// Fill it in
 	Str_Copy(texture->name, name, sizeof(texture->name));
@@ -871,7 +871,7 @@ static texture_t *R_LoadCubeTexture (const char *name, byte **images, int width,
 	if (r_numTextures == MAX_TEXTURES)
 		Com_Error(ERR_DROP, "R_LoadCubeTexture: MAX_TEXTURES hit");
 
-	r_textures[r_numTextures++] = texture = (texture_t *)Mem_ClearedAlloc(sizeof(texture_t), TAG_RENDERER);
+	r_textures[r_numTextures++] = texture = (texture_t *)Mem_Alloc(sizeof(texture_t), TAG_RENDERER);
 
 	// Fill it in
 	Str_Copy(texture->name, name, sizeof(texture->name));
@@ -913,7 +913,7 @@ static texture_t *R_LoadVolumeTexture (const char *name, byte *image, int width,
 	if (r_numTextures == MAX_TEXTURES)
 		Com_Error(ERR_DROP, "R_LoadVolumeTexture: MAX_TEXTURES hit");
 
-	r_textures[r_numTextures++] = texture = (texture_t *)Mem_ClearedAlloc(sizeof(texture_t), TAG_RENDERER);
+	r_textures[r_numTextures++] = texture = (texture_t *)Mem_Alloc(sizeof(texture_t), TAG_RENDERER);
 
 	// Fill it in
 	Str_Copy(texture->name, name, sizeof(texture->name));
@@ -952,7 +952,7 @@ static texture_t *R_LoadArrayTexture (const char *name, byte *image, int width, 
 	if (r_numTextures == MAX_TEXTURES)
 		Com_Error(ERR_DROP, "R_LoadArrayTexture: MAX_TEXTURES hit");
 
-	r_textures[r_numTextures++] = texture = (texture_t *)Mem_ClearedAlloc(sizeof(texture_t), TAG_RENDERER);
+	r_textures[r_numTextures++] = texture = (texture_t *)Mem_Alloc(sizeof(texture_t), TAG_RENDERER);
 
 	// Fill it in
 	Str_Copy(texture->name, name, sizeof(texture->name));

@@ -10,14 +10,12 @@ ui/assets/misc/mouse_cursor
 		clamp map 	ui/assets/misc/mouse_cursor.tga
 		blend 		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
 	}
-/*
 	{
 		linear
 		clamp map 	ui/assets/misc/mouse_cursor_glow.tga
 		blend 		add
 		rgb		0.5 + sinTable[time * 0.3]
 	}
-*/
 }
 
 //
@@ -26,7 +24,26 @@ ui/assets/misc/mouse_cursor
 
 ui/assets/ingui/main
 {
-
+	{
+		linear
+		map		gfx/console01.tga
+		blend 		add
+		scroll		time * 0.02, 0
+		scale 		2, 1
+		rgb		0.25
+	}
+	{
+		linear
+		map		gfx/console02.tga
+		blend 		add
+		scroll		time * 0.2, 0.1
+		scale 		2, 1
+	}
+	{
+		linear
+		map		ui/assets/ingui/main.tga
+		blend 		add
+	}
 }
 
 //
@@ -35,7 +52,16 @@ ui/assets/ingui/main
 
 ui/assets/loading/loading_detail
 {
-
+	{
+		linear
+		map		ui/assets/loading/loading_detail.tga
+		blend 		GL_DST_COLOR, GL_SRC_COLOR
+	}
+	{
+		linear
+		map		ui/assets/loading/loading_backblur.tga
+		blend 		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
 }
 
 //
@@ -44,7 +70,21 @@ ui/assets/loading/loading_detail
 
 ui/assets/mission_levelshots/unknownmap
 {
-
+	{
+		linear
+		map		ui/assets/mission_levelshots/unknownmap.tga
+		blend 		GL_ONE, GL_ZERO
+		scroll		time * 7.1, time * 0.2
+		scale 		0.8, 1
+	}
+	{
+		linear
+		map		ui/assets/mission_levelshots/unknownmap.tga
+		blend 		add
+		scroll		time * -0.01, time * -0.02
+		scale 		0.02, 0.01
+		rotate		time * 3
+	}
 }
 
 //
@@ -53,5 +93,23 @@ ui/assets/mission_levelshots/unknownmap
 
 ui/assets/loading/load_main
 {
-
+	{
+		linear
+		map		ui/assets/loading/load_main.tga
+		blend 		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+	{
+		linear
+		clamp
+		map		ui/assets/loading/load_main3.tga
+		blend 		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+		rotate		time * -400
+	}
+	{
+		linear
+		clamp
+		map		ui/assets/loading/load_main4.tga
+		blend 		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+		rotate		time * 40
+	}
 }

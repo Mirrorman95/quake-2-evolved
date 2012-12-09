@@ -293,6 +293,31 @@ void Matrix4_MultiplyFast (const mat4_t m1, const mat4_t m2, mat4_t out){
 
 /*
  ==================
+ Matrix4_AffineInverse
+ ==================
+*/
+void Matrix4_AffineInverse (const mat4_t in, mat4_t out){
+
+	out[ 0] = in[ 0];
+	out[ 1] = in[ 4];
+	out[ 2] = in[ 8];
+	out[ 3] = 0.0f;
+	out[ 4] = in[ 1];
+	out[ 5] = in[ 5];
+	out[ 6] = in[ 9];
+	out[ 7] = 0.0f;
+	out[ 8] = in[ 2];
+	out[ 9] = in[ 6];
+	out[10] = in[10];
+	out[11] = 0.0f;
+	out[12] = -(in[ 0] * in[12] + in[ 1] * in[13] + in[ 2] * in[14]);
+	out[13] = -(in[ 4] * in[12] + in[ 5] * in[13] + in[ 6] * in[14]);
+	out[14] = -(in[ 8] * in[12] + in[ 9] * in[13] + in[10] * in[14]);
+	out[15] = 1.0f;
+}
+
+/*
+ ==================
  Matrix4_Identity
  ==================
 */
@@ -443,4 +468,16 @@ void Matrix4_Shear (mat4_t m, float x, float y, float z){
 	m[ 9] += mx[1] + my[1];
 	m[10] += mx[2] + my[2];
 	m[11] += mx[3] + my[3];
+}
+
+/*
+ ==================
+ Matrix4_TransformVector
+ ==================
+*/
+void Matrix4_TransformVector (const mat4_t m, const vec3_t in, vec3_t out){
+
+	out[0] = in[0] * m[ 0] + in[1] * m[ 4] + in[2] * m[ 8] + m[12];
+	out[1] = in[0] * m[ 1] + in[1] * m[ 5] + in[2] * m[ 9] + m[13];
+	out[2] = in[0] * m[ 2] + in[1] * m[ 6] + in[2] * m[10] + m[14];
 }

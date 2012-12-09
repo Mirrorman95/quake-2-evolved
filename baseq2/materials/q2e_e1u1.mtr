@@ -1,0 +1,20 @@
+
+textures/e1u1/+0btshoot1
+{
+	bumpMap 		asd
+	diffuseMap 		asd
+	{
+		specularmap 	asd
+		specularParms 	0.0, 0.0
+	}
+}
+
+textures/e1u1/+0btshoot2
+{
+	bumpMap 		asd
+	diffuseMap 		asd
+	{
+		specularmap 	asd
+		specularParms 	0.0, 0.0
+	}
+}

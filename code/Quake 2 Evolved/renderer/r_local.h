@@ -54,8 +54,8 @@ typedef struct {
 	vec3_t					xyz;
 	vec3_t					normal;
 	vec3_t					tangents[2];
-	vec4_t					st;
-	color_t					color;
+	vec2_t					st;
+	byte					color[4];
 } glVertex_t;
 
 typedef struct {
@@ -353,8 +353,8 @@ typedef enum {
 	SORT_BAD,
 	SORT_OPAQUE,
 	SORT_DECAL,
-	SORT_GLARE,		// TODO: unused, remove?
 	SORT_REFRACTABLE,
+	SORT_UNDERWATER,
 	SORT_REFRACTIVE,
 	SORT_FARTHEST,
 	SORT_ALMOST_FARTHEST,
@@ -749,12 +749,15 @@ typedef struct {
 	// Frame counters
 	int						viewCount;
 	int						worldCount;
+	int						lightCount;
 	int						fragmentCount;
 } surface_t;
 
 typedef struct node_s {
 	// Common with leaf
 	int						contents;	// -1, to differentiate from leafs
+	
+	int						viewCount;	// Node needs to be traversed if current
 	int						visCount;	// Node needs to be traversed if current
 
 	vec3_t					mins;		// For bounding box culling
@@ -773,6 +776,8 @@ typedef struct node_s {
 typedef struct leaf_s {
 	// Common with node
 	int						contents;	// Will be a negative contents number
+
+	int						viewCount;	// Node needs to be traversed if current
 	int						visCount;	// Node needs to be traversed if current
 
 	vec3_t					mins;		// For bounding box culling
@@ -1159,6 +1164,7 @@ typedef struct {
 	material_t *			material;
 
 	uint					sort;
+	bool					caps;
 } mesh_t;
 
 void			R_AddMeshToList (meshType_t type,  meshData_t *data, renderEntity_t *entity, material_t *material);
@@ -1179,17 +1185,84 @@ void			R_ClearMeshes ();
 
 #define MAX_LIGHTS					1024
 
-typedef struct light_s {
-	renderLight_t *			light;
+typedef struct {
+	rlType_t				type;
+
+	int						index;
+
+	vec3_t					origin;
+	vec3_t					direction;
+	vec3_t					axis[3];
+
+	vec3_t					corners[8];
+	vec3_t					mins;
+	vec3_t					maxs;
+
+	float					lightRange;
+
+	mat4_t					projectionMatrix;
+	mat4_t					modelviewMatrix;
+	mat4_t					modelviewProjectionMatrix;
+
+	bool					noShadows;
+
+	int						detailLevel;
+	int						style;
+
+	int						allowInView;
+
 	material_t *			material;
+	float					materialParms[MAX_MATERIAL_PARMS];
+} lightData_t;
+
+typedef struct {
+	int						numShadows;
+	int						maxShadows;
+	int						firstShadow;
+	mesh_t *				shadows;
+
+	int						numInteractions;
+	int						maxInteractions;
+	int						firstInteraction;
+	mesh_t *				interactions;
+} lightMeshes_t;
+
+typedef struct {
+	rlType_t				type;
+
+	vec3_t					origin;
+	vec3_t					direction;
+	vec3_t					axis[3];
+
+	bool					noShadows;
+
+	vec3_t					corners[8];
+
+	mat4_t					projectionMatrix;
+	mat4_t					modelviewMatrix;
+	mat4_t					modelviewProjectionMatrix;
+
+	rect_t					scissor;
+
+	float					fogDistance;
+	float					fogHeight;
+
+	material_t *			material;
+	float					materialParms[MAX_MATERIAL_PARMS];
+
+	int						numShadowMeshes;
+	mesh_t *				shadowMeshes;
+
+	int						numInteractionMeshes;
+	mesh_t *				interactionMeshes;
 } light_t;
+
+void			R_GenerateLightMeshes (light_t *light);
+void			R_ClearLightMeshes ();
 
 void			R_AllocLights ();
 void			R_GenerateLights ();
 void			R_ClearLights ();
-
-void			R_InitLights ();
-void			R_ShutdownLights ();
 
 /*
  ==============================================================================
@@ -1201,7 +1274,9 @@ void			R_ShutdownLights ();
 
 #define MAX_RENDER_CROPS			8
 
-#define MAX_LIGHTMAPS				128
+#define MAX_POLYGON_POINTS			64
+
+#define FAR_PLANE_DISTANCE			4000.0f
 
 typedef enum {
 	ASPECT_NORMAL,
@@ -1230,34 +1305,24 @@ typedef enum {
 } ambientType_t;
 
 typedef struct {
-	int						x;
-	int						y;
-	int						width;
-	int						height;
-} viewport_t;
-
-typedef struct {
-	int						x;
-	int						y;
-	int						width;
-	int						height;
-} scissor_t;
-
-typedef struct {
 	bool					primaryView;
 	int						viewType;
 
-	viewport_t				viewport;
-	scissor_t				scissor;
+	rect_t					viewport;
+	rect_t					scissor;
 
 	float					fovX;
 	float					fovY;
 	float					fovScale;
 
-	cplane_t				frustum[4];
+	float					zFar;
 
-	vec3_t					worldMins;
-	vec3_t					worldMaxs;
+	int						planeBits;
+
+	cplane_t				frustum[NUM_FRUSTUM_PLANES];
+
+	vec3_t					visMins;
+	vec3_t					visMaxs;
 
 	mat4_t					projectionMatrix;
 	mat4_t					modelviewMatrix;
@@ -1283,17 +1348,10 @@ typedef struct {
 } viewParms_t;
 
 typedef struct {
-	int 					x;
-	int 					y;
-	int 					width;
-	int						height;
-} cropRect_t;
-
-typedef struct {
 	int						width;
 	int						height;
 
-	cropRect_t				rect;
+	rect_t					rect;
 
 	float					xScale;
 	float					yScale;
@@ -1344,7 +1402,10 @@ typedef struct {
 	int						leafs;
 
 	int						meshes;
+	int						shadowMeshes;
+	int						interactionMeshes;
 
+	int						staticLights;
 	int						dynamicLights;
 
 	int						deformIndices;
@@ -1372,6 +1433,8 @@ typedef struct {
 	int						captureTexturePixels;
 	int						updateTextures;
 	int						updateTexturePixels;
+
+	float					overdrawLights;
 } performanceCounters_t;
 
 typedef struct {
@@ -1381,6 +1444,7 @@ typedef struct {
 	int						frameCount;
 	int						viewCount;
 	int						visCount;
+	int						lightCount;
 	int						fragmentCount;
 
 	// View cluster and area
@@ -1390,11 +1454,14 @@ typedef struct {
 	// Light styles
 	lightStyle_t			lightStyles[MAX_LIGHTSTYLES];
 
+	// Current render view
+	renderView_t			renderView;
+
 	// Current view parms
 	viewParms_t				viewParms;
 
-	// Current render view
-	renderView_t			renderView;
+	// Light meshes
+	lightMeshes_t			lightMeshes;
 
 	// Meshes
 	int						numMeshes[4];
@@ -1402,7 +1469,7 @@ typedef struct {
 	int						firstMesh[4];
 	mesh_t *				meshes[4];
 
-	// Lights
+	// Draw lights
 	int						numLights[4];
 	int						maxLights[4];
 	int						firstLight[4];
@@ -1492,16 +1559,27 @@ extern cvar_t *				r_offsetUnits;
 extern cvar_t *				r_forceImagePrograms;
 extern cvar_t *				r_writeImagePrograms;
 extern cvar_t *				r_colorMipLevels;
+extern cvar_t *				r_maxDebugPolygons;
+extern cvar_t *				r_maxDebugLines;
+extern cvar_t *				r_maxDebugText;
 extern cvar_t *				r_singleMaterial;
 extern cvar_t *				r_singleEntity;
 extern cvar_t *				r_singleLight;
 extern cvar_t *				r_showCluster;
+extern cvar_t *				r_showFarClip;
 extern cvar_t *				r_showCull;
 extern cvar_t *				r_showScene;
+extern cvar_t *				r_showSurfaces;
 extern cvar_t *				r_showDeforms;
 extern cvar_t *				r_showTextureUsage;
 extern cvar_t *				r_showTextures;
 extern cvar_t *				r_showDepth;
+extern cvar_t *				r_showLightCount;
+extern cvar_t *				r_showLightVolumes;
+extern cvar_t *				r_showShadowTris;
+extern cvar_t *				r_showLightScissors;
+extern cvar_t *				r_showShadowVolumes;
+extern cvar_t *				r_showShadowSilhouettes;
 extern cvar_t *				r_showVertexColors;
 extern cvar_t *				r_showTextureCoords;
 extern cvar_t *				r_showTangentSpace;
@@ -1511,9 +1589,12 @@ extern cvar_t *				r_showTextureVectors;
 extern cvar_t *				r_showBatchSize;
 extern cvar_t *				r_showModelBounds;
 extern cvar_t *				r_skipVisibility;
+extern cvar_t *				r_skipSuppress;
 extern cvar_t *				r_skipCulling;
 extern cvar_t *				r_skipEntityCulling;
+extern cvar_t *				r_skipLightCulling;
 extern cvar_t *				r_skipScissors;
+extern cvar_t *				r_skipLightScissors;
 extern cvar_t *				r_skipSorting;
 extern cvar_t *				r_skipEntities;
 extern cvar_t *				r_skipLights;
@@ -1521,6 +1602,7 @@ extern cvar_t *				r_skipParticles;
 extern cvar_t *				r_skipDecals;
 extern cvar_t *				r_skipExpressions;
 extern cvar_t *				r_skipConstantExpressions;
+extern cvar_t *				r_skipLightCache;
 extern cvar_t *				r_skipDeforms;
 extern cvar_t *				r_skipAmbient;
 extern cvar_t *				r_skipBump;
@@ -1556,12 +1638,13 @@ extern cvar_t *				r_contrast;
 extern cvar_t *				r_brightness;
 extern cvar_t *				r_vertexBuffers;
 extern cvar_t *				r_shaderQuality;
+extern cvar_t *				r_lightScale;
+extern cvar_t *				r_lightDetailLevel;
 extern cvar_t *				r_shadows;
 extern cvar_t *				r_playerShadow;
 extern cvar_t *				r_dynamicLights;
 extern cvar_t *				r_modulate;
 extern cvar_t *				r_caustics;
-extern cvar_t *				r_depthClamp;
 extern cvar_t *				r_seamlessCubeMaps;
 extern cvar_t *				r_inGameVideos;
 extern cvar_t *				r_precompressedImages;
@@ -1577,9 +1660,21 @@ extern cvar_t *				r_textureFilter;
 extern cvar_t *				r_textureLODBias;
 extern cvar_t *				r_textureAnisotropy;
 
+bool			R_ClipPolygon (int numPoints, vec3_t *points, const cplane_t plane, float epsilon, int *numClipped, vec3_t *clipped);
+
+void			R_LocalPointToWorld (const vec3_t in, vec3_t out, const vec3_t origin, const vec3_t axis[3]);
+
+void			R_WorldPointToLocal (const vec3_t in, vec3_t out, const vec3_t origin, const vec3_t axis[3]);
+void			R_WorldVectorToLocal (const vec3_t in, vec3_t out, const vec3_t axis[3]);
+void			R_WorldAxisToLocal (const vec3_t in[3], vec3_t out[3], const vec3_t axis[3]);
+
+void			R_TransformWorldToDevice (const vec3_t world, vec3_t ndc, const mat4_t modelviewProjectionMatrix[4]);
+
+void			R_TransformDeviceToScreen (const vec3_t ndc, vec3_t screen, const rect_t viewport);
+
 void			R_AddAliasModel (renderEntity_t *entity);
 
-void			R_AddEntityShadows ();
+void			R_SetFarClip ();
 
 bool			R_CullBox (const vec3_t mins, const vec3_t maxs, int clipFlags);
 bool			R_CullSphere (const vec3_t origin, float radius, int clipFlags);
@@ -1617,6 +1712,9 @@ void			R_AddWorldSurfaces ();
 
 #define MAX_INDICES					16384 * 3
 #define MAX_VERTICES				8192
+
+#define MAX_SHADOW_INDICES			MAX_INDICES * 8
+#define MAX_SHADOW_VERTICES			MAX_VERTICES * 2
 
 #define MAX_DYNAMIC_VERTICES		(MAX_VERTICES << 3)
 
@@ -1656,14 +1754,55 @@ typedef struct {
 } commandBuffer_t;
 
 typedef struct {
+	int						allowInView;
+
+	bool					fill;
+	bool					depthTest;
+
+	vec4_t					color;
+
+	int						numPoints;
+	vec3_t					points[MAX_POLYGON_POINTS >> 2];
+} debugPolygon_t;
+
+typedef struct {
+	int						allowInView;
+
+	bool					depthTest;
+
+	vec4_t					color;
+
+	vec3_t					start;
+	vec3_t					end;
+} debugLine_t;
+
+typedef struct {
+	int						allowInView;
+
+	bool					depthTest;
+
+	vec4_t					color;
+	bool					forceColor;
+
+	vec3_t					origin;
+
+	float					cw;
+	float					ch;
+
+	char					text[MAX_STRING_LENGTH];
+} debugText_t;
+
+typedef struct {
 	bool					primaryView;
 	int						viewType;
 
-	viewport_t				viewport;
-	scissor_t				scissor;
+	rect_t					viewport;
+	rect_t					scissor;
 
 	vec3_t					origin;
 	vec3_t					axis[3];
+
+	cplane_t				clipPlane;
 
 	mat4_t					projectionMatrix;
 	mat4_t					modelviewMatrix;
@@ -1679,12 +1818,12 @@ typedef struct {
 
 typedef struct {
 	vec3_t					viewOrigin;
-	mat3_t					viewAxis;
+	vec3_t					viewAxis[3];
 	mat4_t					viewMatrix;
 
 	vec3_t					lightOrigin;
 	vec3_t					lightDirection;
-	mat3_t					lightAxis;
+	vec3_t					lightAxis[3];
 	vec4_t					lightPlane;
 	mat4_t					lightMatrix;
 } renderLocalParms_t;
@@ -1855,8 +1994,8 @@ typedef struct {
 	int						time;
 	float					floatTime;
 
-	viewport_t				viewport;
-	scissor_t				scissor;
+	rect_t					viewport;
+	rect_t					scissor;
 
 	vec2_t					coordScale;
 	vec2_t					coordBias;
@@ -1879,6 +2018,19 @@ typedef struct {
 	blendLightParms_t		blendLightParms;
 	fogLightParms_t			fogLightParms;
 
+	// Debug visualization
+	int						numDebugPolygons;
+	int						maxDebugPolygons;
+	debugPolygon_t *		debugPolygons;
+
+	int						numDebugLines;
+	int						maxDebugLines;
+	debugLine_t *			debugLines;
+
+	int						numDebugText;
+	int						maxDebugText;
+	debugText_t *			debugText;
+
 	// View parms
 	renderViewParms_t		viewParms;
 
@@ -1886,15 +2038,20 @@ typedef struct {
 	renderLocalParms_t		localParms;
 
 	// Light state
-	renderLight_t *			light;
+	light_t *				light;
 	material_t *			lightMaterial;
 
 	// Batch state
 	material_t *			material;
 	renderEntity_t *		entity;
 
+	bool					stencilShadow;
+	bool					shadowCaps;
+
 	// Batch mesh data
 	meshData_t *			meshData;
+
+	const void *			indexPointer;
 
 	arrayBuffer_t *			vertexBuffer;
 	const void *			vertexPointer;
@@ -1908,13 +2065,16 @@ typedef struct {
 
 	int						numVertices;
 	glVertex_t *			vertices;
+
+	glIndex_t *				shadowIndices;
+	glShadowVertex_t *		shadowVertices;
 } backEnd_t;
 
 extern backEnd_t			backEnd;
 
 // Geometry batching
 void			RB_CheckMeshOverflow (int numIndices, int numVertices);
-void			RB_SetupBatch (renderEntity_t *entity, material_t *material, void (*drawBatch)());
+void			RB_SetupBatch (renderEntity_t *entity, material_t *material, bool stencilShadow, bool shadowCaps, void (*drawBatch)());
 void			RB_RenderBatch ();
 
 void			RB_RenderMeshes (mesh_t *meshes, int numMeshes);
@@ -1952,9 +2112,9 @@ void			RB_CleanupShaderStage (material_t *material, shaderStage_t *shaderStage);
 // Rendering setup & utilities
 void			RB_EntityState (renderEntity_t *entity);
 
-void			RB_TransformLightForEntity (renderLight_t *light, renderEntity_t *entity);
+void			RB_TransformLightForEntity (light_t *light, renderEntity_t *entity);
 
-void			RB_ComputeLightMatrix (renderLight_t *light, renderEntity_t *entity, material_t *material, textureStage_t *textureStage);
+void			RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *material, textureStage_t *textureStage);
 
 void			RB_DrawElements ();
 void			RB_DrawElementsWithCounters (int *totalIndices, int *totalVertices);
@@ -1979,6 +2139,15 @@ void			RB_RenderDebugTools ();
 
 // Main back-end interface.
 // These should be the only functions ever called by the front-end.
+void			RB_AddDebugPolygon (const vec4_t color, int numPoints, const vec3_t *points, bool fill, bool depthTest, int allowInView);
+void			RB_ClearDebugPolygons ();
+
+void			RB_AddDebugLine (const vec4_t color, const vec3_t start, const vec3_t end, bool depthTest, int allowInView);
+void			RB_ClearDebugLines ();
+
+void			RB_AddDebugText (const vec4_t color, bool forceColor, const vec3_t origin, float cw, float ch, const char *text, bool depthTest, int allowInView);
+void			RB_ClearDebugText ();
+
 void			RB_ExecuteRenderCommands (const void *data);
 
 void			RB_InitBackEnd ();

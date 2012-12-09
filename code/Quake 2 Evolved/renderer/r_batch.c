@@ -25,6 +25,10 @@
 // r_batch.c - Geometry batching for back-end
 //
 
+// TODO:
+// - shadows uses more indices and vertices so modify RB_CheckMeshOverflow?
+// - set backEnd.shadowBuffer in RB_SetupBatch ?
+
 
 #include "r_local.h"
 
@@ -46,7 +50,7 @@ void RB_CheckMeshOverflow (int numIndices, int numVertices){
 	if (numVertices > MAX_VERTICES)
 		Com_Error(ERR_DROP, "RB_CheckOverflow: numVertices > MAX_VERTICES (%i > %i)", numVertices, MAX_VERTICES);
 
-	RB_SetupBatch(backEnd.entity, backEnd.material, backEnd.drawBatch);
+	RB_SetupBatch(backEnd.entity, backEnd.material, backEnd.stencilShadow, backEnd.shadowCaps, backEnd.drawBatch);
 }
 
 /*
@@ -54,11 +58,16 @@ void RB_CheckMeshOverflow (int numIndices, int numVertices){
  RB_SetupBatch
  ==================
 */
-void RB_SetupBatch (renderEntity_t *entity, material_t *material, void (*drawBatch)()){
+void RB_SetupBatch (renderEntity_t *entity, material_t *material, bool stencilShadow, bool shadowCaps, void (*drawBatch)()){
 
 	// Set the batch state
 	backEnd.entity = entity;
 	backEnd.material = material;
+
+	backEnd.stencilShadow = stencilShadow;
+	backEnd.shadowCaps = shadowCaps;
+
+	backEnd.indexPointer = backEnd.indices;
 
 	backEnd.vertexBuffer = NULL;
 	backEnd.vertexPointer = backEnd.vertices;
@@ -185,7 +194,7 @@ static void R_BatchAliasModel (meshData_t *data){
 	oldXyzNormal = surface->xyzNormals + surface->numVertices * backEnd.entity->oldFrame;
 
 	if (backEnd.entity->frame == backEnd.entity->oldFrame)
-		backLerp = 0.0;
+		backLerp = 0.0f;
 	else
 		backLerp = backEnd.entity->backLerp;
 
@@ -621,20 +630,275 @@ void RB_BatchGeometry (meshType_t type, meshData_t *data){
 
 /*
  ==================
-
+ RB_BatchSurfaceShadow
  ==================
 */
 static void RB_BatchSurfaceShadow (meshData_t *data){
 
+	surface_t			*surface = (surface_t *)data;
+	surfVertex_t		*vertex;
+	surfTriangle_t		*triangle;
+	glIndex_t			*indices;
+	glShadowVertex_t	*vertices;
+	glIndex_t			indexRemap[MAX_INDICES];
+	int					i;
+
+	// Check for overflow
+	RB_CheckMeshOverflow(surface->numTriangles * 24, surface->numVertices * 2);
+
+	// Batch vertices
+	vertices = backEnd.shadowVertices + backEnd.numVertices;
+
+	for (i = 0, vertex = surface->vertices; i < surface->numVertices; i++, vertex++){
+		vertices[0].xyzw[0] = vertex->xyz[0];
+		vertices[0].xyzw[1] = vertex->xyz[1];
+		vertices[0].xyzw[2] = vertex->xyz[2];
+		vertices[0].xyzw[3] = 1.0f;
+
+		vertices[1].xyzw[0] = vertex->xyz[0] - backEnd.localParms.lightOrigin[0];
+		vertices[1].xyzw[1] = vertex->xyz[1] - backEnd.localParms.lightOrigin[1];
+		vertices[1].xyzw[2] = vertex->xyz[2] - backEnd.localParms.lightOrigin[2];
+		vertices[1].xyzw[3] = 0.0f;
+
+		vertices += 2;
+
+		indexRemap[i] = backEnd.numVertices;
+		backEnd.numVertices += 2;
+	}
+
+	// Batch indices for silhouette edges
+	indices = backEnd.shadowIndices + backEnd.numIndices;
+
+	for (i = 0, triangle = surface->triangles; i < surface->numTriangles; i++, triangle++){
+		if (triangle->neighbor[0] < 0){
+			indices[0] = indexRemap[triangle->index[1]];
+			indices[1] = indexRemap[triangle->index[0]];
+			indices[2] = indexRemap[triangle->index[0]] + 1;
+			indices[3] = indexRemap[triangle->index[1]];
+			indices[4] = indexRemap[triangle->index[0]] + 1;
+			indices[5] = indexRemap[triangle->index[1]] + 1;
+
+			indices += 6;
+
+			backEnd.numIndices += 6;
+		}
+
+		if (triangle->neighbor[1] < 0){
+			indices[0] = indexRemap[triangle->index[2]];
+			indices[1] = indexRemap[triangle->index[1]];
+			indices[2] = indexRemap[triangle->index[1]] + 1;
+			indices[3] = indexRemap[triangle->index[2]];
+			indices[4] = indexRemap[triangle->index[1]] + 1;
+			indices[5] = indexRemap[triangle->index[2]] + 1;
+
+			indices += 6;
+
+			backEnd.numIndices += 6;
+		}
+
+		if (triangle->neighbor[2] < 0){
+			indices[0] = indexRemap[triangle->index[0]];
+			indices[1] = indexRemap[triangle->index[2]];
+			indices[2] = indexRemap[triangle->index[2]] + 1;
+			indices[3] = indexRemap[triangle->index[0]];
+			indices[4] = indexRemap[triangle->index[2]] + 1;
+			indices[5] = indexRemap[triangle->index[0]] + 1;
+
+			indices += 6;
+
+			backEnd.numIndices += 6;
+		}
+	}
+
+	// Batch indices for front and back caps
+	if (backEnd.shadowCaps){
+		for (i = 0, triangle = surface->triangles; i < surface->numTriangles; i++, triangle++){
+			indices[0] = indexRemap[triangle->index[0]];
+			indices[1] = indexRemap[triangle->index[1]];
+			indices[2] = indexRemap[triangle->index[2]];
+			indices[3] = indexRemap[triangle->index[2]] + 1;
+			indices[4] = indexRemap[triangle->index[1]] + 1;
+			indices[5] = indexRemap[triangle->index[0]] + 1;
+
+			indices += 6;
+
+			backEnd.numIndices += 6;
+		}
+	}
 }
 
 /*
  ==================
-
+ RB_BatchAliasModelShadow
  ==================
 */
 static void RB_BatchAliasModelShadow (meshData_t *data){
 
+	mdlSurface_t		*surface = (mdlSurface_t *)data;
+	mdlFacePlane_t		*curFacePlane, *oldFacePlane;
+	mdlXyzNormal_t		*curXyzNormal, *oldXyzNormal;
+	mdlTriangle_t		*triangle;
+	glIndex_t			*indices;
+	glShadowVertex_t	*vertices;
+	glIndex_t			indexRemap[MAX_INDICES];
+	vec3_t				xyz, normal;
+	bool				triangleFacingLight[MAX_INDICES / 3];
+	float				backLerp;
+	float				dist;
+	int					i;
+
+	// Interpolate frames
+	curFacePlane = surface->facePlanes + surface->numTriangles * backEnd.entity->frame;
+	oldFacePlane = surface->facePlanes + surface->numTriangles * backEnd.entity->oldFrame;
+
+	curXyzNormal = surface->xyzNormals + surface->numVertices * backEnd.entity->frame;
+	oldXyzNormal = surface->xyzNormals + surface->numVertices * backEnd.entity->oldFrame;
+
+	if (backEnd.entity->frame == backEnd.entity->oldFrame)
+		backLerp = 0.0f;
+	else
+		backLerp = backEnd.entity->backLerp;
+
+	// Check for overflow
+	RB_CheckMeshOverflow(surface->numTriangles * 24, surface->numVertices * 2);
+
+	// Set up vertices
+	vertices = backEnd.shadowVertices + backEnd.numVertices;
+
+	if (backLerp == 0.0f){
+		// Optimized case
+		for (i = 0; i < surface->numVertices; i++, curXyzNormal++){
+			vertices[0].xyzw[0] = curXyzNormal->xyz[0];
+			vertices[0].xyzw[1] = curXyzNormal->xyz[1];
+			vertices[0].xyzw[2] = curXyzNormal->xyz[2];
+			vertices[0].xyzw[3] = 1.0f;
+
+			vertices[1].xyzw[0] = curXyzNormal->xyz[0] - backEnd.localParms.lightOrigin[0];
+			vertices[1].xyzw[1] = curXyzNormal->xyz[1] - backEnd.localParms.lightOrigin[1];
+			vertices[1].xyzw[2] = curXyzNormal->xyz[2] - backEnd.localParms.lightOrigin[2];
+			vertices[1].xyzw[3] = 0.0f;
+
+			vertices += 2;
+
+			indexRemap[i] = backEnd.numVertices;
+			backEnd.numVertices += 2;
+		}
+	}
+	else {
+		// General case
+		for (i = 0; i < surface->numVertices; i++, curXyzNormal++, oldXyzNormal++){
+			xyz[0] = curXyzNormal->xyz[0] + (oldXyzNormal->xyz[0] - curXyzNormal->xyz[0]) * backLerp;
+			xyz[1] = curXyzNormal->xyz[1] + (oldXyzNormal->xyz[1] - curXyzNormal->xyz[1]) * backLerp;
+			xyz[2] = curXyzNormal->xyz[2] + (oldXyzNormal->xyz[2] - curXyzNormal->xyz[2]) * backLerp;
+
+			vertices[0].xyzw[0] = xyz[0];
+			vertices[0].xyzw[1] = xyz[1];
+			vertices[0].xyzw[2] = xyz[2];
+			vertices[0].xyzw[3] = 1.0f;
+
+			vertices[1].xyzw[0] = xyz[0] - backEnd.localParms.lightOrigin[0];
+			vertices[1].xyzw[1] = xyz[1] - backEnd.localParms.lightOrigin[1];
+			vertices[1].xyzw[2] = xyz[2] - backEnd.localParms.lightOrigin[2];
+			vertices[1].xyzw[3] = 0.0f;
+
+			vertices += 2;
+
+			indexRemap[i] = backEnd.numVertices;
+			backEnd.numVertices += 2;
+		}
+	}
+
+	// Find front facing triangles
+	if (backLerp == 0.0){
+		// Optimized case
+		for (i = 0; i < surface->numTriangles; i++, curFacePlane++){
+			if (DotProduct(backEnd.localParms.lightOrigin, curFacePlane->normal) - curFacePlane->dist > 0.0f)
+				triangleFacingLight[i] = true;
+			else
+				triangleFacingLight[i] = false;
+		}
+	}
+	else {
+		// General case
+		for (i = 0; i < surface->numTriangles; i++, curFacePlane++, oldFacePlane++){
+			normal[0] = curFacePlane->normal[0] + (oldFacePlane->normal[0] - curFacePlane->normal[0]) * backLerp;
+			normal[1] = curFacePlane->normal[1] + (oldFacePlane->normal[1] - curFacePlane->normal[1]) * backLerp;
+			normal[2] = curFacePlane->normal[2] + (oldFacePlane->normal[2] - curFacePlane->normal[2]) * backLerp;
+
+			dist = curFacePlane->dist + (oldFacePlane->dist - curFacePlane->dist) * backLerp;
+
+			if (DotProduct(backEnd.localParms.lightOrigin, normal) - dist > 0.0f)
+				triangleFacingLight[i] = true;
+			else
+				triangleFacingLight[i] = false;
+		}
+	}
+
+	// Batch indices for silhouette edges
+	indices = backEnd.shadowIndices + backEnd.numIndices;
+
+	for (i = 0, triangle = surface->triangles; i < surface->numTriangles; i++, triangle++){
+		if (!triangleFacingLight[i])
+			continue;
+
+		if (triangle->neighbor[0] < 0 || !triangleFacingLight[triangle->neighbor[0]]){
+			indices[0] = indexRemap[triangle->index[1]];
+			indices[1] = indexRemap[triangle->index[0]];
+			indices[2] = indexRemap[triangle->index[0]] + 1;
+			indices[3] = indexRemap[triangle->index[1]];
+			indices[4] = indexRemap[triangle->index[0]] + 1;
+			indices[5] = indexRemap[triangle->index[1]] + 1;
+
+			indices += 6;
+
+			backEnd.numIndices += 6;
+		}
+
+		if (triangle->neighbor[1] < 0 || !triangleFacingLight[triangle->neighbor[1]]){
+			indices[0] = indexRemap[triangle->index[2]];
+			indices[1] = indexRemap[triangle->index[1]];
+			indices[2] = indexRemap[triangle->index[1]] + 1;
+			indices[3] = indexRemap[triangle->index[2]];
+			indices[4] = indexRemap[triangle->index[1]] + 1;
+			indices[5] = indexRemap[triangle->index[2]] + 1;
+
+			indices += 6;
+
+			backEnd.numIndices += 6;
+		}
+
+		if (triangle->neighbor[2] < 0 || !triangleFacingLight[triangle->neighbor[2]]){
+			indices[0] = indexRemap[triangle->index[0]];
+			indices[1] = indexRemap[triangle->index[2]];
+			indices[2] = indexRemap[triangle->index[2]] + 1;
+			indices[3] = indexRemap[triangle->index[0]];
+			indices[4] = indexRemap[triangle->index[2]] + 1;
+			indices[5] = indexRemap[triangle->index[0]] + 1;
+
+			indices += 6;
+
+			backEnd.numIndices += 6;
+		}
+	}
+
+	// Batch indices for front and back caps
+	if (backEnd.shadowCaps){
+		for (i = 0, triangle = surface->triangles; i < surface->numTriangles; i++, triangle++){
+			if (!triangleFacingLight[i])
+				continue;
+
+			indices[0] = indexRemap[triangle->index[0]];
+			indices[1] = indexRemap[triangle->index[1]];
+			indices[2] = indexRemap[triangle->index[2]];
+			indices[3] = indexRemap[triangle->index[2]] + 1;
+			indices[4] = indexRemap[triangle->index[1]] + 1;
+			indices[5] = indexRemap[triangle->index[0]] + 1;
+
+			indices += 6;
+
+			backEnd.numIndices += 6;
+		}
+	}
 }
 
 /*

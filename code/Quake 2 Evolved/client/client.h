@@ -86,18 +86,18 @@ typedef struct {
 // The client precaches these files during level load
 typedef struct {
 	// Sounds
-	sound_t *				sfxRichotecs[3];
-	sound_t *				sfxSparks[3];
-	sound_t *				sfxFootSteps[4];
-	sound_t *				sfxLaserHit;
-	sound_t *				sfxRailgun;
-	sound_t *				sfxRocketExplosion;
-	sound_t *				sfxGrenadeExplosion;
-	sound_t *				sfxWaterExplosion;
-	sound_t *				sfxMachinegunBrass;
-	sound_t *				sfxShotgunBrass;
-	sound_t *				sfxLightning;
-	sound_t *				sfxDisruptorExplosion;
+	sound_t *				richotecSounds[3];
+	sound_t *				sparkSounds[3];
+	sound_t *				footStepSounds[4];
+	sound_t *				laserHitSound;
+	sound_t *				railgunSound;
+	sound_t *				rocketExplosionSound;
+	sound_t *				grenadeExplosionSound;
+	sound_t *				waterExplosionSound;
+	sound_t *				machinegunBrassSound;
+	sound_t *				shotgunBrassSound;
+	sound_t *				lightningSound;
+	sound_t *				disruptorExplosionSound;
 
 	// Models
 	model_t *				parasiteBeamModel;
@@ -277,7 +277,6 @@ typedef struct {
 	testSprite_t			testSprite;
 	testBeam_t				testBeam;
 	testModel_t				testModel;
-	testLight_t				testLight;
 
 	lagometer_t				lagometer;
 
@@ -355,8 +354,6 @@ typedef struct {
 	int						fpsTimes[FPS_FRAMES];
 
 	// Screen rendering information
-	bool					screenDisabled;		// Don't update screen if true
-
 	glConfig_t				glConfig;
 	alConfig_t				alConfig;
 
@@ -864,10 +861,11 @@ void			CL_BuildUserCmd ();
  ==============================================================================
 */
 
-void			CL_Loading ();
+void			CL_LoadLevel ();
+void			CL_FreeLevel ();
 
+void			CL_LoadingState ();
 void			CL_LoadClientInfo (clientInfo_t *ci, const char *string);
-void			CL_LoadGameMedia ();
 
 /*
  ==============================================================================
@@ -899,11 +897,13 @@ void			CL_AddLocalEntities ();
  ==============================================================================
 */
 
+void			CL_InitAll ();
+void			CL_ShutdownAll ();
 void			CL_ClearState ();
-void			CL_ClearMemory ();
-void			CL_Startup ();
-void			CL_Disconnect (bool shuttingDown);
 void			CL_PlayBackgroundTrack ();
+
+void			CL_Disconnect (bool shuttingDown);
+
 void			CL_RequestNextDownload ();
 
 /*
@@ -991,7 +991,7 @@ float *			CL_FadeColor (const vec4_t color, int startTime, int totalTime, int fa
 float *			CL_FadeAlpha (const vec4_t color, int startTime, int totalTime, int fadeTime);
 float *			CL_FadeColorAndAlpha (const vec4_t color, int startTime, int totalTime, int fadeTime);
 void			CL_FillRect (float x, float y, float w, float h, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent);
-void			CL_DrawString (float x, float y, float w, float h, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
+void			CL_DrawString (float x, float y, float w, float h, const char *string, const vec4_t color, bool forceColor, float xShadow, float yShadow, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent, material_t *material);
 void			CL_DrawStringSheared (float x, float y, float w, float h, float shearX, float shearY, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
 void			CL_DrawStringFixed (float x, float y, float w, float h, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
 void			CL_DrawStringShearedFixed (float x, float y, float w, float h, float shearX, float shearY, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
@@ -1042,10 +1042,11 @@ void			CL_AddTempEntities ();
  ==============================================================================
 */
 
-void			CL_TestSprite_f ();
-void			CL_TestBeam_f ();
-void			CL_TestSound_f ();
-void			CL_TestDecal_f ();
+void			CL_ClearTestModel ();
+void			CL_ClearTestSprite ();
+void			CL_ClearTestBeam ();
+void			CL_ClearTestSound ();
+
 void			CL_TestModel_f ();
 void			CL_TestGun_f ();
 void			CL_TestMaterial_f ();
@@ -1054,6 +1055,10 @@ void			CL_NextFrame_f ();
 void			CL_PrevFrame_f ();
 void			CL_NextSkin_f ();
 void			CL_PrevSkin_f ();
+void			CL_TestSprite_f ();
+void			CL_TestBeam_f ();
+void			CL_TestSound_f ();
+void			CL_TestDecal_f ();
 void			CL_Where_f ();
 void			CL_SizeUp_f ();
 void			CL_SizeDown_f ();

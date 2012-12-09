@@ -960,6 +960,9 @@ void Com_Init (const char *cmdLine){
 
 	NetChan_Init();
 
+	// Initialize lookup table manager
+	LUT_Init();
+
 	// Show or hide the system console
 	if (dedicated->integerValue)
 		Sys_ShowConsole(true);
@@ -1012,6 +1015,9 @@ void Com_Shutdown (){
 
 	// Shutdown collision system
 	CM_Shutdown();
+
+	// Shutdown lookup table manager
+	LUT_Shutdown();
 
 	// Shutdown networking
 	NET_Shutdown();

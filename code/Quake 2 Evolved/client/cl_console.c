@@ -1263,6 +1263,11 @@ void Con_CharEvent (int ch){
 */
 void Con_KeyMessageEvent (int key, bool down){
 
+	if (!con.initialized)
+		return;
+
+	if (!down)
+		return;		// Ignore key up events
 }
 
 /*
@@ -1272,6 +1277,8 @@ void Con_KeyMessageEvent (int key, bool down){
 */
 void Con_CharMessageEvent (int ch){
 
+	if (!con.initialized)
+		return;
 }
 
 
@@ -1317,12 +1324,36 @@ void Con_CharMessageEvent (int ch){
 
 /*
  ==================
- 
+ Con_DrawTextBox
+
+ TODO: do something like the old console?
  ==================
 */
 static void Con_DrawTextBox (int x, int y, int w, int h, bool input){
 
 	// Draw the background
+	R_SetColor4(0.10f, 0.18f, 0.21f, 0.75f * con.opacity);
+
+	if (input)
+		R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_STRETCH_WIDTH, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
+	else
+		R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_STRETCH_WIDTH, 1.0f, V_STRETCH_TOP, 1.0f, cls.media.whiteMaterial);
+
+	// Draw the border
+	R_SetColor4(0.36f, 0.41f, 0.44f, 0.5f * con.opacity);
+
+	if (input){
+		R_DrawStretchPic(x, y, w, BORDER_SIZE, 0.0f, 0.0f, 1.0f, 1.0f, H_STRETCH_WIDTH, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
+		R_DrawStretchPic(x, y + h - BORDER_SIZE, w, BORDER_SIZE, 0.0f, 0.0f, 1.0f, 1.0f, H_STRETCH_WIDTH, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
+		R_DrawStretchPic(x, y + BORDER_SIZE, BORDER_SIZE, h - (BORDER_SIZE << 1), 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
+		R_DrawStretchPic(x + w - BORDER_SIZE, y + BORDER_SIZE, BORDER_SIZE, h - (BORDER_SIZE << 1), 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_RIGHT, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
+	}
+	else {
+		R_DrawStretchPic(x, y, w, BORDER_SIZE, 0.0f, 0.0f, 1.0f, 1.0f, H_STRETCH_WIDTH, 1.0f, V_ALIGN_TOP, 1.0f, cls.media.whiteMaterial);
+		R_DrawStretchPic(x, y + h - BORDER_SIZE, w, BORDER_SIZE, 0.0f, 0.0f, 1.0f, 1.0f, H_STRETCH_WIDTH, 1.0f, V_ALIGN_CENTER, 1.0f, cls.media.whiteMaterial);
+		R_DrawStretchPic(x, y + BORDER_SIZE, BORDER_SIZE, h - (BORDER_SIZE << 1), 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_STRETCH_TOP, 1.0f, cls.media.whiteMaterial);
+		R_DrawStretchPic(x + w - BORDER_SIZE, y + BORDER_SIZE, BORDER_SIZE, h - (BORDER_SIZE << 1), 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_RIGHT, 1.0f, V_STRETCH_TOP, 1.0f, cls.media.whiteMaterial);
+	}
 }
 
 /*

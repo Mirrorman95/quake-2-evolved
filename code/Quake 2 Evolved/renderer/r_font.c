@@ -160,7 +160,7 @@ static font_t *R_LoadFont (const char *name, bool defaulted, fontSet_t *fontSet)
 	if (r_numFonts == MAX_FONTS)
 		Com_Error(ERR_DROP, "R_LoadFont: MAX_FONTS hit");
 
-	r_fonts[r_numFonts++] = font = (font_t *)Mem_ClearedAlloc(sizeof(font_t), TAG_RENDERER);
+	r_fonts[r_numFonts++] = font = (font_t *)Mem_Alloc(sizeof(font_t), TAG_RENDERER);
 
 	// Fill it in
 	Str_Copy(font->name, name, sizeof(font->name));

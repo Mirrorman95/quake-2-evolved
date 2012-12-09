@@ -93,60 +93,69 @@ int PlaneTypeForNormal (const vec3_t normal){
 
 /*
  ==================
+ PlaneDistance
+ ==================
+*/
+float PlaneDistance (const vec3_t normal, const float dist, const vec3_t point){
+
+	return normal[0] * point[0] + normal[1] * point[1] + normal[2] * point[2] + -dist;
+}
+
+/*
+ ==================
  
  TODO: rewrite?
 
  Returns 1, 2, or 1 + 2
  ==================
 */
-int BoxOnPlaneSide (const vec3_t mins, const vec3_t maxs, cplane_t *p){
+int BoxOnPlaneSide (const vec3_t mins, const vec3_t maxs, const cplane_t *plane){
 
 	float	dist1, dist2;
-	int		sides;
 
 	// Fast axial cases
-	if (p->type < PLANE_NON_AXIAL){
-		if (p->dist <= mins[p->type])
-			return 1;
-		if (p->dist >= maxs[p->type])
-			return 2;
+	if (plane->type < PLANE_NON_AXIAL){
+		if (plane->dist <= mins[plane->type])
+			return PLANESIDE_FRONT;
+		if (plane->dist >= maxs[plane->type])
+			return PLANESIDE_BACK;
 
-		return 3;
+		return PLANESIDE_CROSS;
 	}
 	
 	// General case
-	switch (p->signbits){
+	switch (plane->signbits){
 	case 0:
-		dist1 = p->normal[0]*maxs[0] + p->normal[1]*maxs[1] + p->normal[2]*maxs[2];
-		dist2 = p->normal[0]*mins[0] + p->normal[1]*mins[1] + p->normal[2]*mins[2];
+		dist1 = plane->normal[0] * maxs[0] + plane->normal[1] * maxs[1] + plane->normal[2] * maxs[2];
+		dist2 = plane->normal[0] * mins[0] + plane->normal[1] * mins[1] + plane->normal[2] * mins[2];
 		break;
 	case 1:
-		dist1 = p->normal[0]*mins[0] + p->normal[1]*maxs[1] + p->normal[2]*maxs[2];
-		dist2 = p->normal[0]*maxs[0] + p->normal[1]*mins[1] + p->normal[2]*mins[2];
+		dist1 = plane->normal[0] * mins[0] + plane->normal[1] * maxs[1] + plane->normal[2] * maxs[2];
+		dist2 = plane->normal[0] * maxs[0] + plane->normal[1] * mins[1] + plane->normal[2] * mins[2];
 		break;
 	case 2:
-		dist1 = p->normal[0]*maxs[0] + p->normal[1]*mins[1] + p->normal[2]*maxs[2];
-		dist2 = p->normal[0]*mins[0] + p->normal[1]*maxs[1] + p->normal[2]*mins[2];
+		dist1 = plane->normal[0] * maxs[0] + plane->normal[1] * mins[1] + plane->normal[2] * maxs[2];
+		dist2 = plane->normal[0] * mins[0] + plane->normal[1] * maxs[1] + plane->normal[2] * mins[2];
 		break;
 	case 3:
-		dist1 = p->normal[0]*mins[0] + p->normal[1]*mins[1] + p->normal[2]*maxs[2];
-		dist2 = p->normal[0]*maxs[0] + p->normal[1]*maxs[1] + p->normal[2]*mins[2];
+		dist1 = plane->normal[0] * mins[0] + plane->normal[1] * mins[1] + plane->normal[2] * maxs[2];
+		dist2 = plane->normal[0] * maxs[0] + plane->normal[1] * maxs[1] + plane->normal[2] * mins[2];
 		break;
 	case 4:
-		dist1 = p->normal[0]*maxs[0] + p->normal[1]*maxs[1] + p->normal[2]*mins[2];
-		dist2 = p->normal[0]*mins[0] + p->normal[1]*mins[1] + p->normal[2]*maxs[2];
+		dist1 = plane->normal[0] * maxs[0] + plane->normal[1] * maxs[1] + plane->normal[2] * mins[2];
+		dist2 = plane->normal[0] * mins[0] + plane->normal[1] * mins[1] + plane->normal[2] * maxs[2];
 		break;
 	case 5:
-		dist1 = p->normal[0]*mins[0] + p->normal[1]*maxs[1] + p->normal[2]*mins[2];
-		dist2 = p->normal[0]*maxs[0] + p->normal[1]*mins[1] + p->normal[2]*maxs[2];
+		dist1 = plane->normal[0] * mins[0] + plane->normal[1] * maxs[1] + plane->normal[2] * mins[2];
+		dist2 = plane->normal[0] * maxs[0] + plane->normal[1] * mins[1] + plane->normal[2] * maxs[2];
 		break;
 	case 6:
-		dist1 = p->normal[0]*maxs[0] + p->normal[1]*mins[1] + p->normal[2]*mins[2];
-		dist2 = p->normal[0]*mins[0] + p->normal[1]*maxs[1] + p->normal[2]*maxs[2];
+		dist1 = plane->normal[0] * maxs[0] + plane->normal[1] * mins[1] + plane->normal[2] * mins[2];
+		dist2 = plane->normal[0] * mins[0] + plane->normal[1] * maxs[1] + plane->normal[2] * maxs[2];
 		break;
 	case 7:
-		dist1 = p->normal[0]*mins[0] + p->normal[1]*mins[1] + p->normal[2]*mins[2];
-		dist2 = p->normal[0]*maxs[0] + p->normal[1]*maxs[1] + p->normal[2]*maxs[2];
+		dist1 = plane->normal[0] * mins[0] + plane->normal[1] * mins[1] + plane->normal[2] * mins[2];
+		dist2 = plane->normal[0] * maxs[0] + plane->normal[1] * maxs[1] + plane->normal[2] * maxs[2];
 		break;
 	default:
 		dist1 = 0.0f;
@@ -154,14 +163,14 @@ int BoxOnPlaneSide (const vec3_t mins, const vec3_t maxs, cplane_t *p){
 		break;
 	}
 
-	sides = 0;
+	if (dist2 < plane->dist){
+		if (dist1 >= plane->dist)
+			return PLANESIDE_CROSS;
+		else
+			return PLANESIDE_BACK;
+	}
 
-	if (dist1 >= p->dist)
-		sides |= 1;
-	if (dist2 < p->dist)
-		sides |= 2;
-
-	return sides;
+	return PLANESIDE_FRONT;
 }
 
 /*
