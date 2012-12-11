@@ -25,10 +25,6 @@
 // r_batch.c - Geometry batching for back-end
 //
 
-// TODO:
-// - shadows uses more indices and vertices so modify RB_CheckMeshOverflow?
-// - set backEnd.shadowBuffer in RB_SetupBatch ?
-
 
 #include "r_local.h"
 
@@ -67,6 +63,7 @@ void RB_SetupBatch (renderEntity_t *entity, material_t *material, bool stencilSh
 	backEnd.stencilShadow = stencilShadow;
 	backEnd.shadowCaps = shadowCaps;
 
+	backEnd.indexBuffer = NULL;
 	backEnd.indexPointer = backEnd.indices;
 
 	backEnd.vertexBuffer = NULL;
@@ -88,6 +85,12 @@ void RB_RenderBatch (){
 
 	// Deform geometry
 	RB_Deform(backEnd.material);
+
+	// Bind the index buffer
+	RB_BindIndexBuffer();
+
+	// Bind the vertex buffer
+	RB_BindVertexBuffer();
 
 	// Set up the vertex array
 	qglVertexPointer(3, GL_FLOAT, sizeof(glVertex_t), GL_VERTEX_XYZ(backEnd.vertexPointer));
@@ -123,9 +126,8 @@ static void RB_BatchSurface (meshData_t *data){
 
 	surface_t		*surface = (surface_t *)data;
 	surfTriangle_t	*triangle;
-	surfVertex_t	*vertex;
 	glIndex_t		*indices;
-	glVertex_t		*vertices;
+	glVertex_t		*vertices, *vertex;
 	int				i;
 
 	// Check for overflow
@@ -636,9 +638,9 @@ void RB_BatchGeometry (meshType_t type, meshData_t *data){
 static void RB_BatchSurfaceShadow (meshData_t *data){
 
 	surface_t			*surface = (surface_t *)data;
-	surfVertex_t		*vertex;
 	surfTriangle_t		*triangle;
 	glIndex_t			*indices;
+	glVertex_t			*vertex;
 	glShadowVertex_t	*vertices;
 	glIndex_t			indexRemap[MAX_INDICES];
 	int					i;

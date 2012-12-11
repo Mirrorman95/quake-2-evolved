@@ -197,17 +197,17 @@ void			R_ShutdownShaders ();
  ==============================================================================
 */
 
-#define MAX_PROGRAMS				256
-#define MAX_PROGRAM_UNIFORMS		64
+#define MAX_PROGRAMS					256
+#define MAX_PROGRAM_UNIFORMS			64
 
-#define MAX_UNIFORM_NAME_LENGTH		64
+#define MAX_UNIFORM_NAME_LENGTH			64
 
 typedef enum {
-	VA_NORMAL						= BIT(0),
-	VA_TANGENT1						= BIT(1),
-	VA_TANGENT2						= BIT(2),
-	VA_TEXCOORD						= BIT(3),
-	VA_COLOR						= BIT(4)
+	VA_NORMAL				= BIT(0),
+	VA_TANGENT1				= BIT(1),
+	VA_TANGENT2				= BIT(2),
+	VA_TEXCOORD				= BIT(3),
+	VA_COLOR				= BIT(4),
 } vertexAttrib_t;
 
 typedef enum {
@@ -270,20 +270,20 @@ void			R_UniformFloat4 (uniform_t *uniform, float v0, float v1, float v2, float 
 void			R_UniformFloatArray (uniform_t *uniform, int count, const float *v);
 
 void			R_UniformVector2 (uniform_t *uniform, const vec2_t v);
-void			R_UniformVector2Array (uniform_t *uniform, int count, const vec2_t *v);
+void			R_UniformVector2Array (uniform_t *uniform, int count, const vec2_t v);
 
 void			R_UniformVector3 (uniform_t *uniform, const vec3_t v);
-void			R_UniformVector3Array (uniform_t *uniform, int count, const vec3_t *v);
+void			R_UniformVector3Array (uniform_t *uniform, int count, const vec3_t v);
 
 void			R_UniformVector4 (uniform_t *uniform, const vec4_t v);
-void			R_UniformVector4Array (uniform_t *uniform, int count, const vec4_t *v);
+void			R_UniformVector4Array (uniform_t *uniform, int count, const vec4_t v);
 
 void			R_UniformMatrix3 (uniform_t *uniform, bool transpose, const mat3_t m);
-void			R_UniformMatrix3Array (uniform_t *uniform, int count, bool transpose, const mat3_t *m);
+void			R_UniformMatrix3Array (uniform_t *uniform, int count, bool transpose, const mat3_t m);
 void			R_UniformMatrix3Identity (uniform_t *uniform);
 
 void			R_UniformMatrix4 (uniform_t *uniform, bool transpose, const mat4_t m);
-void			R_UniformMatrix4Array (uniform_t *uniform, int count, bool transpose, const mat4_t *m);
+void			R_UniformMatrix4Array (uniform_t *uniform, int count, bool transpose, const mat4_t m);
 void			R_UniformMatrix4Identity (uniform_t *uniform);
 
 void			R_InitPrograms ();
@@ -660,6 +660,9 @@ void			R_ShutdownFonts ();
 
 #define MAX_ARRAY_BUFFERS			2048
 
+#define INDEX_OFFSET(ptr, offset)		((const byte *)(ptr) + ((offset) * sizeof(glIndex_t)))
+#define VERTEX_OFFSET(ptr, offset)	((const byte *)(ptr) + ((offset) * sizeof(glVertex_t)))
+
 typedef struct arrayBuffer_s {
 	char					name[MAX_QPATH];
 
@@ -668,6 +671,7 @@ typedef struct arrayBuffer_s {
 
 	int						size;
 	uint					usage;
+	bool					mapped;
 
 	int						frameUsed;
 
@@ -676,9 +680,19 @@ typedef struct arrayBuffer_s {
 	struct arrayBuffer_s *	next;
 } arrayBuffer_t;
 
-arrayBuffer_t *	R_AllocVertexBuffer (const char *name, bool dynamic, int vertexCount);
+arrayBuffer_t *	R_AllocIndexBuffer (const char *name, bool dynamic, int indexCount, const glIndex_t *indexData);
+void			R_ReallocIndexBuffer (arrayBuffer_t *indexBuffer, int indexCount, const glIndex_t *indexData);
+void			R_FreeIndexBuffer (arrayBuffer_t *indexBuffer);
+bool			R_UpdateIndexBuffer (arrayBuffer_t *indexBuffer, int indexOffset, int indexCount, const glIndex_t *indexData, bool discard, bool synchronize);
+glIndex_t *		R_MapIndexBuffer (arrayBuffer_t *indexBuffer, int indexOffset, int indexCount, bool discard, bool synchronize);
+bool			R_UnmapIndexBuffer (arrayBuffer_t *indexBuffer);
 
-void			R_UpdateVertexBuffer (arrayBuffer_t *vertexBuffer, const void *data, int size);
+arrayBuffer_t *	R_AllocVertexBuffer (const char *name, bool dynamic, int vertexCount, const glVertex_t *vertexData);
+void			R_ReallocVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexCount, const glVertex_t *vertexData);
+void			R_FreeVertexBuffer (arrayBuffer_t *vertexBuffer);
+bool			R_UpdateVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexOffset, int vertexCount, const glVertex_t *vertexData, bool discard, bool synchronize);
+glVertex_t *	R_MapVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexOffset, int vertexCount, bool discard, bool synchronize);
+bool			R_UnmapVertexBuffer (arrayBuffer_t *vertexBuffer);
 
 void			R_InitArrayBuffers ();
 void			R_ShutdownArrayBuffers ();
@@ -717,14 +731,6 @@ typedef struct {
 } surfTriangle_t;
 
 typedef struct {
-	vec3_t					xyz;
-	vec3_t					normal;
-	vec3_t					tangents[2];
-	vec2_t					st;
-	byte					color[4];
-} surfVertex_t;
-
-typedef struct {
 	int						flags;
 
 	int						firstEdge;	// Look up in model->edges[]. Negative
@@ -740,11 +746,21 @@ typedef struct {
 
 	texInfo_t *				texInfo;
 
+	// TODO: replace this with glIndex_t
 	int						numTriangles;
-	surfTriangle_t			*triangles;
+	surfTriangle_t *		triangles;
+
+	int						numIndices;
+	glIndex_t *				indices;
 
 	int						numVertices;
-	surfVertex_t			*vertices;
+	glVertex_t *			vertices;
+
+	arrayBuffer_t *			indexBuffer;		// Indices in write-only array buffer memory
+	int						indexOffset;		// Offset into first surface index inside indexBuffer
+
+	arrayBuffer_t *			vertexBuffer;		// Vertices in write-only array buffer memory
+	int						vertexOffset;		// Offset into first surface vertex inside vertexBuffer
 
 	// Frame counters
 	int						viewCount;
@@ -1034,6 +1050,7 @@ typedef struct {
 
 	texture_t *				texture[MAX_TEXTURE_UNITS];
 	program_t *				program;
+	arrayBuffer_t *			indexBuffer;
 	arrayBuffer_t *			vertexBuffer;
 
 	int						viewportX;
@@ -1099,6 +1116,7 @@ void			GL_TexGen (uint texCoord, int texGen);
 
 void			GL_BindProgram (program_t *program);
 
+void			GL_BindIndexBuffer (arrayBuffer_t *indexBuffer);
 void			GL_BindVertexBuffer (arrayBuffer_t *vertexBuffer);
 
 void			GL_Viewport (int x, int y, int width, int height);
@@ -1185,6 +1203,8 @@ void			R_ClearMeshes ();
 
 #define MAX_LIGHTS					1024
 
+#define MAX_STATIC_LIGHTS			4096
+
 typedef struct {
 	rlType_t				type;
 
@@ -1197,6 +1217,7 @@ typedef struct {
 	vec3_t					corners[8];
 	vec3_t					mins;
 	vec3_t					maxs;
+	cplane_t				frustum[6];
 
 	float					lightRange;
 
@@ -1238,6 +1259,8 @@ typedef struct {
 
 	vec3_t					corners[8];
 
+	cplane_t				frustum[6];
+
 	mat4_t					projectionMatrix;
 	mat4_t					modelviewMatrix;
 	mat4_t					modelviewProjectionMatrix;
@@ -1256,6 +1279,9 @@ typedef struct {
 	int						numInteractionMeshes;
 	mesh_t *				interactionMeshes;
 } light_t;
+
+extern lightData_t			r_staticLights[MAX_STATIC_LIGHTS];
+extern int					r_numStaticLights;
 
 void			R_GenerateLightMeshes (light_t *light);
 void			R_ClearLightMeshes ();
@@ -1422,6 +1448,9 @@ typedef struct {
 	int						interactionIndices;
 	int						totalVertices;
 	int						interactionVertices;
+
+	int						indexBuffers[2];
+	int						indexBufferBytes[2];
 
 	int						vertexBuffers[2];
 	int						vertexBufferBytes[2];
@@ -1636,6 +1665,7 @@ extern cvar_t *				r_finish;
 extern cvar_t *				r_gamma;
 extern cvar_t *				r_contrast;
 extern cvar_t *				r_brightness;
+extern cvar_t *				r_indexBuffers;
 extern cvar_t *				r_vertexBuffers;
 extern cvar_t *				r_shaderQuality;
 extern cvar_t *				r_lightScale;
@@ -1716,6 +1746,7 @@ void			R_AddWorldSurfaces ();
 #define MAX_SHADOW_INDICES			MAX_INDICES * 8
 #define MAX_SHADOW_VERTICES			MAX_VERTICES * 2
 
+#define MAX_DYNAMIC_INDICES			(MAX_INDICES << 3)
 #define MAX_DYNAMIC_VERTICES		(MAX_VERTICES << 3)
 
 typedef enum {
@@ -2001,6 +2032,7 @@ typedef struct {
 	vec2_t					coordBias;
 
 	bool					depthFilling;
+	bool					debugRendering;
 
 	sort_t					currentColorCaptured;
 	bool					currentDepthCaptured;
@@ -2051,6 +2083,7 @@ typedef struct {
 	// Batch mesh data
 	meshData_t *			meshData;
 
+	arrayBuffer_t *			indexBuffer;
 	const void *			indexPointer;
 
 	arrayBuffer_t *			vertexBuffer;
@@ -2068,6 +2101,15 @@ typedef struct {
 
 	glIndex_t *				shadowIndices;
 	glShadowVertex_t *		shadowVertices;
+
+	// Dynamic index and vertex buffers
+	int						dynamicIndexOffset;
+	int						dynamicIndexNumber;
+	arrayBuffer_t *			dynamicIndexBuffers[2];
+
+	int						dynamicVertexOffset;
+	int						dynamicVertexNumber;
+	arrayBuffer_t *			dynamicVertexBuffers[2];
 } backEnd_t;
 
 extern backEnd_t			backEnd;
@@ -2115,6 +2157,9 @@ void			RB_EntityState (renderEntity_t *entity);
 void			RB_TransformLightForEntity (light_t *light, renderEntity_t *entity);
 
 void			RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *material, textureStage_t *textureStage);
+
+void			RB_BindIndexBuffer ();
+void			RB_BindVertexBuffer ();
 
 void			RB_DrawElements ();
 void			RB_DrawElementsWithCounters (int *totalIndices, int *totalVertices);

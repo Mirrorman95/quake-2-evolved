@@ -115,6 +115,7 @@ static void R_AddLightSurface (light_t *light, surface_t *surface, material_t *m
 /*
  ==================
  
+ TODO: lightInFrustum
  ==================
 */
 static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightInFrustum, bool castShadows, int skipFlag, int cullBits){
@@ -138,7 +139,18 @@ static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightI
 
 	// Cull
 	if (cullBits){
+		for (i = 0, plane = light->frustum; i < NUM_FRUSTUM_PLANES; i++, plane++){
+			if (!(cullBits & BIT(i)))
+				continue;
 
+			side = BoxOnPlaneSide(node->mins, node->maxs, plane);
+
+			if (side == PLANESIDE_BACK)
+				return;
+
+			if (side == PLANESIDE_FRONT)
+				cullBits &= ~BIT(i);
+		}
 	}
 
 	// Recurse down the children
@@ -155,6 +167,9 @@ static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightI
 		return;
 
 	// Check if the node is in the light PVS
+	if (!r_skipVisibility->integerValue){
+
+	}
 
 	// Add all the surfaces
 	for (i = 0, mark = leaf->firstMarkSurface; i < leaf->numMarkSurfaces; i++, mark++){
@@ -226,11 +241,203 @@ static void R_AddWorldLightSurfaces (light_t *light, bool lightInFrustum, bool c
 
 /*
  ==================
- 
+ R_AddInlineModelLightSurfaces
+
+ TODO: culling
+ ==================
+*/
+static void R_AddInlineModelLightSurfaces (light_t *light, renderEntity_t *entity, bool lightInFrustum, bool castShadows, int skipFlag){
+
+	model_t		*model = entity->model;
+	surface_t	*surface;
+	material_t	*material;
+	vec3_t		lightOrigin, lightDirection;
+	int			cullBits;
+	bool		addShadow, addInteraction;
+	int			i;
+
+	// Check visibility
+	if (entity->viewCount != rg.viewCount){
+		// Not visible, but may still cast visible shadows
+		if (lightInFrustum || !castShadows)
+			return;
+	}
+
+	// Cull
+	if (r_skipEntityCulling->integerValue || entity->depthHack)
+		cullBits = 0;
+	else {
+		cullBits = 0;
+	}
+
+	// Transform light origin and light direction into local space
+	R_WorldPointToLocal(light->origin, lightOrigin, entity->origin, entity->axis);
+	R_WorldVectorToLocal(light->direction, lightDirection, entity->axis);
+
+	// Add all the surfaces
+	surface = model->surfaces + model->firstModelSurface;
+	for (i = 0; i < model->numModelSurfaces; i++, surface++){
+		// Get the material
+		if (entity->material)
+			material = entity->material;
+		else
+			material = surface->texInfo->material;
+
+		if (material->spectrum != light->material->spectrum)
+			continue;		// Not illuminated by this light
+
+		// Determine if we should add the shadow
+		if (castShadows)
+			addShadow = !(material->flags & MF_NOSHADOWS);
+		else
+			addShadow = false;
+
+		// Determine if we should add the interaction
+		if (entity->viewCount == rg.viewCount)
+			addInteraction = !(material->flags & skipFlag);
+		else
+			addInteraction = false;
+
+		// Check if there's nothing to be added
+		if (!addShadow && !addInteraction)
+			continue;
+
+		// Add the surface
+		R_AddLightSurface(light, surface, material, entity, lightOrigin, lightDirection, cullBits, addShadow, addInteraction);
+	}
+}
+
+/*
+ ==================
+ R_AddAliasModelLightSurfaces
+
+ TODO: culling
+ ==================
+*/
+static void R_AddAliasModelLightSurfaces (light_t *light, renderEntity_t *entity, bool lightInFrustum, bool castShadows, int skipFlag){
+
+	mdl_t			*alias = entity->model->alias;
+	mdlSurface_t	*surface;
+	material_t		*material;
+	int				cullBits;
+	bool			addShadow, addInteraction;
+	int				i;
+
+	// Check visibility
+	if (entity->viewCount != rg.viewCount){
+		// Not visible, but may still cast visible shadows
+		if (lightInFrustum || !castShadows)
+			return;
+	}
+
+	// Cull
+	if (r_skipEntityCulling->integerValue || entity->depthHack)
+		cullBits = 0;
+	else {
+
+	}
+
+	// Add all the surfaces
+	for (i = 0, surface = alias->surfaces; i < alias->numSurfaces; i++, surface++){
+		// Get the material
+		if (entity->material)
+			material = entity->material;
+		else {
+			if (surface->numMaterials){
+				if (entity->skinIndex < 0 || entity->skinIndex >= surface->numMaterials){
+					Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModelLightSurfaces: no such material %i (%s)\n", entity->skinIndex, entity->model->name);
+
+					entity->skinIndex = 0;
+				}
+
+				material = surface->materials[entity->skinIndex].material;
+			}
+			else {
+				Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModelLightSurfaces: no materials for surface (%s)\n", entity->model->name);
+
+				material = rg.defaultMaterial;
+			}
+		}
+
+		if (material->spectrum != light->material->spectrum)
+			continue;		// Not illuminated by this light
+
+		// Determine if we should add the shadow
+		if (castShadows)
+			addShadow = !(material->flags & MF_NOSHADOWS);
+		else
+			addShadow = false;
+
+		// Determine if we should add the interaction
+		if (entity->viewCount == rg.viewCount)
+			addInteraction = !(material->flags & skipFlag);
+		else
+			addInteraction = false;
+
+		// Check if there's nothing to be added
+		if (!addShadow && !addInteraction)
+			continue;
+
+		// Cull
+
+		// Add the surface
+		if (addShadow)
+			R_AddShadowSurface(light, MESH_ALIASMODEL, surface, entity, material);
+
+		if (addInteraction)
+			R_AddInteractionSurface(light, MESH_ALIASMODEL, surface, entity, material);
+	}
+}
+
+/*
+ ==================
+ R_AddEntityLightSurfaces
  ==================
 */
 static void R_AddEntityLightSurfaces (light_t *light, bool lightInFrustum, bool castShadows, int skipFlag){
 
+	renderEntity_t	*entity;
+	bool			suppressShadows;
+	int				i;
+
+	if (r_skipEntities->integerValue)
+		return;
+
+	for (i = 0, entity = rg.viewParms.renderEntities; i < rg.viewParms.numRenderEntities; i++, entity++){
+		if (entity == rg.worldEntity)
+			continue;		// World entity
+
+		if (entity->type != RE_MODEL)
+			continue;		// Not a model
+
+		// Development tool
+		if (r_singleEntity->integerValue != -1){
+			if (r_singleEntity->integerValue != entity->index)
+				continue;
+		}
+
+		// Check for view suppression
+		if (!r_skipSuppress->integerValue)
+			suppressShadows = !(entity->allowShadowInView & rg.viewParms.viewType);
+		else
+			suppressShadows = false;
+
+		// Add the entity
+		if (!entity->model)
+			Com_Error(ERR_DROP, "R_AddEntityLightSurfaces: NULL model");
+
+		switch (entity->model->type){
+		case MODEL_INLINE:
+			R_AddInlineModelLightSurfaces(light, entity, lightInFrustum, castShadows && !suppressShadows && !entity->depthHack, skipFlag);
+			break;
+		case MODEL_MD3:
+		case MODEL_MD2:
+			R_AddAliasModelLightSurfaces(light, entity, lightInFrustum, castShadows && !suppressShadows && !entity->depthHack, skipFlag);
+			break;
+		default:
+			Com_Error(ERR_DROP, "R_AddEntityLightSurfaces: bad model type (%i)", entity->model->type);
+		}
+	}
 }
 
 

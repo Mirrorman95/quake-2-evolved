@@ -669,13 +669,13 @@ void Sys_Error (const char *fmt, ...){
 
 	onError = true;
 
-	// Make sure all subsystems are down
-	Com_Shutdown();
-
 	// Get the message
 	va_start(argPtr, fmt);
 	Str_VSPrintf(message, sizeof(message), fmt, argPtr);
 	va_end(argPtr);
+
+	// Shutdown all the subsystems
+//	Com_Shutdown();
 
 	// Echo to console
 	Sys_Print("\n");

@@ -80,6 +80,7 @@ typedef struct {
 
 void			R_LightEditorUpdateCallback (int index, lightParms_t *parms);
 void			R_LightEditorRemoveCallback (int index);
+void			R_LightEditorSaveCallback ();
 void			R_LightEditorCloseCallback ();
 
 void *			WIN_CreateLightEditorWindow ();

@@ -890,12 +890,12 @@ void RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *
 	if (material->lightType != LT_FOG){
 		if (entity == rg.worldEntity){
 			if (!textureStage->numTexMods)
-				Matrix4_Transpose(light->modelviewProjectionMatrix, backEnd.localParms.lightMatrix);
+				Matrix4_Copy(light->modelviewProjectionMatrix, backEnd.localParms.lightMatrix);
 			else {
 				RB_ComputeTextureMatrix(material, textureStage, textureMatrix);
 
 				Matrix4_MultiplyFast(textureMatrix, light->modelviewProjectionMatrix, tmpMatrix);
-				Matrix4_Transpose(tmpMatrix, backEnd.localParms.lightMatrix);
+				Matrix4_Copy(tmpMatrix, backEnd.localParms.lightMatrix);
 			}
 		}
 		else {
@@ -903,12 +903,12 @@ void RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *
 			Matrix4_MultiplyFast(light->modelviewProjectionMatrix, transformMatrix, entityMatrix);
 
 			if (!textureStage->numTexMods)
-				Matrix4_Transpose(entityMatrix, backEnd.localParms.lightMatrix);
+				Matrix4_Copy(entityMatrix, backEnd.localParms.lightMatrix);
 			else {
 				RB_ComputeTextureMatrix(material, textureStage, textureMatrix);
 
 				Matrix4_MultiplyFast(textureMatrix, entityMatrix, tmpMatrix);
-				Matrix4_Transpose(tmpMatrix, backEnd.localParms.lightMatrix);
+				Matrix4_Copy(tmpMatrix, backEnd.localParms.lightMatrix);
 			}
 		}
 
@@ -931,9 +931,111 @@ void RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *
 
 /*
  ==================
- RB_DrawElements
+ RB_BindIndexBuffer
+ ==================
+*/
+void RB_BindIndexBuffer (){
 
- TODO: we might need to get indicies for shadows
+	bool	discard;
+
+	if (backEnd.debugRendering){
+		GL_BindIndexBuffer(NULL);
+		return;
+	}
+
+	// If we already have an index buffer, bind it
+	if (backEnd.indexBuffer){
+		backEnd.indexPointer = NULL;
+
+		GL_BindIndexBuffer(backEnd.indexBuffer);
+		return;
+	}
+
+	// The current batch of indices is entirely dynamic, so copy it to a
+	// dynamic index buffer if possible
+	if (!backEnd.dynamicIndexBuffers[0] || !backEnd.dynamicIndexBuffers[1]){
+		GL_BindIndexBuffer(NULL);
+		return;
+	}
+
+	// In addition to double-buffering, we also discard the entire buffer each
+	// time we swap index buffers to be able to write to it asynchronously
+	if (backEnd.dynamicIndexOffset + backEnd.numIndices <= MAX_DYNAMIC_INDICES)
+		discard = false;
+	else {
+		discard = true;
+
+		backEnd.dynamicIndexOffset = 0;
+		backEnd.dynamicIndexNumber ^= 1;
+	}
+
+	backEnd.indexBuffer = backEnd.dynamicIndexBuffers[backEnd.dynamicIndexNumber];
+	backEnd.indexPointer = INDEX_OFFSET(NULL, backEnd.dynamicIndexOffset);
+
+	// Bind the index buffer
+	GL_BindIndexBuffer(backEnd.indexBuffer);
+
+	// Upload the indices
+	R_UpdateIndexBuffer(backEnd.indexBuffer, backEnd.dynamicIndexOffset, backEnd.numIndices, backEnd.indices, discard, false);
+
+	backEnd.dynamicIndexOffset += backEnd.numIndices;
+}
+
+/*
+ ==================
+ RB_BindVertexBuffer
+ ==================
+*/
+void RB_BindVertexBuffer (){
+
+	bool	discard;
+
+	if (backEnd.debugRendering){
+		GL_BindVertexBuffer(NULL);
+		return;
+	}
+
+	// If we already have a vertex buffer, bind it
+	if (backEnd.vertexBuffer){
+		backEnd.vertexPointer = NULL;
+
+		GL_BindVertexBuffer(backEnd.vertexBuffer);
+		return;
+	}
+
+	// The current batch of vertices is entirely dynamic, so copy it to a
+	// dynamic vertex buffer if possible
+	if (!backEnd.dynamicVertexBuffers[0] || !backEnd.dynamicVertexBuffers[1]){
+		GL_BindVertexBuffer(NULL);
+		return;
+	}
+
+	// In addition to double-buffering, we also discard the entire buffer each
+	// time we swap vertex buffers to be able to write to it asynchronously
+	if (backEnd.dynamicVertexOffset + backEnd.numVertices <= MAX_DYNAMIC_VERTICES)
+		discard = false;
+	else {
+		discard = true;
+
+		backEnd.dynamicVertexOffset = 0;
+		backEnd.dynamicVertexNumber ^= 1;
+	}
+
+	backEnd.vertexBuffer = backEnd.dynamicVertexBuffers[backEnd.dynamicVertexNumber];
+	backEnd.vertexPointer = VERTEX_OFFSET(NULL, backEnd.dynamicVertexOffset);
+
+	// Bind the vertex buffer
+	GL_BindVertexBuffer(backEnd.vertexBuffer);
+
+	// Upload the vertices
+	R_UpdateVertexBuffer(backEnd.vertexBuffer, backEnd.dynamicVertexOffset, backEnd.numVertices, backEnd.vertices, discard, false);
+
+	backEnd.dynamicVertexOffset += backEnd.numVertices;
+}
+
+/*
+ ==================
+ RB_DrawElements
  ==================
 */
 void RB_DrawElements (){
@@ -951,8 +1053,6 @@ void RB_DrawElements (){
 /*
  ==================
  RB_DrawElementsWithCounters
-
- TODO: we might need to get indicies for shadows
  ==================
 */
 void RB_DrawElementsWithCounters (int *totalIndices, int *totalVertices){
@@ -975,8 +1075,6 @@ void RB_DrawElementsWithCounters (int *totalIndices, int *totalVertices){
 /*
  ==================
  RB_DrawElementsStaticIndices
-
- TODO: we might need to get indicies for shadows
  ==================
 */
 void RB_DrawElementsStaticIndices (int numVertices, int numIndices, const void *indices){

@@ -26,18 +26,15 @@
 //
 
 // TODO:
-// - 1.) make sure the light contains valid data
-// - 2.) make sure the functions thata uses the light data, are computing the right way
-// - 3.) could a shader problem (attributes)
+// - in the future, all lights will be passed through renderLight_t. The static
+// light lists is all temporary for testing purposes.
 
 
 #include "r_local.h"
 
 
-#define MAX_STATIC_LIGHTS			4096
-
-static lightData_t			r_staticLights[MAX_STATIC_LIGHTS];
-static int					r_numStaticLights;
+lightData_t					r_staticLights[MAX_STATIC_LIGHTS];
+int							r_numStaticLights;
 
 
 /*
@@ -73,11 +70,27 @@ void R_LoadLights (const char *name){
 
 /*
  ==================
- 
+ R_LightFrustum
  ==================
 */
-static void R_LightFrustum (){
+static void R_LightFrustum (const renderLight_t *renderLight, lightData_t *lightData){
 
+	float	dot;
+	int		i;
+
+	for (i = 0; i < 3; i++){
+		dot = DotProduct(renderLight->origin, renderLight->axis[i]);
+
+		VectorCopy(renderLight->axis[i], lightData->frustum[i*2+0].normal);
+		lightData->frustum[i*2+0].dist = dot - renderLight->radius[i];
+		lightData->frustum[i*2+0].type = PlaneTypeForNormal(lightData->frustum[i*2+0].normal);
+		SetPlaneSignbits(&lightData->frustum[i*2+0]);
+
+		VectorNegate(renderLight->axis[i], lightData->frustum[i*2+1].normal);
+		lightData->frustum[i*2+1].dist = -dot - renderLight->radius[i];
+		lightData->frustum[i*2+1].type = PlaneTypeForNormal(lightData->frustum[i*2+1].normal);
+		SetPlaneSignbits(&lightData->frustum[i*2+1]);
+	}
 }
 
 /*
@@ -87,6 +100,7 @@ static void R_LightFrustum (){
 */
 static void R_SetupStaticLightData (lightData_t *lightData, bool inWorld){
 
+	// TODO: matrices
 }
 
 /*
@@ -159,7 +173,7 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 		BoundsFromPoints(lightData->mins, lightData->maxs, lightData->corners);
 
 		// Compute the frustum planes
-		R_LightFrustum();
+		R_LightFrustum(renderLight, lightData);
 	}
 	else {
 
@@ -248,7 +262,7 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
  
  ==================
 */
-static bool R_ViewInLightVolume (){
+static bool R_ViewInLightVolume (lightData_t *lightData){
 
 	return true;
 }
@@ -324,6 +338,13 @@ static void R_AddLight (lightData_t *lightData, material_t *material, bool viewI
 	VectorCopy(lightData->corners[6], light->corners[6]);
 	VectorCopy(lightData->corners[7], light->corners[7]);
 
+	light->frustum[0] = lightData->frustum[0];
+	light->frustum[1] = lightData->frustum[1];
+	light->frustum[2] = lightData->frustum[2];
+	light->frustum[3] = lightData->frustum[3];
+	light->frustum[4] = lightData->frustum[4];
+	light->frustum[5] = lightData->frustum[5];
+
 	Matrix4_Copy(lightData->projectionMatrix, light->projectionMatrix);
 	Matrix4_Copy(lightData->modelviewMatrix, light->modelviewMatrix);
 	Matrix4_Copy(lightData->modelviewProjectionMatrix, light->modelviewProjectionMatrix);
@@ -374,10 +395,10 @@ static void R_AddLights (){
 		}
 
 		// Check for view suppression
-		if (!r_skipSuppress->integerValue){
-			if (!(lightData->allowInView & rg.viewParms.viewType))
-				continue;
-		}
+//		if (!r_skipSuppress->integerValue){
+//			if (!(lightData->allowInView & rg.viewParms.viewType))
+//				continue;
+//		}
 
 		// Check the detail level
 		if (lightData->detailLevel > r_lightDetailLevel->integerValue)
@@ -397,7 +418,7 @@ static void R_AddLights (){
 		}
 
 		// Determine if the view is inside the light volume
-		viewInLight = R_ViewInLightVolume();
+		viewInLight = R_ViewInLightVolume(lightData);
 
 		// Add the light
 		R_AddLight(lightData, lightData->material, viewInLight);
@@ -439,7 +460,7 @@ static void R_AddLights (){
 		}
 
 		// Determine if the view is inside the light volume
-		viewInLight = R_ViewInLightVolume();
+		viewInLight = R_ViewInLightVolume(lightData);
 
 		// Add the light
 		R_AddLight(lightData, lightData->material, viewInLight);
