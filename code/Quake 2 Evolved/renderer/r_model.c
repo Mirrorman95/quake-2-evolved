@@ -564,7 +564,7 @@ static void R_CalcSurfaceExtents (surface_t *surface){
 static void R_BuildSurfacePolygon (surface_t *surface){
 
 	surfTriangle_t	*triangle;
-	surfVertex_t	*vertex;
+	glVertex_t		*vertex;
 	texInfo_t		*texInfo = surface->texInfo;
 	vertex_t		*v;
 	float			s, t;
@@ -582,11 +582,15 @@ static void R_BuildSurfacePolygon (surface_t *surface){
 		triangle->index[2] = i;
 	}
 
+	// FIXME
+	surface->numIndices = surface->numTriangles;
+	surface->indices = (glIndex_t *)Mem_ClearedAlloc(surface->numIndices * sizeof(glIndex_t), TAG_RENDERER);
+
 	// Create vertices
 	surface->numVertices = surface->numEdges;
-	surface->vertices = (surfVertex_t *)Mem_ClearedAlloc(surface->numVertices * sizeof(surfVertex_t), TAG_RENDERER);
+	surface->vertices = (glVertex_t *)Mem_ClearedAlloc(surface->numVertices * sizeof(glVertex_t), TAG_RENDERER);
 
-	rg.worldModel->size += surface->numVertices * sizeof(surfVertex_t);
+	rg.worldModel->size += surface->numVertices * sizeof(glVertex_t);
 
 	for (i = 0, vertex = surface->vertices; i < surface->numEdges; i++, vertex++){
 		// Vertex
@@ -638,7 +642,7 @@ static void R_BuildSurfacePolygon (surface_t *surface){
 */
 static void R_FixSurfaceTextureCoords (surface_t *surface){
 
-	surfVertex_t	*vertex;
+	glVertex_t		*vertex;
 	vec2_t			bias = {999999.0f, 999999.0f};
 	float			scale = 1.0f, max = 0.0f;
 	int				i;
@@ -709,6 +713,13 @@ static void R_LoadFaces (const byte *data, const bspLump_t *lump){
 
 		out->plane = rg.worldModel->planes + LittleShort(in->planeNum);
 		out->texInfo = rg.worldModel->texInfo + LittleShort(in->texInfo);
+
+		// Clear index and vertex buffers
+		out->indexBuffer = NULL;
+		out->indexOffset = 0;
+
+		out->vertexBuffer = NULL;
+		out->vertexOffset = 0;
 
 		// Clear counters
 		out->viewCount = 0;
@@ -970,6 +981,82 @@ static void R_LoadInlineModels (const byte *data, const bspLump_t *lump){
 
 /*
  ==================
+ R_CacheGeometry
+ ==================
+*/
+static void R_CacheGeometry (){
+
+	char			name[MAX_PATH_LENGTH];
+	surface_t		*surface;
+	arrayBuffer_t	*indexBuffer, *vertexBuffer;
+	int				indexCount[MAX_MATERIALS], vertexCount[MAX_MATERIALS];
+	int				indexOffset, vertexOffset;
+	int				count = 0;
+	int				i, j;
+
+	if (!r_indexBuffers->integerValue && !r_vertexBuffers->integerValue)
+		return;
+
+	// Count indices and vertices for each buffer
+	Mem_Fill(indexCount, 0, sizeof(indexCount));
+	Mem_Fill(vertexCount, 0, sizeof(vertexCount));
+
+	for (i = 0, surface = rg.worldModel->surfaces; i < rg.worldModel->numSurfaces; i++, surface++){
+		indexCount[surface->texInfo->material->index] += surface->numIndices;
+		vertexCount[surface->texInfo->material->index] += surface->numVertices;
+	}
+
+	// Generate the index and vertex buffers
+	for (i = 0; i < MAX_MATERIALS; i++){
+		if (!indexCount[i] && !vertexCount[i])
+			continue;
+
+		// Allocate the index and vertex buffers
+		Str_SPrintf(name, sizeof(name), "bspCache%i", count);
+
+		indexBuffer = R_AllocIndexBuffer(name, false, indexCount[i], NULL);
+		vertexBuffer = R_AllocVertexBuffer(name, false, vertexCount[i], NULL);
+
+		if (!indexBuffer && !vertexBuffer)
+			continue;
+
+		// Cache all the surfaces
+		indexOffset = 0;
+		vertexOffset = 0;
+
+		for (j = 0, surface = rg.worldModel->surfaces; j < rg.worldModel->numSurfaces; j++, surface++){
+			if (surface->texInfo->material->index != i)
+				continue;
+
+			// Set up the index buffer
+			if (indexBuffer){
+				surface->indexBuffer = indexBuffer;
+				surface->indexOffset = indexOffset;
+
+				// Cache the surface indices
+				R_UpdateIndexBuffer(surface->indexBuffer, surface->indexOffset, surface->numIndices, surface->indices, false, true);
+
+				indexOffset += surface->numIndices;
+			}
+
+			// Set up the vertex buffer
+			if (vertexBuffer){
+				surface->vertexBuffer = vertexBuffer;
+				surface->vertexOffset = vertexOffset;
+
+				// Cache the surface vertices
+				R_UpdateVertexBuffer(surface->vertexBuffer, surface->vertexOffset, surface->numVertices, surface->vertices, false, true);
+
+				vertexOffset += surface->numVertices;
+			}
+		}
+
+		count++;
+	}
+}
+
+/*
+ ==================
  R_LoadMap
  ==================
 */
@@ -1037,6 +1124,9 @@ void R_LoadMap (const char *name, const char *skyName, float skyRotate, const ve
 	rg.waterCausticsMaterial = R_FindMaterial("waterCaustics", MT_GENERIC, SURFACEPARM_NONE);
 	rg.slimeCausticsMaterial = R_FindMaterial("slimeCaustics", MT_GENERIC, SURFACEPARM_NONE);
 	rg.lavaCausticsMaterial = R_FindMaterial("lavaCaustics", MT_GENERIC, SURFACEPARM_NONE);
+
+	// Try to cache the geometry in static index and vertex buffers
+	R_CacheGeometry();
 
 	// Add to hash table
 	hashKey = Str_HashKey(rg.worldModel->name, MODELS_HASH_SIZE, false);

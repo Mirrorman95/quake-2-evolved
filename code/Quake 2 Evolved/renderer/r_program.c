@@ -39,18 +39,18 @@ typedef struct {
 	uint					format;
 } uniformTable_t;
 
-static uniformTable_t		r_uniformTable[] = {
-	{"u_ViewOrigin",			UT_VIEW_ORIGIN,				1,	GL_FLOAT_VEC3},
-	{"u_ViewAxis",				UT_VIEW_AXIS,				1,	GL_FLOAT_MAT3},
-	{"u_EntityOrigin",			UT_ENTITY_ORIGIN,			1,	GL_FLOAT_VEC3},
-	{"u_EntityAxis",			UT_ENTITY_AXIS,				1,	GL_FLOAT_MAT3},
-	{"u_SunOrigin",				UT_SUN_ORIGIN,				1,	GL_FLOAT_VEC3},
-	{"u_SunDirection",			UT_SUN_DIRECTION,			1,	GL_FLOAT_VEC3},
-	{"u_SunColor",				UT_SUN_COLOR,				1,	GL_FLOAT_VEC3},
-	{"u_ScreenMatrix",			UT_SCREEN_MATRIX,			1,	GL_FLOAT_MAT4},
-	{"u_CoordScaleAndBias",		UT_COORD_SCALE_AND_BIAS,	1,	GL_FLOAT_VEC4},
-	{"u_ColorScaleAndBias",		UT_COLOR_SCALE_AND_BIAS,	1,	GL_FLOAT_VEC2},
-	{NULL,						UT_CUSTOM,					0,	0}
+static uniformTable_t	r_uniformTable[] = {
+	{"u_ViewOrigin",		UT_VIEW_ORIGIN,				1,	GL_FLOAT_VEC3},
+	{"u_ViewAxis",			UT_VIEW_AXIS,				1,	GL_FLOAT_MAT3},
+	{"u_EntityOrigin",		UT_ENTITY_ORIGIN,			1,	GL_FLOAT_VEC3},
+	{"u_EntityAxis",		UT_ENTITY_AXIS,				1,	GL_FLOAT_MAT3},
+	{"u_SunOrigin",			UT_SUN_ORIGIN,				1,	GL_FLOAT_VEC3},
+	{"u_SunDirection",		UT_SUN_DIRECTION,			1,	GL_FLOAT_VEC3},
+	{"u_SunColor",			UT_SUN_COLOR,				1,	GL_FLOAT_VEC3},
+	{"u_ScreenMatrix",		UT_SCREEN_MATRIX,			1,	GL_FLOAT_MAT4},
+	{"u_CoordScaleAndBias",	UT_COORD_SCALE_AND_BIAS,	1,	GL_FLOAT_VEC4},
+	{"u_ColorScaleAndBias",	UT_COLOR_SCALE_AND_BIAS,	1,	GL_FLOAT_VEC2},
+	{NULL,					UT_CUSTOM,					0,	0}
 };
 
 static program_t *			r_programsHashTable[PROGRAMS_HASH_SIZE];
@@ -515,12 +515,12 @@ void R_UniformVector2 (uniform_t *uniform, const vec2_t v){
  R_UniformVector2Array
  ==================
 */
-void R_UniformVector2Array (uniform_t *uniform, int count, const vec2_t *v){
+void R_UniformVector2Array (uniform_t *uniform, int count, const vec2_t v){
 
 	uniform->values[0] = 0.0f;
 	uniform->values[1] = 0.0f;
 
-	qglUniform2fv(uniform->location, count, (float *)v);
+	qglUniform2fv(uniform->location, count, v);
 }
 
 /*
@@ -545,13 +545,13 @@ void R_UniformVector3 (uniform_t *uniform, const vec3_t v){
  R_UniformVector3Array
  ==================
 */
-void R_UniformVector3Array (uniform_t *uniform, int count, const vec3_t *v){
+void R_UniformVector3Array (uniform_t *uniform, int count, const vec3_t v){
 
 	uniform->values[0] = 0.0f;
 	uniform->values[1] = 0.0f;
 	uniform->values[2] = 0.0f;
 
-	qglUniform3fv(uniform->location, count, (float *)v);
+	qglUniform3fv(uniform->location, count, v);
 }
 
 /*
@@ -577,14 +577,14 @@ void R_UniformVector4 (uniform_t *uniform, const vec4_t v){
  R_UniformVector4Array
  ==================
 */
-void R_UniformVector4Array (uniform_t *uniform, int count, const vec4_t *v){
+void R_UniformVector4Array (uniform_t *uniform, int count, const vec4_t v){
 
 	uniform->values[0] = 0.0f;
 	uniform->values[1] = 0.0f;
 	uniform->values[2] = 0.0f;
 	uniform->values[3] = 0.0f;
 
-	qglUniform4fv(uniform->location, count, (float *)v);
+	qglUniform4fv(uniform->location, count, v);
 }
 
 /*
@@ -602,9 +602,9 @@ void R_UniformMatrix3 (uniform_t *uniform, bool transpose, const mat3_t m){
  R_UniformMatrix3Array
  ==================
 */
-void R_UniformMatrix3Array (uniform_t *uniform, int count, bool transpose, const mat3_t *m){
+void R_UniformMatrix3Array (uniform_t *uniform, int count, bool transpose, const mat3_t m){
 
-	qglUniformMatrix3fv(uniform->location, count, transpose, (float *)m);
+	qglUniformMatrix3fv(uniform->location, count, transpose, m);
 }
 
 /*
@@ -622,9 +622,9 @@ void R_UniformMatrix4 (uniform_t *uniform, bool transpose, const mat4_t m){
  R_UniformMatrix4Array
  ==================
 */
-void R_UniformMatrix4Array (uniform_t *uniform, int count, bool transpose, const mat4_t *m){
+void R_UniformMatrix4Array (uniform_t *uniform, int count, bool transpose, const mat4_t m){
 
-	qglUniformMatrix4fv(uniform->location, count, transpose, (float *)m);
+	qglUniformMatrix4fv(uniform->location, count, transpose, m);
 }
 
 

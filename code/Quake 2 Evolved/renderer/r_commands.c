@@ -31,7 +31,7 @@
 
 /*
  ==================
- 
+ R_PerformanceCounters
  ==================
 */
 static void R_PerformanceCounters (){
@@ -45,23 +45,14 @@ static void R_PerformanceCounters (){
 	if (r_showSurfaces->integerValue)
 		Com_Printf("surfaces: %i (leafs: %i)\n", rg.pc.meshes, rg.pc.leafs);
 
-	// TODO: shadows
-
-	// TODO: lights
-
 	if (r_showDeforms->integerValue)
 		Com_Printf("tris: %i verts: %i (expand: %i, move: %i, sprite: %i, tube: %i, beam: %i)\n", rg.pc.deformIndices / 3, rg.pc.deformVertices, rg.pc.deformExpand, rg.pc.deformMove, rg.pc.deformSprite, rg.pc.deformTube, rg.pc.deformBeam);
-
-	// TODO: vertex buffer
 
 	if (r_showTextureUsage->integerValue)
 		Com_Printf("textures: %i = %.2f MB\n", rg.pc.textures, rg.pc.textureBytes * (1.0f / 1048576.0f));
 
-	// TODO: render to texture
-
-	// TODO: overdraw
-
-	// TODO: light count
+	if (r_showLightCount->integerValue)
+		Com_Printf("light overdraw: %.2f\n", rg.pc.overdrawLights);
 
 	// Clear for next frame
 	Mem_Fill(&rg.pc, 0, sizeof(performanceCounters_t));

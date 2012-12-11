@@ -326,6 +326,36 @@ void GL_BindProgram (program_t *program){
 
 /*
  ==================
+ GL_BindIndexBuffer
+ ==================
+*/
+void GL_BindIndexBuffer (arrayBuffer_t *indexBuffer){
+
+	if (!indexBuffer){
+		if (!glState.indexBuffer)
+			return;
+		glState.indexBuffer = NULL;
+
+		qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		return;
+	}
+
+	if (indexBuffer->frameUsed != rg.frameCount){
+		indexBuffer->frameUsed = rg.frameCount;
+
+		rg.pc.indexBuffers[indexBuffer->dynamic]++;
+		rg.pc.indexBufferBytes[indexBuffer->dynamic] += indexBuffer->size;
+	}
+
+	if (glState.indexBuffer == indexBuffer)
+		return;
+	glState.indexBuffer = indexBuffer;
+
+	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer->bufferId);
+}
+
+/*
+ ==================
  GL_BindVertexBuffer
  ==================
 */
@@ -897,6 +927,7 @@ void GL_Setup3D (int time){
 	backEnd.coordBias[1] = -backEnd.viewport.y * backEnd.coordScale[1];
 
 	backEnd.depthFilling = false;
+	backEnd.debugRendering = false;
 
 	backEnd.currentColorCaptured = SORT_BAD;
 	backEnd.currentDepthCaptured = false;
@@ -998,6 +1029,7 @@ void GL_Setup2D (int time){
 	backEnd.coordBias[1] = -backEnd.viewport.y * backEnd.coordScale[1];
 
 	backEnd.depthFilling = false;
+	backEnd.debugRendering = false;
 
 	backEnd.currentColorCaptured = SORT_BAD;
 	backEnd.currentDepthCaptured = false;
@@ -1076,6 +1108,7 @@ void GL_SetDefaultState (){
 		glState.texture[i] = NULL;
 
 	glState.program = NULL;
+	glState.indexBuffer = NULL;
 	glState.vertexBuffer = NULL;
 
 	glState.viewportX = 0;
@@ -1203,6 +1236,7 @@ void GL_SetDefaultState (){
 
 	qglUseProgram(0);
 
+	qglBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	qglBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	qglViewport(0, 0, glConfig.videoWidth, glConfig.videoHeight);

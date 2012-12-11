@@ -52,7 +52,7 @@ static void RB_DrawInteraction_Generic (const interaction_t *i){
 
 	// Set up the program uniforms
 	parms = &backEnd.interactionParms[INTERACTION_GENERIC][backEnd.light->type];
-#if 0
+
 	R_UniformVector3(parms->viewOrigin, backEnd.localParms.viewOrigin);
 
 	if (backEnd.light->type != RL_DIRECTIONAL)
@@ -86,7 +86,7 @@ static void RB_DrawInteraction_Generic (const interaction_t *i){
 
 	if (backEnd.light->type == RL_CUBIC)
 		GL_BindMultitexture(i->lightCubeTexture, TMU_LIGHTCUBE);
-#endif
+
 	// Draw it
 	RB_DrawElementsWithCounters(&rg.pc.interactionIndices, &rg.pc.interactionVertices);
 }

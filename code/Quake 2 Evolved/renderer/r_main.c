@@ -167,6 +167,7 @@ cvar_t *					r_fullbright;
 cvar_t *					r_gamma;
 cvar_t *					r_contrast;
 cvar_t *					r_brightness;
+cvar_t *					r_indexBuffers;
 cvar_t *					r_vertexBuffers;
 cvar_t *					r_shaderQuality;
 cvar_t *					r_lightScale;
@@ -563,6 +564,7 @@ static void R_Register (){
 	r_gamma = CVar_Register("r_gamma", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Adjust display gamma", 0.5f, 3.0f);
 	r_contrast = CVar_Register("r_contrast", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Adjust display contrast", 0.5f, 2.0f);
 	r_brightness = CVar_Register("r_brightness", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Adjust display brightness", 0.5f, 2.0f);
+	r_indexBuffers = CVar_Register("r_indexBuffers", "2", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Store geometry in index buffers (1 = static geometry, 2 = also dynamic geometry)", 0, 2);
 	r_vertexBuffers = CVar_Register("r_vertexBuffers", "2", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Store geometry in vertex buffers (1 = static geometry, 2 = also dynamic geometry)", 0, 2);
 	r_shaderQuality = CVar_Register("r_shaderQuality", "1", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Shader quality (0 = low, 1 = medium, 2 = high)", 0, 2);
 	r_lightScale = CVar_Register("r_lightScale", "2.0", CVAR_FLOAT, CVAR_ARCHIVE, "Light intensity scale factor", 0.5f, 5.0f);

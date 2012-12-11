@@ -826,7 +826,9 @@ void RB_ExecuteRenderCommands (const void *data){
 
 /*
  ==================
- 
+ RB_SetupInteractionShaders
+
+ FIXME: projection and directional shaders cannot find u_lightPlane for some reason...
  ==================
 */
 static void RB_SetupInteractionShaders (){
@@ -840,7 +842,7 @@ static void RB_SetupInteractionShaders (){
 	rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT] = R_FindProgram("interaction/pointGeneric", vertexShader, fragmentShader);
 	if (!rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT])
 		Com_Error(ERR_FATAL, "RB_SetupInteractionShaders: invalid program '%s'", "interaction/pointGeneric");
-#if 0
+
 	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].viewOrigin = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_ViewOrigin", 1, GL_FLOAT_VEC3);
 	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].lightOrigin = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_LightOrigin", 1, GL_FLOAT_VEC3);
 	backEnd.interactionParms[INTERACTION_GENERIC][RL_POINT].bumpMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_BumpMatrix", 1, GL_FLOAT_MAT4);
@@ -858,12 +860,89 @@ static void RB_SetupInteractionShaders (){
 	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_SpecularMap", 1, GL_SAMPLER_2D, TMU_SPECULAR);
 	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_LightProjectionMap", 1, GL_SAMPLER_2D, TMU_LIGHTPROJECTION);
 	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_POINT], "u_LightFalloffMap", 1, GL_SAMPLER_2D, TMU_LIGHTFALLOFF);
-#endif
+
 	// Load cubicGeneric
+	vertexShader = R_FindShader("interaction/cubicGeneric", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("interaction/cubicGeneric", GL_FRAGMENT_SHADER);
+
+	rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC] = R_FindProgram("interaction/cubicGeneric", vertexShader, fragmentShader);
+	if (!rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC])
+		Com_Error(ERR_FATAL, "RB_SetupInteractionShaders: invalid program '%s'", "interaction/cubicGeneric");
+
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].viewOrigin = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_ViewOrigin", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].lightOrigin = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_LightOrigin", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].lightAxis = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_LightAxis", 1, GL_FLOAT_MAT3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].bumpMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_BumpMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].diffuseMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_DiffuseMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].specularMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_SpecularMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].lightMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_LightMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].colorScaleAndBias = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_ColorScaleAndBias", 1, GL_FLOAT_VEC2);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].diffuseColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_DiffuseColor", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].specularColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_SpecularColor", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].specularParms = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_SpecularParms", 1, GL_FLOAT_VEC2);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_CUBIC].lightColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_LightColor", 1, GL_FLOAT_VEC3);
+
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_BumpMap", 1, GL_SAMPLER_2D, TMU_BUMP);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_DiffuseMap", 1, GL_SAMPLER_2D, TMU_DIFFUSE);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_SpecularMap", 1, GL_SAMPLER_2D, TMU_SPECULAR);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_LightProjectionMap", 1, GL_SAMPLER_2D, TMU_LIGHTPROJECTION);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_LightFalloffMap", 1, GL_SAMPLER_2D, TMU_LIGHTFALLOFF);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_CUBIC], "u_LightCubeMap", 1, GL_SAMPLER_CUBE, TMU_LIGHTCUBE);
 
 	// Load projectedGeneric
+	vertexShader = R_FindShader("interaction/projectedGeneric", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("interaction/projectedGeneric", GL_FRAGMENT_SHADER);
 
+	rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED] = R_FindProgram("interaction/projectedGeneric", vertexShader, fragmentShader);
+	if (!rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED])
+		Com_Error(ERR_FATAL, "RB_SetupInteractionShaders: invalid program '%s'", "interaction/projectedGeneric");
+#if 0
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].viewOrigin = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_ViewOrigin", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].lightOrigin = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_LightOrigin", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].bumpMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_BumpMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].diffuseMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_DiffuseMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].specularMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_SpecularMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].lightMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_LightMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].colorScaleAndBias = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_ColorScaleAndBias", 1, GL_FLOAT_VEC2);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].diffuseColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_DiffuseColor", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].specularColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_SpecularColor", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].specularParms = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_SpecularParms", 1, GL_FLOAT_VEC2);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].lightColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_LightColor", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_PROJECTED].lightPlane = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_LightPlane", 1, GL_FLOAT_VEC4);
+
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_BumpMap", 1, GL_SAMPLER_2D, TMU_BUMP);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_DiffuseMap", 1, GL_SAMPLER_2D, TMU_DIFFUSE);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_SpecularMap", 1, GL_SAMPLER_2D, TMU_SPECULAR);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_LightProjectionMap", 1, GL_SAMPLER_2D, TMU_LIGHTPROJECTION);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_PROJECTED], "u_LightFalloffMap", 1, GL_SAMPLER_2D, TMU_LIGHTFALLOFF);
+#endif
 	// Load directionalGeneric
+	vertexShader = R_FindShader("interaction/directionalGeneric", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("interaction/directionalGeneric", GL_FRAGMENT_SHADER);
+
+	rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL] = R_FindProgram("interaction/directionalGeneric", vertexShader, fragmentShader);
+	if (!rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL])
+		Com_Error(ERR_FATAL, "RB_SetupInteractionShaders: invalid program '%s'", "interaction/directionalGeneric");
+#if 0
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].viewOrigin = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_ViewOrigin", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].lightDirection = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_LightDirection", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].bumpMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_BumpMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].diffuseMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_DiffuseMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].specularMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_SpecularMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].lightMatrix = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_LightMatrix", 1, GL_FLOAT_MAT4);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].colorScaleAndBias = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_ColorScaleAndBias", 1, GL_FLOAT_VEC2);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].diffuseColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_DiffuseColor", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].specularColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_SpecularColor", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].specularParms = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_SpecularParms", 1, GL_FLOAT_VEC2);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].lightColor = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_LightColor", 1, GL_FLOAT_VEC3);
+	backEnd.interactionParms[INTERACTION_GENERIC][RL_DIRECTIONAL].lightPlane = R_GetProgramUniformExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_LightPlane", 1, GL_FLOAT_VEC4);
+
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_BumpMap", 1, GL_SAMPLER_2D, TMU_BUMP);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_DiffuseMap", 1, GL_SAMPLER_2D, TMU_DIFFUSE);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_SpecularMap", 1, GL_SAMPLER_2D, TMU_SPECULAR);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_LightProjectionMap", 1, GL_SAMPLER_2D, TMU_LIGHTPROJECTION);
+	R_SetProgramSamplerExplicit(rg.interactionPrograms[INTERACTION_GENERIC][RL_DIRECTIONAL], "u_LightFalloffMap", 1, GL_SAMPLER_2D, TMU_LIGHTFALLOFF);
+#endif
 }
 
 /*
@@ -957,9 +1036,6 @@ static void RB_SetupFogLightShaders (){
 /*
  ==================
  RB_InitBackEnd
-
- TODO: i do not like to alloc a list of memory that is not filled in because it can cause problems,
- find a way to clear the alloc and fix the "y u no draw" error
  ==================
 */
 void RB_InitBackEnd (){
@@ -975,7 +1051,11 @@ void RB_InitBackEnd (){
 	backEnd.shadowVertices = (glShadowVertex_t *)Mem_Alloc16(MAX_SHADOW_VERTICES * sizeof(glVertex_t), TAG_RENDERER);
 
 	// Allocate dynamic vertex buffer
-	backEnd.vertexBuffer = R_AllocVertexBuffer("streamBuffer1", true, MAX_DYNAMIC_VERTICES * sizeof(arrayBuffer_t));
+	backEnd.dynamicIndexBuffers[0] = R_AllocIndexBuffer("streamBuffer1", true, MAX_DYNAMIC_INDICES, NULL);
+	backEnd.dynamicIndexBuffers[1] = R_AllocIndexBuffer("streamBuffer2", true, MAX_DYNAMIC_INDICES, NULL);
+
+	backEnd.dynamicVertexBuffers[0] = R_AllocVertexBuffer("streamBuffer1", true, MAX_DYNAMIC_VERTICES, NULL);
+	backEnd.dynamicVertexBuffers[1] = R_AllocVertexBuffer("streamBuffer2", true, MAX_DYNAMIC_VERTICES, NULL);
 
 	// Set up shaders
 	RB_SetupInteractionShaders();

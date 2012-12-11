@@ -1898,6 +1898,16 @@ void RB_RenderDebugTools (){
 
 	QGL_LogPrintf("---------- RB_RenderDebugTools ----------\n");
 
+	// Set debug rendering mode
+	backEnd.debugRendering = true;
+
+	// Unbind the index buffer
+	GL_BindIndexBuffer(NULL);
+
+	// Unbind the vertex buffer
+	GL_BindVertexBuffer(NULL);
+
+	// Render debug tools
 	if (r_showDepth->integerValue)
 		RB_ShowDepth();
 
@@ -2073,6 +2083,9 @@ void RB_RenderDebugTools (){
 		RB_DrawDebugLines();
 		RB_DrawDebugText();
 	}
+
+	// Clear debug rendering mode
+	backEnd.debugRendering = false;
 
 	QGL_LogPrintf("--------------------\n");
 }
