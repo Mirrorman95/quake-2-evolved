@@ -121,6 +121,7 @@ cvar_t *					r_showModelBounds;
 cvar_t *					r_skipVisibility;
 cvar_t *					r_skipSuppress;
 cvar_t *					r_skipCulling;
+cvar_t *					r_skipFaceCulling;
 cvar_t *					r_skipEntityCulling;
 cvar_t *					r_skipLightCulling;
 cvar_t *					r_skipScissors;
@@ -519,6 +520,7 @@ static void R_Register (){
 	r_skipVisibility = CVar_Register("r_skipVisibility", "0", CVAR_BOOL, CVAR_CHEAT, "Skip visibility determination tests", 0, 0);
 	r_skipSuppress = CVar_Register("r_skipSuppress", "0", CVAR_BOOL, CVAR_CHEAT, "Skip per-view suppressions", 0, 0);
 	r_skipCulling = CVar_Register("r_skipCulling", "0", CVAR_BOOL, CVAR_CHEAT, "Skip culling", 0, 0);
+	r_skipFaceCulling = CVar_Register("r_skipFaceCulling", "0", CVAR_BOOL, CVAR_CHEAT, "Skip face culling", 0, 0);
 	r_skipEntityCulling = CVar_Register("r_skipEntityCulling", "0", CVAR_BOOL, CVAR_CHEAT, "Skip entity culling", 0, 0);
 	r_skipLightCulling = CVar_Register("r_skipLightCulling", "0", CVAR_BOOL, CVAR_CHEAT, "Skip light culling", 0, 0);
 	r_skipScissors = CVar_Register("r_skipScissors", "0", CVAR_BOOL, CVAR_CHEAT, "Skip scissor testing", 0, 0);

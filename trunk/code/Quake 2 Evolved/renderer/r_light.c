@@ -26,8 +26,9 @@
 //
 
 // TODO:
-// - in the future, all lights will be passed through renderLight_t. The static
-// light lists is all temporary for testing purposes.
+// - parsing
+// - addLight
+// - R_SetupStaticLightData
 
 
 #include "r_local.h"
@@ -53,15 +54,137 @@ int							r_numStaticLights;
 */
 static bool R_ParseLight (script_t *script){
 
+	token_t		token;
+	lightData_t	*lightData;
+	int			index;
+
+	// Parse the index number
+	if (!PS_ReadInteger(script, &index)){
+		Com_Printf(S_COLOR_YELLOW "WARNING: missing index number in light file\n");
+		return false;
+	}
+
+	if (index < 0 || index >= MAX_STATIC_LIGHTS){
+		Com_Printf(S_COLOR_YELLOW "WARNING: invalid value of %i for index number in light file\n", index);
+		return false;
+	}
+
+	// Parse the light parameters
+	lightData = &r_staticLights[index];
+
+	if (!PS_ExpectTokenString(script, &token, "{", true)){
+		Com_Printf(S_COLOR_YELLOW "WARNING: expected '{', found '%s' instead in light file (index %i)\n", token.string, index);
+		return false;
+	}
+
+	while (1){
+		if (!PS_ReadToken(script, &token)){
+			Com_Printf(S_COLOR_YELLOW "WARNING: no concluding '}' in light file (index %i)\n", index);
+			return false;	// End of script
+		}
+
+		if (!Str_ICompare(token.string, "}"))
+			break;			// End of light
+
+		// Parse the parameter
+		if (!Str_ICompare(token.string, "type")){
+
+		}
+		else if (!Str_ICompare(token.string, "origin")){
+
+		}
+		else if (!Str_ICompare(token.string, "center")){
+
+		}
+		else if (!Str_ICompare(token.string, "angles")){
+
+		}
+		else if (!Str_ICompare(token.string, "radius")){
+
+		}
+		else if (!Str_ICompare(token.string, "xMin")){
+
+		}
+		else if (!Str_ICompare(token.string, "xMax")){
+
+		}
+		else if (!Str_ICompare(token.string, "yMin")){
+
+		}
+		else if (!Str_ICompare(token.string, "yMax")){
+
+		}
+		else if (!Str_ICompare(token.string, "zNear")){
+
+		}
+		else if (!Str_ICompare(token.string, "zFar")){
+
+		}
+		else if (!Str_ICompare(token.string, "noShadows")){
+
+		}
+		else if (!Str_ICompare(token.string, "fogDistance")){
+
+		}
+		else if (!Str_ICompare(token.string, "fogHeight")){
+
+		}
+		else if (!Str_ICompare(token.string, "style")){
+
+		}
+		else if (!Str_ICompare(token.string, "detailLevel")){
+
+		}
+		else if (!Str_ICompare(token.string, "material")){
+
+		}
+		else {
+			Com_Printf(S_COLOR_YELLOW "WARNING: unknown parameter '%s' in light file (index %i)\n", token.string, index);
+			return false;
+		}
+	}
+
+	// Fill it in
+
+	return true;
 }
 
 /*
  ==================
- 
+ R_LoadLights
  ==================
 */
 void R_LoadLights (const char *name){
 
+	script_t	*script;
+	token_t		token;
+
+	// Load the script file
+	script = PS_LoadScriptFile(name);
+	if (!script){
+		Com_Printf(S_COLOR_RED "Light file %s not found\n", name);
+		return;
+	}
+
+	PS_SetScriptFlags(script, SF_NOWARNINGS | SF_NOERRORS | SF_ALLOWPATHNAMES);
+
+	// Parse it
+	while (1){
+		if (!PS_ReadToken(script, &token))
+			break;		// End of script
+
+		if (!Str_ICompare(token.string, "light")){
+			if (!R_ParseLight(script))
+				break;
+		}
+		else {
+			Com_Printf(S_COLOR_YELLOW "WARNING: expected 'light', found '%s' instead in light file\n", token.string);
+			break;
+		}
+	}
+
+	// Free the script file
+	PS_FreeScript(script);
 }
 
 
@@ -99,6 +222,18 @@ static void R_LightFrustum (const renderLight_t *renderLight, lightData_t *light
  ==================
 */
 static void R_SetupStaticLightData (lightData_t *lightData, bool inWorld){
+
+	if (lightData->valid)
+		return;		// Already computed the light data
+
+	lightData->valid = true;
+	lightData->precached = false;
+
+	// If the light data was precached, copy it and return immediately
+	if (!r_skipLightCache->integerValue){
+		if (R_PrecachedLightData(lightData))
+			return;
+	}
 
 	// TODO: matrices
 }
@@ -176,7 +311,24 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 		R_LightFrustum(renderLight, lightData);
 	}
 	else {
+		// Compute the corner points
+		ratio = renderLight->zFar / renderLight->zNear;
 
+		VectorScale(renderLight->axis[0], renderLight->xMin, lVector);
+		VectorScale(renderLight->axis[0], renderLight->xMax, rVector);
+
+		VectorScale(renderLight->axis[1], renderLight->yMin, dVector);
+		VectorScale(renderLight->axis[1], renderLight->yMax, uVector);
+
+		VectorScale(renderLight->axis[2], renderLight->zNear, nVector);
+		VectorScale(renderLight->axis[2], renderLight->zFar, fVector);
+
+		// TODO: lightData->corners
+
+		// Compute the bounding box
+		BoundsFromPoints(lightData->mins, lightData->maxs, lightData->corners);
+
+		// Compute the frustum planes
 	}
 
 	// Compute the light range
@@ -242,10 +394,50 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 		Matrix4_Multiply(lightData->projectionMatrix, lightData->modelviewMatrix, lightData->modelviewProjectionMatrix);
 	}
 	else {
+		lightData->projectionMatrix[ 0] = 0.5f * (2.0f * renderLight->zNear / (renderLight->xMax - renderLight->xMin));
+		lightData->projectionMatrix[ 1] = 0.0f;
+		lightData->projectionMatrix[ 2] = 0.0f;
+		lightData->projectionMatrix[ 3] = 0.0f;
+		lightData->projectionMatrix[ 4] = 0.0f;
+		lightData->projectionMatrix[ 5] = -0.5f * (2.0f * renderLight->zNear / (renderLight->yMax - renderLight->yMin));
+		lightData->projectionMatrix[ 6] = 0.0f;
+		lightData->projectionMatrix[ 7] = 0.0f;
+		lightData->projectionMatrix[ 8] = 0.5f * ((renderLight->xMax + renderLight->xMin) / (renderLight->xMax - renderLight->xMin)) - 0.5f;
+		lightData->projectionMatrix[ 9] = -0.5f * ((renderLight->yMax + renderLight->yMin) / (renderLight->yMax - renderLight->yMin)) - 0.5f;
+		lightData->projectionMatrix[10] = 1.0f / (renderLight->zFar - renderLight->zNear);
+		lightData->projectionMatrix[11] = -1.0f;
+		lightData->projectionMatrix[12] = 0.0f;
+		lightData->projectionMatrix[13] = 0.0f;
+		lightData->projectionMatrix[14] = -0.5f * ((renderLight->zFar + renderLight->zNear) / (renderLight->zFar - renderLight->zNear)) + 0.5f;
+		lightData->projectionMatrix[15] = 0.0f;
 
+		lightData->modelviewMatrix[ 0] = renderLight->axis[0][0];
+		lightData->modelviewMatrix[ 1] = renderLight->axis[1][0];
+		lightData->modelviewMatrix[ 2] = -renderLight->axis[2][0];
+		lightData->modelviewMatrix[ 3] = 0.0f;
+		lightData->modelviewMatrix[ 4] = renderLight->axis[0][1];
+		lightData->modelviewMatrix[ 5] = renderLight->axis[1][1];
+		lightData->modelviewMatrix[ 6] = -renderLight->axis[2][1];
+		lightData->modelviewMatrix[ 7] = 0.0f;
+		lightData->modelviewMatrix[ 8] = renderLight->axis[0][2];
+		lightData->modelviewMatrix[ 9] = renderLight->axis[1][2];
+		lightData->modelviewMatrix[10] = -renderLight->axis[2][2];
+		lightData->modelviewMatrix[11] = 0.0f;
+		lightData->modelviewMatrix[12] = -DotProduct(renderLight->origin, renderLight->axis[0]);
+		lightData->modelviewMatrix[13] = -DotProduct(renderLight->origin, renderLight->axis[1]);
+		lightData->modelviewMatrix[14] = DotProduct(renderLight->origin, renderLight->axis[2]);
+		lightData->modelviewMatrix[15] = 1.0f;
+
+		Matrix4_Multiply(lightData->projectionMatrix, lightData->modelviewMatrix, lightData->modelviewProjectionMatrix);
 	}
 
 	// Set up the PVS and area
+	if (renderLight->type == RL_DIRECTIONAL || lightData->material->lightType != LT_GENERIC || !inWorld){
+
+	}
+	else {
+
+	}
 
 	// Clear the precached nodes
 

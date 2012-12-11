@@ -159,22 +159,37 @@ void R_LightEditorUpdateCallback (int index, lightParms_t *parms){
 	lightData_t		*lightData;
 
 	if (!r_lightEditor.active)
-		return;			// Not active
+		return;		// Not active
 
 	// Copy the parameters and clamp as needed
 }
 
 /*
  ==================
- 
+ R_LightEditorRemoveCallback
  ==================
 */
 void R_LightEditorRemoveCallback (int index){
 
-	if (!r_lightEditor.active)
-		return;			// Not active
+	lightData_t	*lightData;
+	int			i, j;
 
-	// TODO: remove the static light
+	if (!r_lightEditor.active)
+		return;		// Not active
+
+	for (i = 0, lightData = r_staticLights; i < r_numStaticLights; i++, lightData++){
+		if (lightData != r_lightEditor.editLight)
+			continue;
+
+		for (j = i; j < r_numStaticLights - 1; j++)
+			memcpy(&r_staticLights[j], &r_staticLights[j+1], sizeof(lightData_t));
+
+		r_numStaticLights--;
+		break;
+	}
+
+	for (i = 0, lightData = r_staticLights; i < r_numStaticLights; i++, lightData++)
+		lightData->index = i;
 
 	// Force a reset
 	r_lightEditor.focusLight = NULL;
@@ -188,6 +203,38 @@ void R_LightEditorRemoveCallback (int index){
 */
 void R_LightEditorSaveCallback (){
 
+	fileHandle_t	f;
+	lightData_t		*lightData;
+	char			name[MAX_OSPATH];
+	int				i;
+
+	if (!r_lightEditor.active)
+		return;		// Not active
+
+	if (!r_numStaticLights)
+		return;		// No lights
+
+	// Write the light file
+	Str_SPrintf(name, sizeof(name), "%s.light", rg.worldModel->name);
+
+	FS_OpenFile(name, FS_WRITE, &f);
+	if (!f){
+		Com_Printf("Couldn't write light file %s\n", name);
+		return;
+	}
+
+	for (i = 0, lightData = r_staticLights; i < r_numStaticLights; i++, lightData++){
+		FS_Printf(f, "light %i" NEWLINE, i);
+		FS_Printf(f, "{" NEWLINE);
+
+		// TODO: write the parms
+
+		FS_Printf(f, "}" NEWLINE);
+	}
+
+	FS_CloseFile(f);
+
+	Com_Printf("Wrote light file %s\n", name);
 }
 
 /*
@@ -198,7 +245,7 @@ void R_LightEditorSaveCallback (){
 void R_LightEditorCloseCallback (){
 
 	if (!r_lightEditor.active)
-		return;			// Not active
+		return;		// Not active
 
 	r_lightEditor.active = false;
 
