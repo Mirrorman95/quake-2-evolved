@@ -1206,6 +1206,9 @@ void			R_ClearMeshes ();
 #define MAX_STATIC_LIGHTS			4096
 
 typedef struct {
+	bool					valid;
+	bool					precached;
+
 	rlType_t				type;
 
 	int						index;
@@ -1285,6 +1288,8 @@ extern int					r_numStaticLights;
 
 void			R_GenerateLightMeshes (light_t *light);
 void			R_ClearLightMeshes ();
+
+bool			R_PrecachedLightData (lightData_t *lightData);
 
 void			R_AllocLights ();
 void			R_GenerateLights ();
@@ -1620,6 +1625,7 @@ extern cvar_t *				r_showModelBounds;
 extern cvar_t *				r_skipVisibility;
 extern cvar_t *				r_skipSuppress;
 extern cvar_t *				r_skipCulling;
+extern cvar_t *				r_skipFaceCulling;
 extern cvar_t *				r_skipEntityCulling;
 extern cvar_t *				r_skipLightCulling;
 extern cvar_t *				r_skipScissors;

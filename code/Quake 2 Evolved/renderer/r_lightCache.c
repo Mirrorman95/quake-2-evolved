@@ -27,3 +27,9 @@
 
 
 #include "r_local.h"
+
+
+bool R_PrecachedLightData (lightData_t *lightData){
+
+	return true;
+}
