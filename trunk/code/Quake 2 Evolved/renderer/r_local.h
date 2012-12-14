@@ -1028,6 +1028,60 @@ void			R_ShutdownImages ();
 /*
  ==============================================================================
 
+ LIGHT MESHES
+
+ ==============================================================================
+*/
+
+typedef struct {
+	bool					valid;
+	bool					precached;
+
+	int						type;
+
+	material_t *			material;
+	float					materialParms[MAX_MATERIAL_PARMS];
+
+	vec3_t					origin;
+	vec3_t					direction;
+	vec3_t					axis[3];
+
+	vec3_t					corners[8];
+	vec3_t					bounds[2];
+	cplane_t				frustum[6];
+
+	float					lightRange;
+
+	cplane_t				fogPlane;
+
+	mat4_t					projectionMatrix;
+	mat4_t					modelviewMatrix;
+	mat4_t					modelviewProjectionMatrix;
+
+	bool					noShadows;
+
+	int						style;
+} lightData_t;
+
+typedef struct {
+	int						numShadows;
+	int						maxShadows;
+	int						firstShadow;
+	struct mesh_s *			shadows;
+
+	int						numInteractions;
+	int						maxInteractions;
+	int						firstInteraction;
+	struct mesh_s *			interactions;
+} lightMeshes_t;
+
+void			R_AllocLightMeshes ();
+void			R_GenerateLightMeshes (struct light_s *light);
+void			R_ClearLightMeshes ();
+
+/*
+ ==============================================================================
+
  GL STATE MANAGER
 
  ==============================================================================
@@ -1174,7 +1228,7 @@ typedef enum {
 	MESH_DECAL
 } meshType_t;
 
-typedef struct {
+typedef struct mesh_s {
 	meshType_t				type;
 	meshData_t *			data;
 
@@ -1203,78 +1257,14 @@ void			R_ClearMeshes ();
 
 #define MAX_LIGHTS					1024
 
-#define MAX_STATIC_LIGHTS			4096
-
-typedef struct {
-	bool					valid;
-	bool					precached;
-
-	rlType_t				type;
-
-	int						index;
-
-	vec3_t					origin;
-	vec3_t					direction;
-	vec3_t					axis[3];
-
-	vec3_t					corners[8];
-	vec3_t					mins;
-	vec3_t					maxs;
-	cplane_t				frustum[6];
-
-	float					lightRange;
-
-	mat4_t					projectionMatrix;
-	mat4_t					modelviewMatrix;
-	mat4_t					modelviewProjectionMatrix;
-
-	bool					noShadows;
-
-	int						detailLevel;
-	int						style;
-
-	int						allowInView;
-
+typedef struct light_s {
+	lightData_t				data;
 	material_t *			material;
 	float					materialParms[MAX_MATERIAL_PARMS];
-} lightData_t;
-
-typedef struct {
-	int						numShadows;
-	int						maxShadows;
-	int						firstShadow;
-	mesh_t *				shadows;
-
-	int						numInteractions;
-	int						maxInteractions;
-	int						firstInteraction;
-	mesh_t *				interactions;
-} lightMeshes_t;
-
-typedef struct {
-	rlType_t				type;
-
-	vec3_t					origin;
-	vec3_t					direction;
-	vec3_t					axis[3];
-
-	bool					noShadows;
-
-	vec3_t					corners[8];
-
-	cplane_t				frustum[6];
-
-	mat4_t					projectionMatrix;
-	mat4_t					modelviewMatrix;
-	mat4_t					modelviewProjectionMatrix;
 
 	rect_t					scissor;
 
-	float					fogDistance;
-	float					fogHeight;
-
-	material_t *			material;
-	float					materialParms[MAX_MATERIAL_PARMS];
+	bool					fogPlaneVisible;
 
 	int						numShadowMeshes;
 	mesh_t *				shadowMeshes;
@@ -1283,13 +1273,8 @@ typedef struct {
 	mesh_t *				interactionMeshes;
 } light_t;
 
-extern lightData_t			r_staticLights[MAX_STATIC_LIGHTS];
-extern int					r_numStaticLights;
-
-void			R_GenerateLightMeshes (light_t *light);
-void			R_ClearLightMeshes ();
-
-bool			R_PrecachedLightData (lightData_t *lightData);
+int				R_LightCullBounds (lightData_t *lightData, const vec3_t mins, const vec3_t maxs, int planeBits);
+int				R_LightCullLocalBounds (lightData_t *lightData, const vec3_t mins, const vec3_t maxs, const vec3_t origin, const vec3_t axis[3], int planeBits);
 
 void			R_AllocLights ();
 void			R_GenerateLights ();
@@ -1306,6 +1291,9 @@ void			R_ClearLights ();
 #define MAX_RENDER_CROPS			8
 
 #define MAX_POLYGON_POINTS			64
+
+#define CULL_IN						0
+#define CULL_OUT					-1
 
 #define FAR_PLANE_DISTANCE			4000.0f
 
@@ -1421,9 +1409,14 @@ typedef struct {
 
 typedef struct {
 	int						cullBoundsIn;
+	int						cullBoundsClip;
 	int						cullBoundsOut;
 	int						cullSphereIn;
+	int						cullSphereClip;
 	int						cullSphereOut;
+	int						cullLineIn;
+	int						cullLineClip;
+	int						cullLineOut;
 
 	int						entities;
 	int						lights;

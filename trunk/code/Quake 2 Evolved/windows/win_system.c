@@ -739,6 +739,12 @@ void Sys_ProcessEvents (){
 		if (!GetMessage(&msg, NULL, 0, 0))
 			Sys_Quit();
 
+		// Special case for the editor window
+		if (sys.hWndEditor){
+			if (IsDialogMessage(sys.hWndEditor, &msg))
+				continue;
+		}
+
 		// Translate and dispatch the message
 		sys.msgTime = msg.time;
 

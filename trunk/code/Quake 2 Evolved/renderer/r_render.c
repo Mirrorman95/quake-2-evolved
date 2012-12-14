@@ -850,57 +850,58 @@ void RB_TransformLightForEntity (light_t *light, renderEntity_t *entity){
 
 	// Transform light origin, light direction, and light axis into local space
 	if (entity == rg.worldEntity){
-		VectorCopy(light->origin, backEnd.localParms.lightOrigin);
-		VectorCopy(light->direction, backEnd.localParms.lightDirection);
-		Matrix3_Copy(light->axis, backEnd.localParms.lightAxis);
+		VectorCopy(light->data.origin, backEnd.localParms.lightOrigin);
+		VectorCopy(light->data.direction, backEnd.localParms.lightDirection);
+		Matrix3_Copy(light->data.axis, backEnd.localParms.lightAxis);
 	}
 	else {
-		R_WorldPointToLocal(light->origin, backEnd.localParms.lightOrigin, entity->origin, entity->axis);
-		R_WorldVectorToLocal(light->direction, backEnd.localParms.lightDirection, entity->axis);
-		R_WorldAxisToLocal(light->axis, backEnd.localParms.lightAxis, entity->axis);
+		R_WorldPointToLocal(light->data.origin, backEnd.localParms.lightOrigin, entity->origin, entity->axis);
+		R_WorldVectorToLocal(light->data.direction, backEnd.localParms.lightDirection, entity->axis);
+		R_WorldAxisToLocal(light->data.axis, backEnd.localParms.lightAxis, entity->axis);
 	}
 
 	// Compute the light plane
 	if (entity == rg.worldEntity){
-		backEnd.localParms.lightPlane[0] = light->axis[0][0];
-		backEnd.localParms.lightPlane[1] = light->axis[0][1];
-		backEnd.localParms.lightPlane[2] = light->axis[0][2];
-		backEnd.localParms.lightPlane[3] = -DotProduct(light->origin, light->axis[0]);
+		backEnd.localParms.lightPlane[0] = light->data.axis[0][0];
+		backEnd.localParms.lightPlane[1] = light->data.axis[0][1];
+		backEnd.localParms.lightPlane[2] = light->data.axis[0][2];
+		backEnd.localParms.lightPlane[3] = -DotProduct(light->data.origin, light->data.axis[0]);
 	}
 	else {
-		backEnd.localParms.lightPlane[0] = DotProduct(entity->axis[0], light->axis[0]);
-		backEnd.localParms.lightPlane[1] = DotProduct(entity->axis[1], light->axis[0]);
-		backEnd.localParms.lightPlane[2] = DotProduct(entity->axis[2], light->axis[0]);
-		backEnd.localParms.lightPlane[3] = DotProduct(entity->origin, light->axis[0]) - DotProduct(light->origin, light->axis[0]);
+		backEnd.localParms.lightPlane[0] = DotProduct(entity->axis[0], light->data.axis[0]);
+		backEnd.localParms.lightPlane[1] = DotProduct(entity->axis[1], light->data.axis[0]);
+		backEnd.localParms.lightPlane[2] = DotProduct(entity->axis[2], light->data.axis[0]);
+		backEnd.localParms.lightPlane[3] = DotProduct(entity->origin, light->data.axis[0]) - DotProduct(light->data.origin, light->data.axis[0]);
 	}
 }
 
 /*
  ==================
+ RB_ComputeLightMatrix
 
+ TODO: fog light
  ==================
 */
 void RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *material, textureStage_t *textureStage){
 
 	mat4_t	transformMatrix, entityMatrix, textureMatrix;
 	mat4_t	tmpMatrix;
-	float	distanceScale, heightScale;
 
 	// Compute a generic, ambient, or blend light
 	if (material->lightType != LT_FOG){
 		if (entity == rg.worldEntity){
 			if (!textureStage->numTexMods)
-				Matrix4_Copy(light->modelviewProjectionMatrix, backEnd.localParms.lightMatrix);
+				Matrix4_Copy(light->data.modelviewProjectionMatrix, backEnd.localParms.lightMatrix);
 			else {
 				RB_ComputeTextureMatrix(material, textureStage, textureMatrix);
 
-				Matrix4_MultiplyFast(textureMatrix, light->modelviewProjectionMatrix, tmpMatrix);
+				Matrix4_MultiplyFast(textureMatrix, light->data.modelviewProjectionMatrix, tmpMatrix);
 				Matrix4_Copy(tmpMatrix, backEnd.localParms.lightMatrix);
 			}
 		}
 		else {
 			Matrix4_Set(transformMatrix, entity->axis, entity->origin);
-			Matrix4_MultiplyFast(light->modelviewProjectionMatrix, transformMatrix, entityMatrix);
+			Matrix4_MultiplyFast(light->data.modelviewProjectionMatrix, transformMatrix, entityMatrix);
 
 			if (!textureStage->numTexMods)
 				Matrix4_Copy(entityMatrix, backEnd.localParms.lightMatrix);
@@ -916,17 +917,6 @@ void RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *
 	}
 
 	// Compute a fog light
-	if (light->fogDistance < 1.0f)
-		distanceScale = 0.5f / 500.0f;
-	else
-		distanceScale = 0.5f / light->fogDistance;
-
-	if (light->fogHeight < 1.0f)
-		heightScale = 0.5f / 500.0f;
-	else
-		heightScale = 0.5f / light->fogHeight;
-
-	// TODO!!!
 }
 
 /*

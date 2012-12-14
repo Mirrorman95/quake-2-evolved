@@ -534,6 +534,12 @@ void Key_Event (int key, int time, bool down){
 	// Send the key event to the appropriate handler
 	switch (key_dest){
 	case KEY_GAME:
+		// Send mouse events to the editor if active
+		if (key == K_MOUSE1 && Com_IsEditorActive()){
+			if (Com_EditorEvent())
+				return;		// Don't generate a game command
+		}
+
 		// Generate a game command
 		kb = k->binding;
 		if (kb){

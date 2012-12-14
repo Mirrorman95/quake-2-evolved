@@ -31,5 +31,5 @@
 
 bool R_PrecachedLightData (lightData_t *lightData){
 
-	return true;
+	return false;
 }
