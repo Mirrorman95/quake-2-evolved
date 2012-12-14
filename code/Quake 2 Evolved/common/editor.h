@@ -71,6 +71,7 @@ typedef struct {
 	float					fogHeight;
 
 	// Light attributes
+	int						style;
 	int						detailLevel;
 
 	// Material

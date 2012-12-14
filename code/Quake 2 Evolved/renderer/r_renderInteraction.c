@@ -48,19 +48,19 @@ static void RB_DrawInteraction_Generic (const interaction_t *i){
 	interactionParms_t	*parms;
 
 	// Bind the program
-	GL_BindProgram(rg.interactionPrograms[INTERACTION_GENERIC][backEnd.light->type]);
+	GL_BindProgram(rg.interactionPrograms[INTERACTION_GENERIC][backEnd.light->data.type]);
 
 	// Set up the program uniforms
-	parms = &backEnd.interactionParms[INTERACTION_GENERIC][backEnd.light->type];
+	parms = &backEnd.interactionParms[INTERACTION_GENERIC][backEnd.light->data.type];
 
 	R_UniformVector3(parms->viewOrigin, backEnd.localParms.viewOrigin);
 
-	if (backEnd.light->type != RL_DIRECTIONAL)
+	if (backEnd.light->data.type != RL_DIRECTIONAL)
 		R_UniformVector3(parms->lightOrigin, backEnd.localParms.lightOrigin);
 	else
 		R_UniformVector3(parms->lightDirection, backEnd.localParms.lightDirection);
 
-	if (backEnd.light->type == RL_CUBIC)
+	if (backEnd.light->data.type == RL_CUBIC)
 		R_UniformMatrix3(parms->lightAxis, GL_TRUE, backEnd.localParms.lightAxis);
 
 	R_UniformMatrix4(parms->bumpMatrix, GL_TRUE, i->bumpMatrix);
@@ -74,7 +74,7 @@ static void RB_DrawInteraction_Generic (const interaction_t *i){
 	R_UniformVector2(parms->specularParms, i->specularParms);
 	R_UniformVector3(parms->lightColor, i->lightColor);
 
-	if (backEnd.light->type == RL_PROJECTED || backEnd.light->type == RL_DIRECTIONAL)
+	if (backEnd.light->data.type == RL_PROJECTED || backEnd.light->data.type == RL_DIRECTIONAL)
 		R_UniformVector4(parms->lightPlane, backEnd.localParms.lightPlane);
 
 	// Bind the textures
@@ -84,7 +84,7 @@ static void RB_DrawInteraction_Generic (const interaction_t *i){
 	GL_BindMultitexture(i->lightProjectionTexture, TMU_LIGHTPROJECTION);
 	GL_BindMultitexture(i->lightFalloffTexture, TMU_LIGHTFALLOFF);
 
-	if (backEnd.light->type == RL_CUBIC)
+	if (backEnd.light->data.type == RL_CUBIC)
 		GL_BindMultitexture(i->lightCubeTexture, TMU_LIGHTCUBE);
 
 	// Draw it

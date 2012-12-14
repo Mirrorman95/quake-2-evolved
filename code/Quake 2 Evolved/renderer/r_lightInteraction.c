@@ -22,7 +22,7 @@
 
 
 //
-// r_lightInteraction.c - Light interaction
+// r_lightInteraction.c - Light interaction meshes
 //
 
 
@@ -31,16 +31,16 @@
 
 /*
  ==================
- R_AddShadowSurface
+ R_AddShadowMesh
  ==================
 */
-static void R_AddShadowSurface (light_t *light, meshType_t type, meshData_t *data, renderEntity_t *entity, material_t *material){
+static void R_AddShadowMesh (light_t *light, meshType_t type, meshData_t *data, renderEntity_t *entity, material_t *material, bool caps){
 
-	mesh_t *mesh;
+	mesh_t	*mesh;
 
 	// Add a new mesh
 	if (rg.lightMeshes.numShadows == rg.lightMeshes.maxShadows){
-		Com_DPrintf(S_COLOR_YELLOW "R_AddShadowSurface: overflow\n");
+		Com_DPrintf(S_COLOR_YELLOW "R_AddShadowMesh: overflow\n");
 		return;
 	}
 
@@ -54,20 +54,21 @@ static void R_AddShadowSurface (light_t *light, meshType_t type, meshData_t *dat
 	mesh->material = material;
 
 	mesh->sort = (material->sort << MESH_SHIFT_SORT) | (entity->index << MESH_SHIFT_ENTITY) | (material->index << MESH_SHIFT_MATERIAL) | type;
+	mesh->caps = caps;
 }
 
 /*
  ==================
- R_AddInteractionSurface
+ R_AddInteractionMesh
  ==================
 */
-static void R_AddInteractionSurface (light_t *light, meshType_t type, meshData_t *data, renderEntity_t *entity, material_t *material){
+static void R_AddInteractionMesh (light_t *light, meshType_t type, meshData_t *data, renderEntity_t *entity, material_t *material, bool caps){
 
-	mesh_t *mesh;
+	mesh_t	*mesh;
 
 	// Add a new mesh
 	if (rg.lightMeshes.numInteractions == rg.lightMeshes.maxInteractions){
-		Com_DPrintf(S_COLOR_YELLOW "R_AddInteractionSurface: overflow\n");
+		Com_DPrintf(S_COLOR_YELLOW "R_AddInteractionMesh: overflow\n");
 		return;
 	}
 
@@ -81,24 +82,21 @@ static void R_AddInteractionSurface (light_t *light, meshType_t type, meshData_t
 	mesh->material = material;
 
 	mesh->sort = (material->sort << MESH_SHIFT_SORT) | (entity->index << MESH_SHIFT_ENTITY) | (material->index << MESH_SHIFT_MATERIAL) | type;
+	mesh->caps = caps;
 }
 
 /*
  ==================
- R_AddLightSurface
 
- TODO: is SURF_PLANEBACK right?
- TODO: bounds
+ TODO: make sure SURF_PLANEBACK is valid
  ==================
 */
-static void R_AddLightSurface (light_t *light, surface_t *surface, material_t *material, renderEntity_t *entity, const vec3_t lightOrigin, const vec3_t lightDirection, bool addShadow, bool addInteraction){
-
-	int		side;
+static void R_AddLightSurface (light_t *light, surface_t *surface, material_t *material, renderEntity_t *entity, bool caps, const vec3_t lightOrigin, const vec3_t lightDirection, int cullBits, bool addShadow, bool addInteraction){
 
 	// Cull face
 	if (light->material->lightType == LT_GENERIC){
 		if (!r_skipFaceCulling->integerValue && surface->plane && material->deform == DFRM_NONE){
-			if (light->type == RL_DIRECTIONAL){
+			if (light->data.type == RL_DIRECTIONAL){
 				if (material->cullType == CT_FRONT_SIDED){
 					if (!(surface->flags & SURF_PLANEBACK)){
 						if (DotProduct(lightDirection, surface->plane->normal) >= 0.0f)
@@ -111,16 +109,14 @@ static void R_AddLightSurface (light_t *light, surface_t *surface, material_t *m
 				}
 			}
 			else {
-				side = PointOnPlaneSide(lightOrigin, 0.0f, surface->plane);
-
 				if (material->cullType == CT_FRONT_SIDED){
 					if (!(surface->flags & SURF_PLANEBACK)){
-						if (side != PLANESIDE_FRONT)
+						if (PointOnPlaneSide(lightOrigin, 0.0f, surface->plane) != PLANESIDE_FRONT)
 							return;
 					}
 				}
 				else if (material->cullType == CT_BACK_SIDED){
-					if (side != PLANESIDE_BACK)
+					if (PointOnPlaneSide(lightOrigin, 0.0f, surface->plane) != PLANESIDE_BACK)
 						return;
 				}
 			}
@@ -131,17 +127,17 @@ static void R_AddLightSurface (light_t *light, surface_t *surface, material_t *m
 
 	// Add the draw surface
 	if (addShadow)
-		R_AddShadowSurface(light, MESH_SURFACE, surface, entity, material);
+		R_AddShadowMesh(light, MESH_SURFACE, surface, entity, material, caps);
 
 	if (addInteraction)
-		R_AddInteractionSurface(light, MESH_SURFACE, surface, entity, material);
+		R_AddInteractionMesh(light, MESH_SURFACE, surface, entity, material, caps);
 }
 
 
 /*
  ==============================================================================
 
- WORLD LIGHT SURFACES
+ WORLD LIGHT INTERACTION
 
  ==============================================================================
 */
@@ -149,10 +145,17 @@ static void R_AddLightSurface (light_t *light, surface_t *surface, material_t *m
 
 /*
  ==================
- R_RecursiveWorldLightNode
+ 
+ ==================
+*/
+static void R_PrecachedWorldLightNode (){
 
- TODO: lightInFrustum
- TODO: PVS
+}
+
+/*
+ ==================
+ 
+ TODO: culling, caps, PVS
  ==================
 */
 static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightInFrustum, bool castShadows, int skipFlag, int cullBits){
@@ -160,6 +163,7 @@ static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightI
 	cplane_t	*plane;
 	leaf_t		*leaf;
 	surface_t	*surface, **mark;
+	bool		caps = false;
 	bool		addShadow, addInteraction;
 	int			side;
 	int			i;
@@ -170,25 +174,12 @@ static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightI
 
 	// Check visibility
 	if (node->viewCount != rg.viewCount){
-		if (!castShadows)
+		// Not visible, but may still cast visible shadows
+		if (lightInFrustum || !castShadows)
 			return;
 	}
 
 	// Cull
-	if (cullBits){
-		for (i = 0, plane = light->frustum; i < NUM_FRUSTUM_PLANES; i++, plane++){
-			if (!(cullBits & BIT(i)))
-				continue;
-
-			side = BoxOnPlaneSide(node->mins, node->maxs, plane);
-
-			if (side == PLANESIDE_BACK)
-				return;
-
-			if (side == PLANESIDE_FRONT)
-				cullBits &= ~BIT(i);
-		}
-	}
 
 	// Recurse down the children
 	if (node->contents == -1){
@@ -221,7 +212,8 @@ static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightI
 
 		// Check visibility
 		if (surface->viewCount != rg.viewCount){
-			if (!castShadows)
+			// Not visible, but may still cast visible shadows
+			if (lightInFrustum || !castShadows)
 				return;
 		}
 
@@ -242,24 +234,28 @@ static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightI
 			continue;
 
 		// Add the surface
-		R_AddLightSurface(light, surface, surface->texInfo->material, rg.worldEntity, light->origin, light->direction, addShadow, addInteraction);
+		R_AddLightSurface(light, surface, surface->texInfo->material, rg.worldEntity, caps, light->data.origin, light->data.direction, cullBits, addShadow, addInteraction);
 	}
 }
 
 /*
  ==================
- R_AddWorldLightSurfaces
-
- TODO: precached data
+ R_AddWorldLightInteractions
  ==================
 */
-static void R_AddWorldLightSurfaces (light_t *light, bool lightInFrustum, bool castShadows, int skipFlag){
+static void R_AddWorldLightInteractions (light_t *light, bool lightInFrustum, bool castShadows, int skipFlag){
 
 	if (!rg.viewParms.primaryView)
 		return;
 
 	// Bump light count
 	rg.lightCount++;
+
+	// If we have precached lists of nodes and surfaces
+	if (!r_skipLightCache->integerValue && light->data.precached){
+		R_PrecachedWorldLightNode();
+		return;
+	}
 
 	// Recurse down the BSP tree
 	if (r_skipCulling->integerValue)
@@ -272,7 +268,7 @@ static void R_AddWorldLightSurfaces (light_t *light, bool lightInFrustum, bool c
 /*
  ==============================================================================
 
- ENTITY LIGHT SURFACES
+ ENTITY LIGHT INTERACTION
 
  ==============================================================================
 */
@@ -280,16 +276,16 @@ static void R_AddWorldLightSurfaces (light_t *light, bool lightInFrustum, bool c
 
 /*
  ==================
- R_AddInlineModelLightSurfaces
-
- TODO: culling
+ 
+ TODO: culling, caps
  ==================
 */
-static void R_AddInlineModelLightSurfaces (light_t *light, renderEntity_t *entity, bool lightInFrustum, bool castShadows, int skipFlag){
+static void R_AddInlineModelLightInteractions (light_t *light, renderEntity_t *entity, bool lightInFrustum, bool castShadows, int skipFlag){
 
 	model_t		*model = entity->model;
 	surface_t	*surface;
 	material_t	*material;
+	bool		caps = false;
 	vec3_t		lightOrigin, lightDirection;
 	int			cullBits;
 	bool		addShadow, addInteraction;
@@ -306,12 +302,12 @@ static void R_AddInlineModelLightSurfaces (light_t *light, renderEntity_t *entit
 	if (r_skipEntityCulling->integerValue || entity->depthHack)
 		cullBits = 0;
 	else {
-		cullBits = 0;
+
 	}
 
 	// Transform light origin and light direction into local space
-	R_WorldPointToLocal(light->origin, lightOrigin, entity->origin, entity->axis);
-	R_WorldVectorToLocal(light->direction, lightDirection, entity->axis);
+	R_WorldPointToLocal(light->data.origin, lightOrigin, entity->origin, entity->axis);
+	R_WorldVectorToLocal(light->data.direction, lightDirection, entity->axis);
 
 	// Add all the surfaces
 	surface = model->surfaces + model->firstModelSurface;
@@ -342,24 +338,23 @@ static void R_AddInlineModelLightSurfaces (light_t *light, renderEntity_t *entit
 			continue;
 
 		// Add the surface
-		R_AddLightSurface(light, surface, material, entity, lightOrigin, lightDirection, addShadow, addInteraction);
+		R_AddLightSurface(light, surface, material, entity, caps, lightOrigin, lightDirection, cullBits, addShadow, addInteraction);
 	}
 }
 
 /*
  ==================
- R_AddAliasModelLightSurfaces
-
- TODO: culling
+ 
+ TODO: culling, caps
  ==================
 */
-static void R_AddAliasModelLightSurfaces (light_t *light, renderEntity_t *entity, bool lightInFrustum, bool castShadows, int skipFlag){
+static void R_AddAliasModelLightInteractions (light_t *light, renderEntity_t *entity, bool lightInFrustum, bool castShadows, int skipFlag){
 
 	mdl_t			*alias = entity->model->alias;
-	mdlFrame_t		*curFrame, *oldFrame;
 	mdlSurface_t	*surface;
 	material_t		*material;
-	float			radius;
+	bool			caps = false;
+	int				cullBits;
 	bool			addShadow, addInteraction;
 	int				i;
 
@@ -370,30 +365,11 @@ static void R_AddAliasModelLightSurfaces (light_t *light, renderEntity_t *entity
 			return;
 	}
 
-	// Find model radius
-	if ((entity->frame < 0 || entity->frame >= alias->numFrames) || (entity->oldFrame < 0 || entity->oldFrame >= alias->numFrames)){
-		Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModelLightSurfaces: no such frame %i to %i (%s)\n", entity->frame, entity->oldFrame, entity->model->name);
-
-		entity->frame = 0;
-		entity->oldFrame = 0;
-	}
-
-	curFrame = alias->frames + entity->frame;
-	oldFrame = alias->frames + entity->oldFrame;
-
-	if (curFrame == oldFrame)
-		radius = curFrame->radius;
-	else {
-		if (curFrame->radius > oldFrame->radius)
-			radius = curFrame->radius;
-		else
-			radius = oldFrame->radius;
-	}
-
 	// Cull
-	if (!r_skipEntityCulling->integerValue || !entity->depthHack){
-		if (R_CullSphere(entity->origin, radius, 31))
-			return;
+	if (r_skipEntityCulling->integerValue || entity->depthHack)
+		cullBits = 0;
+	else {
+
 	}
 
 	// Add all the surfaces
@@ -404,7 +380,7 @@ static void R_AddAliasModelLightSurfaces (light_t *light, renderEntity_t *entity
 		else {
 			if (surface->numMaterials){
 				if (entity->skinIndex < 0 || entity->skinIndex >= surface->numMaterials){
-					Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModelLightSurfaces: no such material %i (%s)\n", entity->skinIndex, entity->model->name);
+					Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModelLightInteractions: no such material %i (%s)\n", entity->skinIndex, entity->model->name);
 
 					entity->skinIndex = 0;
 				}
@@ -412,7 +388,7 @@ static void R_AddAliasModelLightSurfaces (light_t *light, renderEntity_t *entity
 				material = surface->materials[entity->skinIndex].material;
 			}
 			else {
-				Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModelLightSurfaces: no materials for surface (%s)\n", entity->model->name);
+				Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModelLightInteractions: no materials for surface (%s)\n", entity->model->name);
 
 				material = rg.defaultMaterial;
 			}
@@ -441,19 +417,19 @@ static void R_AddAliasModelLightSurfaces (light_t *light, renderEntity_t *entity
 
 		// Add the surface
 		if (addShadow)
-			R_AddShadowSurface(light, MESH_ALIASMODEL, surface, entity, material);
+			R_AddShadowMesh(light, MESH_ALIASMODEL, surface, entity, material, 63);
 
 		if (addInteraction)
-			R_AddInteractionSurface(light, MESH_ALIASMODEL, surface, entity, material);
+			R_AddInteractionMesh(light, MESH_ALIASMODEL, surface, entity, material, 63);
 	}
 }
 
 /*
  ==================
- R_AddEntityLightSurfaces
+ R_AddEntityLightInteractions
  ==================
 */
-static void R_AddEntityLightSurfaces (light_t *light, bool lightInFrustum, bool castShadows, int skipFlag){
+static void R_AddEntityLightInteractions (light_t *light, bool lightInFrustum, bool castShadows, int skipFlag){
 
 	renderEntity_t	*entity;
 	bool			suppressShadows;
@@ -483,18 +459,18 @@ static void R_AddEntityLightSurfaces (light_t *light, bool lightInFrustum, bool 
 
 		// Add the entity
 		if (!entity->model)
-			Com_Error(ERR_DROP, "R_AddEntityLightSurfaces: NULL model");
+			Com_Error(ERR_DROP, "R_AddEntityLightInteractions: NULL model");
 
 		switch (entity->model->type){
 		case MODEL_INLINE:
-			R_AddInlineModelLightSurfaces(light, entity, lightInFrustum, castShadows && !suppressShadows && !entity->depthHack, skipFlag);
+			R_AddInlineModelLightInteractions(light, entity, lightInFrustum, castShadows && !suppressShadows && !entity->depthHack, skipFlag);
 			break;
 		case MODEL_MD3:
 		case MODEL_MD2:
-			R_AddAliasModelLightSurfaces(light, entity, lightInFrustum, castShadows && !suppressShadows && !entity->depthHack, skipFlag);
+			R_AddAliasModelLightInteractions(light, entity, lightInFrustum, castShadows && !suppressShadows && !entity->depthHack, skipFlag);
 			break;
 		default:
-			Com_Error(ERR_DROP, "R_AddEntityLightSurfaces: bad model type (%i)", entity->model->type);
+			Com_Error(ERR_DROP, "R_AddEntityLightInteractions: bad model type (%i)", entity->model->type);
 		}
 	}
 }
@@ -519,9 +495,7 @@ void R_AllocLightMeshes (){
 
 /*
  ==================
- R_GenerateLightMeshes
-
- TODO: lightInFrustum
+ 
  ==================
 */
 void R_GenerateLightMeshes (light_t *light){
@@ -540,25 +514,22 @@ void R_GenerateLightMeshes (light_t *light){
 	light->interactionMeshes = NULL;
 
 	// Determine if the light origin is inside the view frustum
-	if (light->type == RL_DIRECTIONAL)
+	if (light->data.type == RL_DIRECTIONAL)
 		lightInFrustum = false;
 	else {
 		for (i = 0, plane = rg.viewParms.frustum; i < NUM_FRUSTUM_PLANES; i++, plane++){
 			if (!(rg.viewParms.planeBits & BIT(i)))
 				continue;
 
-			if (PointOnPlaneSide(light->origin, 0.0f, plane) == PLANESIDE_BACK)
-				break;
+			// TODO: plane side
 		}
 
-		if (i == 5)
-			lightInFrustum = true;
-		else
-			lightInFrustum = false;
+		// TODO!!!
+		lightInFrustum = false;
 	}
 
 	// Determine if it casts shadows
-	if (light->noShadows || (light->material->flags & MF_NOSHADOWS))
+	if (light->data.noShadows || (light->material->flags & MF_NOSHADOWS))
 		castShadows = false;
 	else
 		castShadows = true;
@@ -573,11 +544,11 @@ void R_GenerateLightMeshes (light_t *light){
 	else
 		skipFlag = MF_NOINTERACTIONS;
 
-	// Add the draw surfaces
-	R_AddWorldLightSurfaces(light, lightInFrustum, castShadows, skipFlag);
-	R_AddEntityLightSurfaces(light, lightInFrustum, castShadows, skipFlag);
+	// Add the interaction meshes
+	R_AddWorldLightInteractions(light, lightInFrustum, castShadows, skipFlag);
+	R_AddEntityLightInteractions(light, lightInFrustum, castShadows, skipFlag);
 
-	// Set up the meshes
+	// Set up the interaction meshes
 	light->numShadowMeshes = rg.lightMeshes.numShadows - rg.lightMeshes.firstShadow;
 	light->shadowMeshes = &rg.lightMeshes.shadows[rg.lightMeshes.firstShadow];
 
@@ -591,7 +562,7 @@ void R_GenerateLightMeshes (light_t *light){
 	rg.lightMeshes.firstShadow = rg.lightMeshes.numShadows;
 	rg.lightMeshes.firstInteraction = rg.lightMeshes.numInteractions;
 
-	// Sort the draw surfaces
+	// Sort the interaction meshes
 	if (r_skipSorting->integerValue)
 		return;
 

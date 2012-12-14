@@ -391,6 +391,12 @@ static void CL_LoadAssets (){
 */
 static void CL_PrecacheLights (){
 
+	char		name[MAX_OSPATH];
+
+	// Load and parse the lights
+	Str_SPrintf(name, sizeof(name), "maps/%s.light", cls.loadingInfo.map);
+
+	R_LoadLights(name);
 }
 
 /*

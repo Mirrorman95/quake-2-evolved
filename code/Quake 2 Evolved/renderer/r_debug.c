@@ -190,30 +190,30 @@ static void RB_ShowLightVolume (){
 
 		// Draw it
 		qglBegin(GL_QUADS);
-		qglVertex3fv(backEnd.light->corners[3]);
-		qglVertex3fv(backEnd.light->corners[2]);
-		qglVertex3fv(backEnd.light->corners[6]);
-		qglVertex3fv(backEnd.light->corners[7]);
-		qglVertex3fv(backEnd.light->corners[0]);
-		qglVertex3fv(backEnd.light->corners[1]);
-		qglVertex3fv(backEnd.light->corners[5]);
-		qglVertex3fv(backEnd.light->corners[4]);
-		qglVertex3fv(backEnd.light->corners[2]);
-		qglVertex3fv(backEnd.light->corners[3]);
-		qglVertex3fv(backEnd.light->corners[1]);
-		qglVertex3fv(backEnd.light->corners[0]);
-		qglVertex3fv(backEnd.light->corners[4]);
-		qglVertex3fv(backEnd.light->corners[5]);
-		qglVertex3fv(backEnd.light->corners[7]);
-		qglVertex3fv(backEnd.light->corners[6]);
-		qglVertex3fv(backEnd.light->corners[1]);
-		qglVertex3fv(backEnd.light->corners[3]);
-		qglVertex3fv(backEnd.light->corners[7]);
-		qglVertex3fv(backEnd.light->corners[5]);
-		qglVertex3fv(backEnd.light->corners[2]);
-		qglVertex3fv(backEnd.light->corners[0]);
-		qglVertex3fv(backEnd.light->corners[4]);
-		qglVertex3fv(backEnd.light->corners[6]);
+		qglVertex3fv(backEnd.light->data.corners[3]);
+		qglVertex3fv(backEnd.light->data.corners[2]);
+		qglVertex3fv(backEnd.light->data.corners[6]);
+		qglVertex3fv(backEnd.light->data.corners[7]);
+		qglVertex3fv(backEnd.light->data.corners[0]);
+		qglVertex3fv(backEnd.light->data.corners[1]);
+		qglVertex3fv(backEnd.light->data.corners[5]);
+		qglVertex3fv(backEnd.light->data.corners[4]);
+		qglVertex3fv(backEnd.light->data.corners[2]);
+		qglVertex3fv(backEnd.light->data.corners[3]);
+		qglVertex3fv(backEnd.light->data.corners[1]);
+		qglVertex3fv(backEnd.light->data.corners[0]);
+		qglVertex3fv(backEnd.light->data.corners[4]);
+		qglVertex3fv(backEnd.light->data.corners[5]);
+		qglVertex3fv(backEnd.light->data.corners[7]);
+		qglVertex3fv(backEnd.light->data.corners[6]);
+		qglVertex3fv(backEnd.light->data.corners[1]);
+		qglVertex3fv(backEnd.light->data.corners[3]);
+		qglVertex3fv(backEnd.light->data.corners[7]);
+		qglVertex3fv(backEnd.light->data.corners[5]);
+		qglVertex3fv(backEnd.light->data.corners[2]);
+		qglVertex3fv(backEnd.light->data.corners[0]);
+		qglVertex3fv(backEnd.light->data.corners[4]);
+		qglVertex3fv(backEnd.light->data.corners[6]);
 		qglEnd();
 	}
 
@@ -230,28 +230,28 @@ static void RB_ShowLightVolume (){
 
 		// Draw it
 		qglBegin(GL_LINE_LOOP);
-		qglVertex3fv(backEnd.light->corners[0]);
-		qglVertex3fv(backEnd.light->corners[2]);
-		qglVertex3fv(backEnd.light->corners[3]);
-		qglVertex3fv(backEnd.light->corners[1]);
+		qglVertex3fv(backEnd.light->data.corners[0]);
+		qglVertex3fv(backEnd.light->data.corners[2]);
+		qglVertex3fv(backEnd.light->data.corners[3]);
+		qglVertex3fv(backEnd.light->data.corners[1]);
 		qglEnd();
 
 		qglBegin(GL_LINE_LOOP);
-		qglVertex3fv(backEnd.light->corners[4]);
-		qglVertex3fv(backEnd.light->corners[6]);
-		qglVertex3fv(backEnd.light->corners[7]);
-		qglVertex3fv(backEnd.light->corners[5]);
+		qglVertex3fv(backEnd.light->data.corners[4]);
+		qglVertex3fv(backEnd.light->data.corners[6]);
+		qglVertex3fv(backEnd.light->data.corners[7]);
+		qglVertex3fv(backEnd.light->data.corners[5]);
 		qglEnd();
 
 		qglBegin(GL_LINES);
-		qglVertex3fv(backEnd.light->corners[0]);
-		qglVertex3fv(backEnd.light->corners[4]);
-		qglVertex3fv(backEnd.light->corners[1]);
-		qglVertex3fv(backEnd.light->corners[5]);
-		qglVertex3fv(backEnd.light->corners[2]);
-		qglVertex3fv(backEnd.light->corners[6]);
-		qglVertex3fv(backEnd.light->corners[3]);
-		qglVertex3fv(backEnd.light->corners[7]);
+		qglVertex3fv(backEnd.light->data.corners[0]);
+		qglVertex3fv(backEnd.light->data.corners[4]);
+		qglVertex3fv(backEnd.light->data.corners[1]);
+		qglVertex3fv(backEnd.light->data.corners[5]);
+		qglVertex3fv(backEnd.light->data.corners[2]);
+		qglVertex3fv(backEnd.light->data.corners[6]);
+		qglVertex3fv(backEnd.light->data.corners[3]);
+		qglVertex3fv(backEnd.light->data.corners[7]);
 		qglEnd();
 	}
 
