@@ -35,8 +35,8 @@
 // Plane sides
 #define	PLANESIDE_FRONT				0
 #define	PLANESIDE_BACK				1
-#define	PLANESIDE_ON				2
 #define PLANESIDE_CROSS				3
+#define	PLANESIDE_ON				3
 
 // 0-2 are axial planes
 #define	PLANE_X						0

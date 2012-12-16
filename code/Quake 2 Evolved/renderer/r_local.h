@@ -1033,9 +1033,17 @@ void			R_ShutdownImages ();
  ==============================================================================
 */
 
+#include "../common/editor.h"
+
+#define MAX_STATIC_LIGHTS			4096
+
 typedef struct {
 	bool					valid;
 	bool					precached;
+
+	char					name[64];
+
+	int						index;
 
 	int						type;
 
@@ -1061,6 +1069,8 @@ typedef struct {
 	bool					noShadows;
 
 	int						style;
+
+	lightParms_t			parms;
 } lightData_t;
 
 typedef struct {
@@ -1272,9 +1282,6 @@ typedef struct light_s {
 	int						numInteractionMeshes;
 	mesh_t *				interactionMeshes;
 } light_t;
-
-int				R_LightCullBounds (lightData_t *lightData, const vec3_t mins, const vec3_t maxs, int planeBits);
-int				R_LightCullLocalBounds (lightData_t *lightData, const vec3_t mins, const vec3_t maxs, const vec3_t origin, const vec3_t axis[3], int planeBits);
 
 void			R_AllocLights ();
 void			R_GenerateLights ();
@@ -1513,6 +1520,10 @@ typedef struct {
 	model_t *				worldModel;
 	renderEntity_t *		worldEntity;
 
+	// Static lights
+	lightData_t				staticLights[MAX_STATIC_LIGHTS];
+	int						numStaticLights;
+
 	// Environment shot rendering
 	bool					envShotRendering;
 	int						envShotSize;
@@ -1697,7 +1708,7 @@ void			R_WorldPointToLocal (const vec3_t in, vec3_t out, const vec3_t origin, co
 void			R_WorldVectorToLocal (const vec3_t in, vec3_t out, const vec3_t axis[3]);
 void			R_WorldAxisToLocal (const vec3_t in[3], vec3_t out[3], const vec3_t axis[3]);
 
-void			R_TransformWorldToDevice (const vec3_t world, vec3_t ndc, const mat4_t modelviewProjectionMatrix[4]);
+void			R_TransformWorldToDevice (const vec3_t world, vec3_t ndc, mat4_t modelviewProjectionMatrix[4]);
 
 void			R_TransformDeviceToScreen (const vec3_t ndc, vec3_t screen, const rect_t viewport);
 

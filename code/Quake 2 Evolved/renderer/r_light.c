@@ -29,9 +29,6 @@
 #include "r_local.h"
 
 
-#define MAX_STATIC_LIGHTS			4096
-
-
 /*
  ==============================================================================
 
@@ -76,6 +73,8 @@ static bool R_ParseLight (script_t *script){
 
 		if (!Str_ICompare(token.string, "}"))
 			break;			// End of light
+
+		// Set default parameters
 
 		// Parse the parameter
 		if (!Str_ICompare(token.string, "name")){
@@ -202,7 +201,7 @@ void R_LoadLights (const char *name){
  
  ==================
 */
-static void R_LightCullBounds (){
+void R_LightCullBounds (){
 
 }
 
@@ -211,7 +210,7 @@ static void R_LightCullBounds (){
  
  ==================
 */
-static void R_LightCullLocalBounds (){
+void R_LightCullLocalBounds (){
 
 }
 
@@ -220,7 +219,7 @@ static void R_LightCullLocalBounds (){
  
  ==================
 */
-static void R_LightCullSphere (){
+void R_LightCullSphere (){
 
 }
 
@@ -229,35 +228,7 @@ static void R_LightCullSphere (){
  
  ==================
 */
-static void R_LightCullLocalSphere (){
-
-}
-
-
-/*
- ==============================================================================
-
- LIGHT CULLING
-
- ==============================================================================
-*/
-
-
-/*
- ==================
- 
- ==================
-*/
-static void R_CullLightBounds (){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-static void R_CullLightVolume (){
+void R_LightCullLocalSphere (){
 
 }
 
@@ -307,10 +278,74 @@ static void R_SetDynamicLightFrustum (const renderLight_t *renderLight, lightDat
 /*
  ==================
  
+ NOTE: this will use a structure that gets filled in when adding a new or appending a light
+ NOTE2: use lightParms_t as the container since it is the "static light" structure?
  ==================
 */
-static void R_SetupStaticLightData (){
+static void R_SetupStaticLightData (lightData_t *lightData, bool inWorld){
 
+	material_t	*material;
+	vec3_t		origin;
+	vec3_t		direction, corner;
+	vec3_t		lVector, rVector;
+	vec3_t		dVector, uVector;
+	vec3_t		nVector, fVector;
+	float		ratio;
+	float		distance, maxDistance;
+	int			i;
+
+	if (lightData->valid)
+		return;		// Already computed the light data
+
+	lightData->valid = true;
+	lightData->precached = false;
+
+	// Set the name
+	Str_Copy(lightData->name, lightData->parms.name, sizeof(lightData->name));
+
+	// Set the index
+	lightData->index = lightData->parms.index;
+
+	// Set the type
+	lightData->type = lightData->parms.type;
+
+	// Set the material
+	material = R_RegisterMaterialLight(lightData->parms.material);
+
+	if (material)
+		lightData->material = material;
+	else {
+		if (lightData->type != RL_PROJECTED)
+			lightData->material = rg.defaultLightMaterial;
+		else
+			lightData->material = rg.defaultProjectedLightMaterial;
+	}
+
+	// Set the material parameters
+	lightData->materialParms[0] = lightData->parms.materialParms[0];
+	lightData->materialParms[1] = lightData->parms.materialParms[1];
+	lightData->materialParms[2] = lightData->parms.materialParms[2];
+	lightData->materialParms[3] = lightData->parms.materialParms[3];
+	lightData->materialParms[4] = lightData->parms.materialParms[4];
+	lightData->materialParms[5] = lightData->parms.materialParms[5];
+	lightData->materialParms[6] = lightData->parms.materialParms[6];
+	lightData->materialParms[7] = lightData->parms.materialParms[7];
+
+	// Compute the origin, direction, and axis
+
+	// Compute the bounding volume
+
+	// Compute the light range
+
+	// Compute the fog plane
+
+	// Compute the transformation matrices
+
+	// Set no shadows
+
+	// Set style
+
+	// Set up the PVS and area
 }
 
 /*
@@ -322,11 +357,21 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 
 	vec3_t	origin;
 	vec3_t	direction, corner;
+	vec3_t	lVector, rVector;
+	vec3_t	dVector, uVector;
+	vec3_t	nVector, fVector;
+	float	ratio;
 	float	distance, maxDistance;
 	int		i;
 
 	lightData->valid = true;
 	lightData->precached = false;
+
+	// Set the name
+	Str_SPrintf(lightData->name, sizeof(lightData->name), "dynamicLight%i", renderLight->index);
+
+	// Set the index
+	lightData->index = renderLight->index;
 
 	// Set the type
 	lightData->type = renderLight->type;
@@ -352,7 +397,7 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 	lightData->materialParms[7] = renderLight->materialParms[7];
 
 	// Compute the origin, direction, and axis
-	if (lightData->type == RL_POINT || renderLight->type == RL_CUBIC){
+	if (lightData->type == RL_POINT || lightData->type == RL_CUBIC){
 		VectorRotate(renderLight->center, renderLight->axis, origin);
 		VectorAdd(renderLight->origin, origin, lightData->origin);
 		VectorClear(lightData->direction);
@@ -389,8 +434,21 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 	}
 	else {
 		// Compute the corner points
+		ratio = renderLight->zFar / renderLight->zNear;
+
+		VectorScale(renderLight->axis[0], renderLight->xMin, lVector);
+		VectorScale(renderLight->axis[0], renderLight->xMax, rVector);
+
+		VectorScale(renderLight->axis[1], renderLight->yMin, dVector);
+		VectorScale(renderLight->axis[1], renderLight->yMax, uVector);
+
+		VectorScale(renderLight->axis[2], renderLight->zNear, nVector);
+		VectorScale(renderLight->axis[2], renderLight->zFar, fVector);
+
+		// TODO: corners
 
 		// Compute the bounding box
+		BoundsFromPoints(lightData->bounds[0], lightData->bounds[1], lightData->corners);
 
 		// Compute the frustum planes
 	}
@@ -515,9 +573,8 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
  
  ==================
 */
-static bool R_ViewInLightVolume (){
+static void R_CullLightBounds (){
 
-	return true;
 }
 
 /*
@@ -525,9 +582,89 @@ static bool R_ViewInLightVolume (){
  
  ==================
 */
+static void R_CullLightVolume (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static bool R_ViewInLightVolume (){
+
+	return true;
+}
+
+/*
+ ==================
+
+ ==================
+*/
 static void R_SetupScissor (light_t *light){
 
-	light->scissor = rg.viewParms.scissor;
+	static int	cornerIndices[6][4] = {{3, 2, 6, 7}, {0, 1, 5, 4}, {2, 3, 1, 0}, {4, 5, 7, 6}, {1, 3, 7, 5}, {2, 0, 4, 6}};
+	vec3_t		points[2][MAX_POLYGON_POINTS];
+	int			numPoints;
+	vec3_t		mins, maxs;
+	vec3_t		ndc;
+	int			pingPong = 0;
+	int			i, j;
+
+	// If scissor testing is disabled
+	if (r_skipLightScissors->integerValue){
+		light->scissor = rg.viewParms.scissor;
+		return;
+	}
+
+	// Clip the light volume to the view frustum
+	ClearBounds(mins, maxs);
+
+	for (i = 0; i < 6; i++){
+		numPoints = 4;
+
+		VectorCopy(light->data.corners[cornerIndices[i][0]], points[pingPong][0]);
+		VectorCopy(light->data.corners[cornerIndices[i][1]], points[pingPong][1]);
+		VectorCopy(light->data.corners[cornerIndices[i][2]], points[pingPong][2]);
+		VectorCopy(light->data.corners[cornerIndices[i][3]], points[pingPong][3]);
+
+		for (j = 0; j < NUM_FRUSTUM_PLANES; j++){
+			if (!(rg.viewParms.planeBits & BIT(j)))
+				continue;
+
+			if (!R_ClipPolygon(numPoints, points[pingPong], rg.viewParms.frustum[j], ON_EPSILON, &numPoints, points[!pingPong]))
+				break;
+
+			pingPong ^= 1;
+		}
+
+		if (j != NUM_FRUSTUM_PLANES)
+			continue;
+
+		// Add the clipped points
+		for (j = 0; j < numPoints; j++){
+			// Transform into normalized device coordinates
+			R_TransformWorldToDevice(points[pingPong][j], ndc, (mat4_t *)rg.viewParms.modelviewProjectionMatrix);
+
+			// Add it
+			AddPointToBounds(ndc, mins, maxs);
+		}
+	}
+
+	if (BoundsIsCleared(mins, maxs)){
+		light->scissor.x = 0;
+		light->scissor.y = 0;
+		light->scissor.width = 0;
+		light->scissor.height = 0;
+
+		return;
+	}
+
+	// Transform into screen space
+	R_TransformDeviceToScreen(mins, mins, rg.viewParms.viewport);
+	R_TransformDeviceToScreen(maxs, maxs, rg.viewParms.viewport);
+
+	// Set up the scissor
 }
 
 /*
@@ -583,6 +720,9 @@ static void R_AddLight (lightData_t *lightData, material_t *material, bool viewI
 	// Set up the scissor
 	R_SetupScissor(light);
 
+	if (!RectSize(light->scissor))
+		return;
+
 	// Set up the depth bounds
 	R_SetupDepthBounds(light);
 
@@ -612,6 +752,36 @@ static void R_AddLights (){
 	int				i;
 
 	// Add static lights
+	for (i = 0, lightData = rg.staticLights; i < rg.numStaticLights; i++, lightData++){
+		// Development tool
+		if (r_singleLight->integerValue != -1){
+			if (r_singleLight->integerValue != lightData->parms.index)
+				continue;
+		}
+
+		// Check the detail level
+		if (lightData->parms.detailLevel > r_lightDetailLevel->integerValue)
+			continue;
+
+		// Set up the light data
+		R_SetupStaticLightData(lightData, rg.viewParms.primaryView);
+
+		// Check area connection if rendering a primary view
+		if (!r_skipVisibility->integerValue && rg.viewParms.primaryView){
+
+		}
+
+		// Cull
+		if (!r_skipLightCulling->integerValue){
+
+		}
+
+		// Determine if the view is inside the light volume
+		viewInLight = R_ViewInLightVolume();
+
+		// Add the light
+		R_AddLight(lightData, lightData->material, viewInLight);
+	}
 
 	// Add dynamic lights
 	for (i = 0, renderLight = rg.viewParms.renderLights; i < rg.viewParms.numRenderLights; i++, renderLight++){
@@ -644,6 +814,9 @@ static void R_AddLights (){
 		}
 
 		// Cull
+		if (!r_skipLightCulling->integerValue){
+
+		}
 
 		// Determine if the view is inside the light volume
 		viewInLight = R_ViewInLightVolume();

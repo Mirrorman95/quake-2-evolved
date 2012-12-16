@@ -104,7 +104,7 @@ void R_WorldAxisToLocal (const vec3_t in[3], vec3_t out[3], const vec3_t axis[3]
  R_TransformWorldToDevice
  ==================
 */
-void R_TransformWorldToDevice (const vec3_t world, vec3_t ndc, const mat4_t modelviewProjectionMatrix[4]){
+void R_TransformWorldToDevice (const vec3_t world, vec3_t ndc, mat4_t modelviewProjectionMatrix[4]){
 
 	vec4_t	clip;
 	float	scale;

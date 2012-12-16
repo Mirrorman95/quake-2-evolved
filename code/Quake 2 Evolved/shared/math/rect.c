@@ -49,10 +49,14 @@ void RectToBounds (rect_t rect, vec3_t mins, vec3_t maxs){
  RectFromBounds
  ==================
 */
-void RectFromBounds (rect_t rect, const vec3_t mins, const vec3_t maxs){
+rect_t RectFromBounds (const vec3_t mins, const vec3_t maxs){
+
+	rect_t rect;
 
 	rect.x = FloatToShort(mins[0]);
 	rect.y = FloatToShort(mins[1]);
 	rect.width = FloatToShort(maxs[0]);
 	rect.height = FloatToShort(maxs[1]);
+
+	return rect;
 }
