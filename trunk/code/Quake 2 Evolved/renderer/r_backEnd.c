@@ -552,7 +552,11 @@ static const void *RB_DrawCinematic (const void *data){
 
 	QGL_LogPrintf("---------- RB_DrawCinematic ----------\n");
 
-	// TODO: vertex buffer stuff?
+	// Unbind the index buffer
+	GL_BindIndexBuffer(NULL);
+
+	// Unbind the vertex buffer
+	GL_BindVertexBuffer(NULL);
 
 	// Set the GL state
 	GL_PolygonMode(GL_FILL);

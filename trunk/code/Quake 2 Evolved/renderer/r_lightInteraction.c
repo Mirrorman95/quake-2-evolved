@@ -89,6 +89,7 @@ static void R_AddInteractionMesh (light_t *light, meshType_t type, meshData_t *d
  ==================
 
  TODO: make sure SURF_PLANEBACK is valid
+ TODO: culling
  ==================
 */
 static void R_AddLightSurface (light_t *light, surface_t *surface, material_t *material, renderEntity_t *entity, bool caps, const vec3_t lightOrigin, const vec3_t lightDirection, int cullBits, bool addShadow, bool addInteraction){

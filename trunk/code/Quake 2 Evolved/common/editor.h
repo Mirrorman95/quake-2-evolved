@@ -43,6 +43,8 @@
 typedef struct {
 	char					name[MAX_LIGHT_NAME_LENGTH];
 
+	int						index;
+
 	int						type;
 
 	// Transformation matrix

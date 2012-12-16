@@ -1,20 +1,26 @@
 
-textures/e1u1/+0btshoot1
+textures/e1u1/bluwter
 {
-	bumpMap 		asd
-	diffuseMap 		asd
+	sort 		refractive
+	noShadows
 	{
-		specularmap 	asd
-		specularParms 	0.0, 0.0
 	}
 }
 
-textures/e1u1/+0btshoot2
+textures/e1u1/wndow0_3
 {
-	bumpMap 		asd
-	diffuseMap 		asd
+	forceOverlays
+	sort 		refractive
+	
+	// High quality render path
 	{
-		specularmap 	asd
-		specularParms 	0.0, 0.0
+	}
+
+	// Medium quality render path
+	{
+	}
+
+	// Low quality render path
+	{
 	}
 }

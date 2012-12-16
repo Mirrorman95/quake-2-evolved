@@ -70,7 +70,7 @@ INLINE int RectSize (rect_t rect){
 }
 
 void RectToBounds (rect_t rect, vec3_t mins, vec3_t maxs);
-void RectFromBounds (rect_t rect, const vec3_t mins, const vec3_t maxs);
+rect_t RectFromBounds (const vec3_t mins, const vec3_t maxs);
 
 
 #endif	// __MATH_RECT_H__

@@ -666,6 +666,7 @@ void RB_SetupShaderStage (material_t *material, shaderStage_t *shaderStage){
 	uniform_t		*uniform;
 	shaderParm_t	*shaderParm;
 	shaderMap_t		*shaderMap;
+	mat4_t			projectionViewMatrix;
 	int				i;
 
 	// Bind the program
@@ -707,13 +708,13 @@ void RB_SetupShaderStage (material_t *material, shaderStage_t *shaderStage){
 			R_UniformVector3(uniform, backEnd.localParms.viewOrigin);
 			break;
 		case UT_VIEW_AXIS:
-
+			R_UniformMatrix3(uniform, GL_TRUE, (float *)backEnd.localParms.viewAxis);
 			break;
 		case UT_ENTITY_ORIGIN:
 			R_UniformVector3(uniform, backEnd.entity->origin);
 			break;
 		case UT_ENTITY_AXIS:
-
+			R_UniformMatrix3(uniform, GL_TRUE, (float *)backEnd.entity->axis);
 			break;
 		case UT_SUN_ORIGIN:
 
@@ -725,7 +726,8 @@ void RB_SetupShaderStage (material_t *material, shaderStage_t *shaderStage){
 
 			break;
 		case UT_SCREEN_MATRIX:
-
+			Matrix4_Multiply(backEnd.viewParms.projectionMatrix, backEnd.localParms.viewMatrix, projectionViewMatrix);
+			R_UniformMatrix4(uniform, GL_TRUE, projectionViewMatrix);
 			break;
 		case UT_COORD_SCALE_AND_BIAS:
 			R_UniformFloat4(uniform, backEnd.coordScale[0], backEnd.coordScale[1], backEnd.coordBias[0], backEnd.coordBias[1]);

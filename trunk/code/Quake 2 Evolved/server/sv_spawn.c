@@ -256,7 +256,7 @@ static void SV_SpawnServer (const char *levelName, const char *spawnPoint, bool 
 	}
 
 	if (serverState == SS_GAME){
-		Str_SPrintf(sv.configStrings[CS_MODELS + 1], sizeof(sv.configStrings[CS_MODELS + 1]), "maps/base1.bsp", levelName);	// FIXME!!!
+		Str_SPrintf(sv.configStrings[CS_MODELS + 1], sizeof(sv.configStrings[CS_MODELS + 1]), "maps/q2dm1.bsp", levelName);	// FIXME!!!
 		sv.models[1] = CM_LoadMap(sv.configStrings[CS_MODELS + 1], false, &checksum);
 	}
 	else {
