@@ -208,10 +208,10 @@ void R_AddInlineModel (renderEntity_t *entity){
 */
 static void R_MarkLeaves (){
 
-	byte	*vis, fatVis[MAX_MAP_LEAFS / 8];
+	byte	vis[MAX_MAP_LEAFS/8], fatVis[MAX_MAP_LEAFS / 8];
 	node_t	*node;
 	leaf_t	*leaf;
-	vec3_t	tmp;
+	vec3_t	viewOrigin;
 	int		i, c;
 
 	// Current view cluster
@@ -229,17 +229,21 @@ static void R_MarkLeaves (){
 	// Check above and below so crossing solid water doesn't draw wrong
 	if (!leaf->contents){
 		// Look down a bit
-		VectorCopy(rg.renderView.origin, tmp);
-		tmp[2] -= 16.0f;
-		leaf = R_PointInLeaf(tmp);
+		VectorCopy(rg.renderView.origin, viewOrigin);
+
+		viewOrigin[2] -= 16.0f;
+
+		leaf = R_PointInLeaf(viewOrigin);
 		if (!(leaf->contents & CONTENTS_SOLID) && (leaf->cluster != rg.viewCluster2))
 			rg.viewCluster2 = leaf->cluster;
 	}
 	else {
 		// Look up a bit
-		VectorCopy(rg.renderView.origin, tmp);
-		tmp[2] += 16.0f;
-		leaf = R_PointInLeaf(tmp);
+		VectorCopy(rg.renderView.origin, viewOrigin);
+
+		viewOrigin[2] += 16.0f;
+
+		leaf = R_PointInLeaf(viewOrigin);
 		if (!(leaf->contents & CONTENTS_SOLID) && (leaf->cluster != rg.viewCluster2))
 			rg.viewCluster2 = leaf->cluster;
 	}
@@ -268,15 +272,14 @@ static void R_MarkLeaves (){
 
 	// May have to combine two clusters because of solid water 
 	// boundaries
-	vis = R_ClusterPVS(rg.viewCluster);
+	R_ClusterPVS(rg.viewCluster, vis);
+
 	if (rg.viewCluster != rg.viewCluster2){
-		Mem_Copy(fatVis, vis, (rg.worldModel->numLeafs + 7) / 8);
-		vis = R_ClusterPVS(rg.viewCluster2);
+		R_ClusterPVS(rg.viewCluster2, vis);
+
 		c = (rg.worldModel->numLeafs + 31) / 32;
 		for (i = 0; i < c; i++)
-			((int *)fatVis)[i] |= ((int *)vis)[i];
-
-		vis = fatVis;
+			((int *)vis)[i] |= ((int *)fatVis)[i];
 	}
 	
 	// Mark the leaves and nodes that are visible from the current cluster
@@ -284,7 +287,7 @@ static void R_MarkLeaves (){
 		if (leaf->cluster == -1)
 			continue;
 
-		if (!(vis[leaf->cluster >> 3] & (1<<(leaf->cluster & 7))))
+		if (!(vis[leaf->cluster >> 3] & (1 << (leaf->cluster & 7))))
 			continue;
 
 		node = (node_t *)leaf;
@@ -357,7 +360,11 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 			return;		// Not visible
 	}
 
-	// Add to world mins/maxs
+	// Development tool
+	if (r_showLeafBounds->integerValue)
+		R_DebugBounds(colorWhite, leaf->mins, leaf->maxs, true, rg.viewParms.viewType);
+
+	// Add to the vis bounds
 	AddPointToBounds(leaf->mins, rg.viewParms.visMins, rg.viewParms.visMaxs);
 	AddPointToBounds(leaf->maxs, rg.viewParms.visMins, rg.viewParms.visMaxs);
 

@@ -87,6 +87,54 @@ static void R_AddInteractionMesh (light_t *light, meshType_t type, meshData_t *d
 
 /*
  ==================
+ R_BoxInNearClipVolume
+ ==================
+*/
+static bool R_BoxInNearClipVolume (light_t *light, const vec3_t mins, const vec3_t maxs){
+
+	int		i;
+
+	if (light->ncv.degenerate){
+		if (BoxOnPlaneSide(mins, maxs, &rg.viewParms.frustum[FRUSTUM_NEAR]) == PLANESIDE_CROSS)
+			return true;
+
+		return false;
+	}
+
+	for (i = 0; i < NUM_FRUSTUM_PLANES; i++){
+		if (BoxOnPlaneSide(mins, maxs, &light->ncv.frustum[i]) == PLANESIDE_BACK)
+			return false;
+	}
+
+	return true;
+}
+
+/*
+ ==================
+ R_SphereInNearClipVolume
+ ==================
+*/
+static bool R_SphereInNearClipVolume (light_t *light, const vec3_t center, float radius){
+
+	int		i;
+
+	if (light->ncv.degenerate){
+		if (SphereOnPlaneSide(center, radius, &rg.viewParms.frustum[FRUSTUM_NEAR]) == PLANESIDE_CROSS)
+			return true;
+
+		return false;
+	}
+
+	for (i = 0; i < NUM_FRUSTUM_PLANES; i++){
+		if (SphereOnPlaneSide(center, radius, &light->ncv.frustum[i]) == PLANESIDE_BACK)
+			return false;
+	}
+
+	return true;
+}
+
+/*
+ ==================
 
  TODO: make sure SURF_PLANEBACK is valid
  TODO: culling
@@ -155,8 +203,7 @@ static void R_PrecachedWorldLightNode (){
 
 /*
  ==================
- 
- TODO: culling, caps, PVS
+ R_RecursiveWorldLightNode
  ==================
 */
 static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightInFrustum, bool castShadows, int skipFlag, int cullBits){
@@ -164,7 +211,7 @@ static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightI
 	cplane_t	*plane;
 	leaf_t		*leaf;
 	surface_t	*surface, **mark;
-	bool		caps = false;
+	bool		caps;
 	bool		addShadow, addInteraction;
 	int			side;
 	int			i;
@@ -181,6 +228,20 @@ static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightI
 	}
 
 	// Cull
+	if (cullBits){
+		for (i = 0, plane = light->data.frustum; i < NUM_FRUSTUM_PLANES; i++, plane++){
+			if (!(cullBits & BIT(i)))
+				continue;
+
+			side = BoxOnPlaneSide(node->mins, node->maxs, plane);
+
+			if (side == PLANESIDE_BACK)
+				return;
+
+			if (side == PLANESIDE_FRONT)
+				cullBits &= ~BIT(i);
+		}
+	}
 
 	// Recurse down the children
 	if (node->contents == -1){
@@ -197,7 +258,10 @@ static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightI
 
 	// Check if the node is in the light PVS
 	if (!r_skipVisibility->integerValue){
-
+		if (light->data.pvs){
+			if (!(light->data.pvs[leaf->cluster >> 3] & BIT(leaf->cluster & 7)))
+				return;
+		}
 	}
 
 	// Add all the surfaces
@@ -233,6 +297,9 @@ static void R_RecursiveWorldLightNode (light_t *light, node_t *node, bool lightI
 		// Check if there's nothing to be added
 		if (!addShadow && !addInteraction)
 			continue;
+
+		// Select rendering method for shadows
+		caps = R_BoxInNearClipVolume(light, surface->mins, surface->maxs);
 
 		// Add the surface
 		R_AddLightSurface(light, surface, surface->texInfo->material, rg.worldEntity, caps, light->data.origin, light->data.direction, cullBits, addShadow, addInteraction);
@@ -346,7 +413,8 @@ static void R_AddInlineModelLightInteractions (light_t *light, renderEntity_t *e
 /*
  ==================
  
- TODO: culling, caps
+ TODO: culling
+ TODO: might need some RF_ flag checks in here
  ==================
 */
 static void R_AddAliasModelLightInteractions (light_t *light, renderEntity_t *entity, bool lightInFrustum, bool castShadows, int skipFlag){
@@ -354,7 +422,8 @@ static void R_AddAliasModelLightInteractions (light_t *light, renderEntity_t *en
 	mdl_t			*alias = entity->model->alias;
 	mdlSurface_t	*surface;
 	material_t		*material;
-	bool			caps = false;
+	float			radius;
+	bool			caps;
 	int				cullBits;
 	bool			addShadow, addInteraction;
 	int				i;
@@ -366,6 +435,9 @@ static void R_AddAliasModelLightInteractions (light_t *light, renderEntity_t *en
 			return;
 	}
 
+	// Find model radius
+	radius = R_ModelRadius(alias, entity);
+
 	// Cull
 	if (r_skipEntityCulling->integerValue || entity->depthHack)
 		cullBits = 0;
@@ -373,27 +445,13 @@ static void R_AddAliasModelLightInteractions (light_t *light, renderEntity_t *en
 
 	}
 
+	// Select rendering method for shadows
+	caps = R_SphereInNearClipVolume(light, entity->origin, radius);
+
 	// Add all the surfaces
 	for (i = 0, surface = alias->surfaces; i < alias->numSurfaces; i++, surface++){
 		// Get the material
-		if (entity->material)
-			material = entity->material;
-		else {
-			if (surface->numMaterials){
-				if (entity->skinIndex < 0 || entity->skinIndex >= surface->numMaterials){
-					Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModelLightInteractions: no such material %i (%s)\n", entity->skinIndex, entity->model->name);
-
-					entity->skinIndex = 0;
-				}
-
-				material = surface->materials[entity->skinIndex].material;
-			}
-			else {
-				Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModelLightInteractions: no materials for surface (%s)\n", entity->model->name);
-
-				material = rg.defaultMaterial;
-			}
-		}
+		material = R_ModelMaterial(entity, surface);
 
 		if (material->spectrum != light->material->spectrum)
 			continue;		// Not illuminated by this light

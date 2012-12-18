@@ -118,6 +118,7 @@ cvar_t *					r_showNormals;
 cvar_t *					r_showTextureVectors;
 cvar_t *					r_showBatchSize;
 cvar_t *					r_showModelBounds;
+cvar_t *					r_showLeafBounds;
 cvar_t *					r_skipVisibility;
 cvar_t *					r_skipSuppress;
 cvar_t *					r_skipCulling;
@@ -517,6 +518,7 @@ static void R_Register (){
 	r_showTextureVectors = CVar_Register("r_showTextureVectors", "0.0", CVAR_FLOAT, CVAR_CHEAT, "Draw texture (tangent) vectors", 0.0f, 10.0f);
 	r_showBatchSize = CVar_Register("r_showBatchSize", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw triangles colored by batch size (1 = draw visible ones, 2 = draw everything through walls)", 0, 2);
 	r_showModelBounds = CVar_Register("r_showModelBounds", "0", CVAR_BOOL, CVAR_CHEAT, "Draw model bounds", 0, 0);
+	r_showLeafBounds = CVar_Register("r_showLeafBounds", "0", CVAR_BOOL, CVAR_CHEAT, "Draw leaf bounds", 0, 0);
 	r_skipVisibility = CVar_Register("r_skipVisibility", "0", CVAR_BOOL, CVAR_CHEAT, "Skip visibility determination tests", 0, 0);
 	r_skipSuppress = CVar_Register("r_skipSuppress", "0", CVAR_BOOL, CVAR_CHEAT, "Skip per-view suppressions", 0, 0);
 	r_skipCulling = CVar_Register("r_skipCulling", "0", CVAR_BOOL, CVAR_CHEAT, "Skip culling", 0, 0);

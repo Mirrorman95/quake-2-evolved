@@ -122,7 +122,7 @@ int BoxOnPlaneSide (const vec3_t mins, const vec3_t maxs, const cplane_t *plane)
 
 		return PLANESIDE_CROSS;
 	}
-	
+
 	// General case
 	switch (plane->signbits){
 	case 0:

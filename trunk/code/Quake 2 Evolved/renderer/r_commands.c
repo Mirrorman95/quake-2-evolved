@@ -36,6 +36,9 @@
 */
 static void R_PerformanceCounters (){
 
+	if (r_showCull->integerValue)
+		Com_Printf("in: %i (b: %i, s: %i, l: %i), clip: %i (b: %i, s: %i, l: %i), out: %i (b: %i, s: %i, l: %i)\n", rg.pc.cullBoundsIn + rg.pc.cullSphereIn + rg.pc.cullLineIn, rg.pc.cullBoundsIn, rg.pc.cullSphereIn, rg.pc.cullLineIn, rg.pc.cullBoundsClip + rg.pc.cullSphereClip + rg.pc.cullLineClip, rg.pc.cullBoundsClip, rg.pc.cullSphereClip, rg.pc.cullLineClip, rg.pc.cullBoundsOut + rg.pc.cullSphereOut + rg.pc.cullLineOut, rg.pc.cullBoundsOut, rg.pc.cullSphereOut, rg.pc.cullLineOut);
+
 	// Clear for next frame
 	Mem_Fill(&rg.pc, 0, sizeof(performanceCounters_t));
 }

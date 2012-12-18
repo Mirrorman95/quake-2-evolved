@@ -425,16 +425,16 @@ static byte	cm_phsRow[MAX_MAP_LEAFS/8];
 */
 static void CM_DecompressVis (const byte *in, byte *out){
 
-	byte	*out_p;
+	byte	*vis;
 	int		c, row;
 
-	row = (cm.numClusters+7)>>3;	
-	out_p = out;
+	row = (cm.numClusters + 7) >> 3;
+	vis = out;
 
 	if (!in){
 		// No vis info, so make all visible
 		while (row){
-			*out_p++ = 0xff;
+			*vis++ = 0xFF;
 			row--;
 		}
 
@@ -443,22 +443,22 @@ static void CM_DecompressVis (const byte *in, byte *out){
 
 	do {
 		if (*in){
-			*out_p++ = *in++;
+			*vis++ = *in++;
 			continue;
 		}
 	
 		c = in[1];
 		in += 2;
-		if ((out_p - out) + c > row){
-			c = row - (out_p - out);
+		if ((vis - out) + c > row){
+			c = row - (vis - out);
 			Com_DPrintf(S_COLOR_YELLOW "Vis decompression overrun\n");
 		}
 
 		while (c){
-			*out_p++ = 0;
+			*vis++ = 0;
 			c--;
 		}
-	} while (out_p - out < row);
+	} while (vis - out < row);
 }
 
 /*
@@ -468,8 +468,13 @@ static void CM_DecompressVis (const byte *in, byte *out){
 */
 byte *CM_ClusterPVS (int cluster){
 
+	if (!cm.loaded || !cm.numClusters){
+		Mem_Fill(cm_pvsRow, 0xFF, 1);
+		return cm_pvsRow;
+	}
+
 	if (cluster == -1 || cm.numVisibility == 0)
-		Mem_Fill(cm_pvsRow, 0, (cm.numClusters+7)>>3);
+		Mem_Fill(cm_pvsRow, 0xFF, (cm.numClusters + 7) >> 3);
 	else
 		CM_DecompressVis((byte *)cm.visibility + cm.visibility->bitOfs[cluster][VIS_PVS], cm_pvsRow);
 
