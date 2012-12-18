@@ -38,8 +38,6 @@
 
 static model_t				r_inlineModels[MAX_MODELS];
 
-static byte					r_noMapVis[MAX_MAP_LEAFS/8];
-
 static model_t *			r_modelsHashTable[MODELS_HASH_SIZE];
 static model_t *			r_models[MAX_MODELS];
 static int					r_numModels;
@@ -85,40 +83,37 @@ leaf_t *R_PointInLeaf (const vec3_t point){
  R_DecompressVis
  ==================
 */
-static byte *R_DecompressVis (const byte *in){
+static void R_DecompressVis (const byte *in, byte *out){
 
-	static byte	decompressed[MAX_MAP_LEAFS/8];
-	byte		*out;
-	int			c, row;
+	byte	*pvs;
+	int		c, row;
 
-	row = (rg.worldModel->vis->numClusters + 7) >> 3;	
-	out = decompressed;
+	row = (rg.worldModel->vis->numClusters + 7) >> 3;
+	pvs = out;
 
 	if (!in){
 		// No vis info, so make all visible
 		while (row){
-			*out++ = 0xFF;
+			*pvs++ = 0xFF;
 			row--;
 		}
 
-		return decompressed;		
+		return;
 	}
 
 	do {
 		if (*in){
-			*out++ = *in++;
+			*pvs++ = *in++;
 			continue;
 		}
-	
+
 		c = in[1];
 		in += 2;
 		while (c){
-			*out++ = 0;
+			*pvs++ = 0;
 			c--;
 		}
-	} while (out - decompressed < row);
-	
-	return decompressed;
+	} while (pvs - out < row);
 }
 
 /*
@@ -126,12 +121,14 @@ static byte *R_DecompressVis (const byte *in){
  R_ClusterPVS
  ==================
 */
-byte *R_ClusterPVS (int cluster){
+void R_ClusterPVS (int cluster, byte *pvs){
 
-	if (cluster == -1 || !rg.worldModel || !rg.worldModel->vis)
-		return r_noMapVis;
+	if (cluster == -1 || !rg.worldModel || !rg.worldModel->vis){
+		Mem_Fill(pvs, 0xFF, MAX_MAP_LEAFS/8);
+		return;
+	}
 
-	return R_DecompressVis((byte *)rg.worldModel->vis + rg.worldModel->vis->bitOfs[cluster][VIS_PVS]);
+	R_DecompressVis((byte *)rg.worldModel->vis + rg.worldModel->vis->bitOfs[cluster][VIS_PVS], pvs);
 }
 
 
@@ -1997,6 +1994,69 @@ model_t *R_RegisterModel (const char *name){
 
 /*
  ==================
+ R_ModelRadius
+ ==================
+*/
+float R_ModelRadius (mdl_t *alias, renderEntity_t *entity){
+
+	mdlFrame_t	*curFrame, *oldFrame;
+	float		radius;
+
+	if ((entity->frame < 0 || entity->frame >= alias->numFrames) || (entity->oldFrame < 0 || entity->oldFrame >= alias->numFrames)){
+		Com_DPrintf(S_COLOR_YELLOW "R_ModelRadius: no such frame %i to %i (%s)\n", entity->frame, entity->oldFrame, entity->model->name);
+
+		entity->frame = 0;
+		entity->oldFrame = 0;
+	}
+
+	curFrame = alias->frames + entity->frame;
+	oldFrame = alias->frames + entity->oldFrame;
+
+	if (curFrame == oldFrame)
+		radius = curFrame->radius;
+	else {
+		if (curFrame->radius > oldFrame->radius)
+			radius = curFrame->radius;
+		else
+			radius = oldFrame->radius;
+	}
+
+	return radius;
+}
+
+/*
+ ==================
+ R_ModelMaterial
+ ==================
+*/
+material_t *R_ModelMaterial (renderEntity_t *entity, mdlSurface_t *surface){
+
+	material_t *material;
+
+	if (entity->material)
+		material = entity->material;
+	else {
+		if (surface->numMaterials){
+			if (entity->skinIndex < 0 || entity->skinIndex >= surface->numMaterials){
+				Com_DPrintf(S_COLOR_YELLOW "R_ModelMaterial: no such material %i (%s)\n", entity->skinIndex, entity->model->name);
+
+				entity->skinIndex = 0;
+			}
+
+			material = surface->materials[entity->skinIndex].material;
+		}
+		else {
+			Com_DPrintf(S_COLOR_YELLOW "R_ModelMaterial: no materials for surface (%s)\n", entity->model->name);
+
+			material = rg.defaultMaterial;
+		}
+	}
+
+	return material;
+}
+
+/*
+ ==================
  R_ModelFrames
  ==================
 */
@@ -2219,9 +2279,6 @@ void R_InitModels (){
 
 	// Create the default model
 	R_CreateDefaultModel();
-
-	// Fill PVS data
-	Mem_Fill(r_noMapVis, 255, sizeof(r_noMapVis));
 
 	// Set up the world entity
 	rg.worldEntity = &rg.scene.entities[0];

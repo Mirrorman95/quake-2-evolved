@@ -25,6 +25,10 @@
 // r_lightEditor.c - Light editor
 //
 
+// TODO:
+// - light index is removed or something in the light editor code
+// - drawing
+
 
 #include "r_local.h"
 #include "../common/editor.h"
@@ -52,6 +56,7 @@ void R_RefreshLightEditor (){
 	lightData_t *lightData;
 	trace_t		trace;
 	vec3_t		origin, textOrigin, forward, angles, axis[3];
+	vec3_t		tmp;
 	vec3_t		mins = {-5.0f, -5.0f, -5.0f}, maxs = {5.0f, 5.0f, 5.0f};
 	char		string[MAX_STRING_LENGTH];
 	float		fraction = 1.0f;
@@ -126,7 +131,14 @@ void R_RefreshLightEditor (){
 		if (lightData == r_lightEditor.editLight){
 			// If a point or cubic light, draw a box at the center
 			if (lightData->type == RL_POINT || lightData->type == RL_CUBIC){
+				ClearBounds(mins, maxs);
 
+				VectorSet(mins, -2.0f, -2.0f, -2.0f);
+				VectorSet(maxs, 2.0f, 2.0f, 2.0f);
+
+				// TODO: axis * center + origin
+
+				R_DebugBox(colorRed, origin, axis, mins, maxs, false, VIEW_MAIN);
 			}
 
 			// If a projected light, draw an arrow pointing to the far plane
@@ -149,7 +161,7 @@ void R_RefreshLightEditor (){
 
 		VectorMA(origin, 10.0f, forward, textOrigin);
 
-		R_DebugText(colorWhite, true, textOrigin, 2.0f, 4.0f, string, false, VIEW_MAIN);
+//		R_DebugText(colorWhite, true, textOrigin, 2.0f, 4.0f, string, false, VIEW_MAIN);
 	}
 }
 
@@ -165,13 +177,60 @@ void R_RefreshLightEditor (){
 
 /*
  ==================
- 
+ R_LightEditorUpdateCallback
+
+ TODO: getting a invalid index value
  ==================
 */
 void R_LightEditorUpdateCallback (int index, lightParms_t *parms){
 
+	lightData_t	*lightData;
+
 	if (!r_lightEditor.active)
 		return;			// Not active
+
+	if (index < 0 || index >= MAX_STATIC_LIGHTS)
+		return;			// Out of range
+
+	lightData = &rg.staticLights[index];
+
+	lightData->valid = false;
+
+	// Copy the parameters and clamp as needed
+	lightData->parms = *parms;
+
+	lightData->parms.type = ClampInt(parms->type, 0, 3);
+
+	lightData->parms.radius[0] = Max(parms->radius[0], 1.0f);
+	lightData->parms.radius[1] = Max(parms->radius[1], 1.0f);
+	lightData->parms.radius[2] = Max(parms->radius[2], 1.0f);
+
+	lightData->parms.zNear = Max(parms->zNear, 1.0f);
+	lightData->parms.zFar = Max(parms->zFar, 2.0f);
+
+	lightData->parms.fogDistance = Max(parms->fogDistance, 1.0f);
+	lightData->parms.fogHeight = Max(parms->fogHeight, 1.0f);
+
+	lightData->parms.detailLevel = ClampInt(parms->detailLevel, 0, 2);
+
+	// Validate
+	if (lightData->parms.type == RL_DIRECTIONAL && lightData->parms.center[0] != 0.0f || lightData->parms.center[1] != 0.0f || lightData->parms.center[2] != 0.0f)
+		VectorSet(lightData->parms.center, 0.0f, 0.0f, 1.0f);
+
+	if (lightData->parms.xMin >= lightData->parms.xMax){
+		lightData->parms.xMin = -0.5f;
+		lightData->parms.xMax = 0.5f;
+	}
+
+	if (lightData->parms.yMin >= lightData->parms.yMax){
+		lightData->parms.yMin = -0.5f;
+		lightData->parms.yMax = 0.5f;
+	}
+
+	if (lightData->parms.zNear >= lightData->parms.zFar){
+		lightData->parms.zNear = 1.0f;
+		lightData->parms.zFar = 200.0f;
+	}
 }
 
 /*
@@ -181,8 +240,8 @@ void R_LightEditorUpdateCallback (int index, lightParms_t *parms){
 */
 void R_LightEditorRemoveCallback (int index){
 
-	lightData_t		*lightData;
-	int				i, j;
+	lightData_t	*lightData;
+	int			i, j;
 
 	if (!r_lightEditor.active)
 		return;			// Not active
@@ -193,7 +252,7 @@ void R_LightEditorRemoveCallback (int index){
 			continue;
 
 		for (j = i; j < rg.numStaticLights - 1; j++)
-			memcpy(&rg.staticLights[j], &rg.staticLights[j+1], sizeof(lightData_t));
+			Mem_Copy(&rg.staticLights[j], &rg.staticLights[j+1], sizeof(lightData_t));
 
 		rg.numStaticLights--;
 		break;
@@ -209,14 +268,13 @@ void R_LightEditorRemoveCallback (int index){
 
 /*
  ==================
- 
+ R_LightEditorSaveCallback
  ==================
 */
 void R_LightEditorSaveCallback (){
 
 	fileHandle_t	f;
 	lightData_t		*lightData;
-	char			name[MAX_QPATH];
 	int				i;
 
 	if (!r_lightEditor.active)
@@ -228,14 +286,9 @@ void R_LightEditorSaveCallback (){
 	}
 
 	// Write the light file
-	Str_Copy(name, rg.worldModel->name, sizeof(name));
-	Str_StripFileExtension(name);
-
-	Str_SPrintf(name, sizeof(name), "%s.light", name);
-
-	FS_OpenFile(name, FS_WRITE, &f);
+	FS_OpenFile(rg.staticLights->fileName, FS_WRITE, &f);
 	if (!f){
-		Com_Printf("Couldn't write light file %s\n", name);
+		Com_Printf("Couldn't write light file %s\n", rg.staticLights->fileName);
 		return;
 	}
 
@@ -243,18 +296,70 @@ void R_LightEditorSaveCallback (){
 		FS_Printf(f, "light %i" NEWLINE, i);
 		FS_Printf(f, "{" NEWLINE);
 
-		FS_Printf(f, "name                %g" NEWLINE, lightData->name);
+		FS_Printf(f, "name                %s" NEWLINE, lightData->parms.name);
 
-		FS_Printf(f, "type                %g" NEWLINE, lightData->type);
+		if (lightData->parms.type != RL_POINT)
+			FS_Printf(f, "type                %g" NEWLINE, lightData->parms.type);
 
-		FS_Printf(f, "origin              ( %g %g %g )" NEWLINE, lightData->origin[0], lightData->origin[1], lightData->origin[2]);
+		FS_Printf(f, "origin              ( %g %g %g )" NEWLINE, lightData->parms.origin[0], lightData->parms.origin[1], lightData->parms.origin[2]);
+
+		if (lightData->parms.center[0] != 0.0f || lightData->parms.center[1] != 0.0f || lightData->parms.center[2] != 0.0f)
+			FS_Printf(f, "center              ( %g %g %g )" NEWLINE, lightData->parms.center[0], lightData->parms.center[1], lightData->parms.center[2]);
+
+		if (lightData->parms.angles[0] != 0.0f || lightData->parms.angles[1] != 0.0f || lightData->parms.angles[2] != 0.0f)
+			FS_Printf(f, "angles              ( %g %g %g )" NEWLINE, lightData->parms.angles[0], lightData->parms.angles[1], lightData->parms.angles[2]);
+
+		if (lightData->parms.radius[0] != 100.0f || lightData->parms.radius[1] != 100.0f || lightData->parms.radius[2] != 100.0f)
+			FS_Printf(f, "radius              ( %g %g %g )" NEWLINE, lightData->parms.radius[0], lightData->parms.radius[1], lightData->parms.radius[2]);
+
+		if (lightData->parms.xMin != -0.5f)
+			FS_Printf(f, "xMin                %g" NEWLINE, lightData->parms.xMin);
+
+		if (lightData->parms.xMax != 0.5f)
+			FS_Printf(f, "xMax                %g" NEWLINE, lightData->parms.xMax);
+
+		if (lightData->parms.yMin != -0.5f)
+			FS_Printf(f, "yMin                %g" NEWLINE, lightData->parms.yMin);
+
+		if (lightData->parms.yMax != 0.5f)
+			FS_Printf(f, "yMax                %g" NEWLINE, lightData->parms.yMax);
+
+		if (lightData->parms.zNear != 1.0f)
+			FS_Printf(f, "zNear               %g" NEWLINE, lightData->parms.zNear);
+
+		if (lightData->parms.zFar != 200.0f)
+			FS_Printf(f, "zFar                %g" NEWLINE, lightData->parms.zFar);
+
+		if (lightData->parms.noShadows)
+			FS_Printf(f, "noShadows           %g" NEWLINE, lightData->parms.noShadows);
+
+		if (lightData->parms.fogDistance != 500.0f)
+			FS_Printf(f, "fogDistance         %g" NEWLINE, lightData->parms.fogDistance);
+
+		if (lightData->parms.fogHeight != 500.0f)
+			FS_Printf(f, "fogHeight           %g" NEWLINE, lightData->parms.fogHeight);
+
+		if (lightData->parms.style != 0)
+			FS_Printf(f, "style               %g" NEWLINE, lightData->parms.style);
+
+		if (lightData->parms.detailLevel)
+			FS_Printf(f, "detailLevel         %g" NEWLINE, lightData->parms.detailLevel);
+
+		if (lightData->parms.material)
+			FS_Printf(f, "material            %s" NEWLINE, lightData->parms.material);
+
+		if (lightData->parms.materialParms[MATERIALPARM_RED] != 1.0f || lightData->parms.materialParms[MATERIALPARM_GREEN] != 1.0f || lightData->parms.materialParms[MATERIALPARM_BLUE] != 1.0f)
+			FS_Printf(f, "color               ( %g %g %g )" NEWLINE, lightData->parms.materialParms[MATERIALPARM_RED], lightData->parms.materialParms[MATERIALPARM_GREEN], lightData->parms.materialParms[MATERIALPARM_BLUE]);
+
+		if (lightData->parms.materialParms[MATERIALPARM_ALPHA] != 1.0f)
+			FS_Printf(f, "alpha               %g" NEWLINE, lightData->parms.materialParms[MATERIALPARM_ALPHA]);
 
 		FS_Printf(f, "}" NEWLINE);
 	}
 
 	FS_CloseFile(f);
 
-	Com_Printf("Wrote light file %s with %i lights\n", name, rg.numStaticLights);
+	Com_Printf("Wrote light file %s with %i lights\n", rg.staticLights->fileName, rg.numStaticLights);
 }
 
 /*
@@ -278,7 +383,7 @@ void R_LightEditorCloseCallback (){
 
 /*
  ==================
- 
+ R_LightEditorMouseEvent
  ==================
 */
 static bool R_LightEditorMouseEvent (){
@@ -293,6 +398,10 @@ static bool R_LightEditorMouseEvent (){
 
 	// Edit the light that has focus
 	lightData = r_lightEditor.editLight = r_lightEditor.focusLight;
+
+	WIN_EditLightParameters(lightData->index, &lightData->parms);
+
+	return true;
 }
 
 
@@ -333,7 +442,7 @@ static void R_EditLights_f (){
 
 /*
  ==================
-
+ R_AddLight_f
  ==================
 */
 static void R_AddLight_f (){
@@ -360,7 +469,7 @@ static void R_AddLight_f (){
 	// Edit the new light
 	r_lightEditor.editLight = lightData;
 
-	Str_SPrintf(lightData->parms.name, sizeof(lightData->parms.name), "light%i", rg.numStaticLights - 1);
+	Str_SPrintf(lightData->parms.name, sizeof(lightData->parms.name), "light_%i", rg.numStaticLights - 1);
 
 	lightData->parms.index = rg.numStaticLights - 1;
 
@@ -389,16 +498,16 @@ static void R_AddLight_f (){
 	lightData->parms.style = 0;
 	lightData->parms.detailLevel = 0;
 
-	Str_Copy(lightData->parms.material, "defaultLight", sizeof(lightData->parms.material));
+	Str_Copy(lightData->parms.material, "lights/default", sizeof(lightData->parms.material));
 
-	lightData->parms.materialParms[0] = 1.0f;
-	lightData->parms.materialParms[1] = 1.0f;
-	lightData->parms.materialParms[2] = 1.0f;
-	lightData->parms.materialParms[3] = 1.0f;
-	lightData->parms.materialParms[4] = 0.0f;
-	lightData->parms.materialParms[5] = 0.0f;
-	lightData->parms.materialParms[6] = 0.0f;
-	lightData->parms.materialParms[7] = 0.0f;
+	lightData->parms.materialParms[MATERIALPARM_RED] = 1.0f;
+	lightData->parms.materialParms[MATERIALPARM_GREEN] = 1.0f;
+	lightData->parms.materialParms[MATERIALPARM_BLUE] = 1.0f;
+	lightData->parms.materialParms[MATERIALPARM_ALPHA] = 1.0f;
+	lightData->parms.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
+	lightData->parms.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
+	lightData->parms.materialParms[MATERIALPARM_MISC] = 0.0f;
+	lightData->parms.materialParms[MATERIALPARM_MODE] = 0.0f;
 
 	WIN_EditLightParameters(lightData->parms.index, &lightData->parms);
 }

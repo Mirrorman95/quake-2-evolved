@@ -137,24 +137,7 @@ void R_AddAliasModel (renderEntity_t *entity){
 	// Add all the surfaces
 	for (i = 0, surface = alias->surfaces; i < alias->numSurfaces; i++, surface++){
 		// Select the material
-		if (entity->material)
-			material = entity->material;
-		else {
-			if (surface->numMaterials){
-				if (entity->skinIndex < 0 || entity->skinIndex >= surface->numMaterials){
-					Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModel: no such material %i (%s)\n", entity->skinIndex, entity->model->name);
-
-					entity->skinIndex = 0;
-				}
-
-				material = surface->materials[entity->skinIndex].material;
-			}
-			else {
-				Com_DPrintf(S_COLOR_YELLOW "R_AddAliasModel: no materials for surface (%s)\n", entity->model->name);
-
-				material = rg.defaultMaterial;
-			}
-		}
+		material = R_ModelMaterial(entity, surface);
 
 		if (!material->numStages)
 			continue;

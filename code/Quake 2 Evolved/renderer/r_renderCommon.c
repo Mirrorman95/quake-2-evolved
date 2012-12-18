@@ -409,11 +409,7 @@ void RB_RenderMaterialPasses (int numMeshes, mesh_t *meshes, ambientPass_t pass)
 */
 static void RB_DrawShadow (){
 
-	// TODO: update the vertex buffer and enable GL_VERTEX_ARRAY since shadows has it's own
-	// buffer
-
-	RB_Cull(backEnd.material);
-	RB_PolygonOffset(backEnd.material);
+	// TODO: enable GL_VERTEX_ARRAY shadow vertex array here?
 
 	if (backEnd.shadowCaps){
 		if (glConfig.stencilTwoSideAvailable){
@@ -487,7 +483,7 @@ static void RB_DrawShadow (){
 
 /*
  ==================
- 
+ RB_RenderStencilShadows
  ==================
 */
 static void RB_RenderStencilShadows (int numMeshes, mesh_t *meshes){
@@ -507,6 +503,30 @@ static void RB_RenderStencilShadows (int numMeshes, mesh_t *meshes){
 	QGL_LogPrintf("---------- RB_RenderStencilShadows ----------\n");
 
 	// Set the GL state
+	GL_DisableTexture();
+
+	if (glConfig.stencilTwoSideAvailable || glConfig.atiSeparateStencilAvailable)
+		GL_Disable(GL_CULL_FACE);
+	else
+		GL_Enable(GL_CULL_FACE);
+
+	GL_Enable(GL_POLYGON_OFFSET_FILL);
+	GL_PolygonOffset(0.0f, 1.0f);
+
+	GL_Disable(GL_BLEND);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Enable(GL_DEPTH_TEST);
+	GL_DepthFunc(GL_LEQUAL);
+
+	GL_Enable(GL_STENCIL_TEST);
+	GL_StencilFunc(GL_ALWAYS, 128, 255);
+	GL_StencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+
+	GL_ColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(255);
 
 	// Clear the batch state
 	backEnd.entity = NULL;
@@ -800,14 +820,6 @@ static void RB_InteractionPass (int numMeshes, mesh_t *meshes){
 /*
  ==================
  RB_RenderLights
-
- FIXME: find out what causes it not to draw, everything else seems fine
- - matrix issue?
- - texture issue?
- - light issue?
- - materialParm issue?
- - worldEntity issue?
- - backEnd.light issue?
  ==================
 */
 void RB_RenderLights (int numLights, light_t *lights){
@@ -847,6 +859,8 @@ void RB_RenderLights (int numLights, light_t *lights){
 		// Skip if condition evaluated to false
 		if (!light->material->expressionRegisters[light->material->conditionRegister])
 			continue;
+
+		// TODO: clear the stencil buffer if needed?
 
 		// Render the stencil shadow volume if needed
 //		RB_RenderStencilShadows(light->numShadowMeshes, light->shadowMeshes);

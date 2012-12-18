@@ -985,7 +985,10 @@ typedef struct model_s {
 } model_t;
 
 leaf_t *		R_PointInLeaf (const vec3_t p);
-byte *			R_ClusterPVS (int cluster);
+void			R_ClusterPVS (int cluster, byte *pvs);
+
+float			R_ModelRadius (mdl_t *alias, renderEntity_t *entity);
+material_t *	R_ModelMaterial (renderEntity_t *entity, mdlSurface_t *surface);
 
 void			R_InitModels ();
 void			R_ShutdownModels ();
@@ -1041,6 +1044,7 @@ typedef struct {
 	bool					valid;
 	bool					precached;
 
+	char					fileName[64];
 	char					name[64];
 
 	int						index;
@@ -1069,6 +1073,9 @@ typedef struct {
 	bool					noShadows;
 
 	int						style;
+
+	const byte *			pvs;
+	int						area;
 
 	lightParms_t			parms;
 } lightData_t;
@@ -1267,12 +1274,20 @@ void			R_ClearMeshes ();
 
 #define MAX_LIGHTS					1024
 
+typedef struct {
+	bool					FIXME;
+	bool					degenerate;
+	cplane_t				frustum[6];
+} nearClipVolume_t;
+
 typedef struct light_s {
 	lightData_t				data;
 	material_t *			material;
 	float					materialParms[MAX_MATERIAL_PARMS];
 
 	rect_t					scissor;
+
+	nearClipVolume_t		ncv;
 
 	bool					fogPlaneVisible;
 
@@ -1626,6 +1641,7 @@ extern cvar_t *				r_showNormals;
 extern cvar_t *				r_showTextureVectors;
 extern cvar_t *				r_showBatchSize;
 extern cvar_t *				r_showModelBounds;
+extern cvar_t *				r_showLeafBounds;
 extern cvar_t *				r_skipVisibility;
 extern cvar_t *				r_skipSuppress;
 extern cvar_t *				r_skipCulling;

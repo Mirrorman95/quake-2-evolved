@@ -107,17 +107,17 @@ void BoundsFromPoints (vec3_t mins, vec3_t maxs, const vec3_t points[8]){
 	for (i = 0; i < 8; i++){
 		if (points[i][0] < mins[0])
 			mins[0] = points[i][0];
-		if (points[i][0] > mins[0])
+		if (points[i][0] > maxs[0])
 			maxs[0] = points[i][0];
 
 		if (points[i][1] < mins[1])
 			mins[1] = points[i][1];
-		if (points[i][1] > mins[1])
+		if (points[i][1] > maxs[1])
 			maxs[1] = points[i][1];
 
 		if (points[i][2] < mins[2])
 			mins[2] = points[i][2];
-		if (points[i][2] > mins[2])
+		if (points[i][2] > maxs[2])
 			maxs[2] = points[i][2];
 	}
 }
