@@ -3531,6 +3531,8 @@ static material_t *R_CreateDefaultMaterial (const char *name, materialType_t typ
 /*
  ==================
  R_CreateMaterial
+
+ TODO: water volumes are static, it should warp/translate
  ==================
 */
 static material_t *R_CreateMaterial (const char *name, materialType_t type, surfaceParm_t surfaceParm, materialDef_t *materialDef){

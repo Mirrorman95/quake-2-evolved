@@ -1,0 +1,64 @@
+
+textures/e1u1/bluwter
+{
+	sort 			refractive
+	noShadows
+
+	// High quality render path
+	{
+		shaderQuality == 2
+	}
+
+	// Medium quality render path
+	{
+		shaderQuality == 1
+	}
+
+	// Low quality render path
+	{
+		shaderQuality == 0
+	}
+}
+
+textures/e1u1/wndow0_3
+{
+	forceOverlays
+	sort 			refractive
+	
+	// High quality render path
+	{
+		shaderQuality == 2
+
+		shader		glass
+
+		shaderParm	u_DistortionScale	0.031, 0.031
+		shaderParm	u_ColorTint		1, 1, 1
+		shaderParm	u_FresnelParms		1, 1, 0
+
+		shaderMap	u_BumpMap		normalMap textures/e1u1/wndow0_3_local.tga
+		shaderMap	u_ColorMap		textures/e1u1/wndow0_3.tga
+		shaderMap	u_RefractionMap		_currentColor
+		shaderMap	u_ReflectionMap		cubeMap env/generic1
+	}
+
+	// Medium quality render path
+	{
+		shaderQuality == 1
+
+		shader		glass
+
+		shaderParm	u_DistortionScale	0.031, 0.031
+		shaderParm	u_ColorTint		1, 1, 1
+		shaderParm	u_FresnelParms		1, 1, 0
+
+		shaderMap	u_BumpMap		normalMap textures/e1u1/wndow0_3_local.tga
+		shaderMap	u_ColorMap		textures/e1u1/wndow0_3.tga
+		shaderMap	u_RefractionMap		_currentColor
+		shaderMap	u_ReflectionMap		cubeMap env/generic1
+	}
+
+	// Low quality render path
+	{
+		shaderQuality == 0
+	}
+}

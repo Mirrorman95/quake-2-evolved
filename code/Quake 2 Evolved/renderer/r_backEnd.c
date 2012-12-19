@@ -479,13 +479,12 @@ static const void *RB_DrawStretchPic (const void *data){
 	// Batch indices
 	indices = backEnd.indices + backEnd.numIndices;
 
-	for (i = 2; i < 4; i++){
-		indices[0] = backEnd.numVertices + 0;
-		indices[1] = backEnd.numVertices + i-1;
-		indices[2] = backEnd.numVertices + i;
-
-		indices += 3;
-	}
+	indices[0] = backEnd.numVertices;
+	indices[1] = backEnd.numVertices + 1;
+	indices[2] = backEnd.numVertices + 3;
+	indices[3] = backEnd.numVertices + 3;
+	indices[4] = backEnd.numVertices + 1;
+	indices[5] = backEnd.numVertices + 2;
 
 	backEnd.numIndices += 6;
 

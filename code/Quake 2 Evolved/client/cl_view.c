@@ -264,6 +264,24 @@ void CL_PrevSkin_f (){
 */
 static void CL_UpdateTestModel (){
 
+	if (!cl.testModel.active)
+		return;
+
+	// Update origin and axis
+	if (cl.testModel.isGun){
+		VectorCopy(cl.renderView.origin, cl.testModel.renderEntity.origin);
+		Matrix3_Copy(cl.renderView.axis, cl.testModel.renderEntity.axis);
+
+		VectorMA(cl.testModel.renderEntity.origin, cl_testGunX->floatValue, cl.testModel.renderEntity.axis[0], cl.testModel.renderEntity.origin);
+		VectorMA(cl.testModel.renderEntity.origin, cl_testGunY->floatValue, cl.testModel.renderEntity.axis[1], cl.testModel.renderEntity.origin);
+		VectorMA(cl.testModel.renderEntity.origin, cl_testGunZ->floatValue, cl.testModel.renderEntity.axis[2], cl.testModel.renderEntity.origin);
+	}
+	else {
+
+	}
+
+	// Add or update the render entity
+	R_AddEntityToScene(&cl.testModel.renderEntity);
 }
 
 

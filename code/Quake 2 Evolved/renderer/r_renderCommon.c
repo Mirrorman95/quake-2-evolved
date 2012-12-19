@@ -873,7 +873,7 @@ void RB_RenderLights (int numLights, light_t *lights){
 	}
 
 	// Restore the scissor
-	GL_Scissor(light->scissor.x, light->scissor.y, light->scissor.width, light->scissor.height);
+	GL_Scissor(backEnd.scissor.x, backEnd.scissor.y, backEnd.scissor.width, backEnd.scissor.height);
 
 	QGL_LogPrintf("--------------------\n");
 }
@@ -890,11 +890,52 @@ void RB_RenderLights (int numLights, light_t *lights){
 
 /*
  ==================
- 
+ RB_DrawBlendLight
  ==================
 */
 static void RB_DrawBlendLight (){
 
+	stage_t	*stage;
+	vec4_t	color;
+	int		i;
+
+	RB_Cull(backEnd.material);
+	RB_PolygonOffset(backEnd.material);
+
+	// Run through the light stages
+	for (i = 0, stage = backEnd.lightMaterial->stages; i < backEnd.lightMaterial->numStages; i++, stage++){
+		if (!backEnd.lightMaterial->expressionRegisters[stage->conditionRegister])
+			continue;
+
+		// Set the GL state
+		if (stage->drawState & DS_BLEND){
+			GL_Enable(GL_BLEND);
+			GL_BlendFunc(stage->blendSrc, stage->blendDst);
+			GL_BlendEquation(stage->blendMode);
+		}
+		else
+			GL_Disable(GL_BLEND);
+
+		// Compute the light matrix
+		RB_ComputeLightMatrix(backEnd.light, backEnd.entity, backEnd.lightMaterial, &stage->textureStage);
+
+		// Set the light color
+		color[0] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[0]];
+		color[1] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[1]];
+		color[2] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[2]];
+		color[3] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[3]];
+
+		// Set up the program uniforms
+		R_UniformMatrix4(backEnd.blendLightParms.lightMatrix, GL_TRUE, backEnd.localParms.lightMatrix);
+		R_UniformVector4(backEnd.blendLightParms.lightColor, color);
+
+		// Bind the textures
+		GL_BindMultitexture(stage->textureStage.texture, TMU_LIGHTPROJECTION);
+		GL_BindMultitexture(backEnd.lightMaterial->lightFalloffImage, TMU_LIGHTFALLOFF);
+
+		// Draw it
+		RB_DrawElementsWithCounters(&rg.pc.interactionIndices, &rg.pc.interactionVertices);
+	}
 }
 
 /*
@@ -991,13 +1032,50 @@ static void RB_BlendLightPass (int numMeshes, mesh_t *meshes){
 
 /*
  ==================
- 
+ RB_RenderBlendLights
  ==================
 */
 void RB_RenderBlendLights (int numLights, light_t *lights){
 
+	light_t	*light;
+	int		i;
+
 	if (!numLights)
 		return;
+
+	// Development tool
+	if (r_skipBlendLights->integerValue)
+		return;
+
+	QGL_LogPrintf("---------- RB_RenderBlendLights ----------\n");
+
+	// Run through the lights
+	for (i = 0, light = lights; i < numLights; i++, light++){
+		if (!light->numInteractionMeshes)
+			continue;
+
+		// Set the light
+		backEnd.light = light;
+		backEnd.lightMaterial = light->material;
+
+		// Evaluate registers
+		RB_EvaluateRegisters(light->material, backEnd.floatTime, light->materialParms);
+
+		// Skip if condition evaluated to false
+		if (!light->material->expressionRegisters[light->material->conditionRegister])
+			continue;
+
+		// Set up the scissor
+		GL_Scissor(light->scissor.x, light->scissor.y, light->scissor.width, light->scissor.height);
+
+		// Draw the surfaces
+		RB_BlendLightPass(light->numInteractionMeshes, light->interactionMeshes);
+	}
+
+	// Restore the scissor
+	GL_Scissor(backEnd.scissor.x, backEnd.scissor.y, backEnd.scissor.width, backEnd.scissor.height);
+
+	QGL_LogPrintf("--------------------\n");
 }
 
 
@@ -1012,29 +1090,194 @@ void RB_RenderBlendLights (int numLights, light_t *lights){
 
 /*
  ==================
- 
+ RB_DrawFogLight
  ==================
 */
 static void RB_DrawFogLight (){
 
+	stage_t	*stage;
+	vec4_t	color;
+	int		i;
+
+	RB_Cull(backEnd.material);
+	RB_PolygonOffset(backEnd.material);
+
+	// Run through the light stages
+	for (i = 0, stage = backEnd.lightMaterial->stages; i < backEnd.lightMaterial->numStages; i++, stage++){
+		if (!backEnd.lightMaterial->expressionRegisters[stage->conditionRegister])
+			continue;
+
+		// Compute the light matrix
+		RB_ComputeLightMatrix(backEnd.light, backEnd.entity, backEnd.lightMaterial, &stage->textureStage);
+
+		// Compute the light color
+		color[0] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[0]];
+		color[1] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[1]];
+		color[2] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[2]];
+		color[3] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[3]];
+
+		// Set up the program uniforms
+		R_UniformMatrix4(backEnd.fogLightParms.lightMatrix, GL_TRUE, backEnd.localParms.lightMatrix);
+		R_UniformVector4(backEnd.fogLightParms.lightColor, color);
+
+		// Bind the textures
+		GL_BindMultitexture(stage->textureStage.texture, TMU_LIGHTPROJECTION);
+		GL_BindMultitexture(backEnd.lightMaterial->lightFalloffImage, TMU_LIGHTFALLOFF);
+
+		// Draw it
+		RB_DrawElementsWithCounters(&rg.pc.interactionIndices, &rg.pc.interactionVertices);
+	}
 }
 
 /*
  ==================
- 
+ RB_DrawFogLightPlane
  ==================
 */
 static void RB_DrawFogLightPlane (){
 
+	static glIndex_t	indices[6] = {2, 3, 1, 2, 1, 0};
+	stage_t				*stage;
+	vec4_t				color;
+	int					i;
+
+	// Unbind the index buffer
+	GL_BindIndexBuffer(NULL);
+
+	// Unbind the vertex buffer
+	GL_BindVertexBuffer(NULL);
+
+	// Set the GL state
+	GL_PolygonMode(GL_FILL);
+
+	GL_Enable(GL_CULL_FACE);
+	GL_CullFace(GL_BACK);
+
+	GL_Disable(GL_POLYGON_OFFSET_FILL);
+
+	GL_Enable(GL_BLEND);
+	GL_BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	GL_BlendEquation(GL_FUNC_ADD);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Enable(GL_DEPTH_TEST);
+	GL_DepthFunc(GL_LEQUAL);
+
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	// Set the entity state
+	RB_EntityState(rg.worldEntity);
+
+	// Bind the program
+	GL_BindProgram(rg.fogLightProgram);
+
+	// Set up the vertex array
+	qglVertexPointer(3, GL_FLOAT, 0, backEnd.light->data.corners);
+
+	// Run through the light stages
+	for (i = 0, stage = backEnd.lightMaterial->stages; i < backEnd.lightMaterial->numStages; i++, stage++){
+		if (!backEnd.lightMaterial->expressionRegisters[stage->conditionRegister])
+			continue;
+
+		// Compute the light matrix
+		RB_ComputeLightMatrix(backEnd.light, rg.worldEntity, backEnd.lightMaterial, &stage->textureStage);
+
+		// Compute the light color
+		color[0] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[0]];
+		color[1] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[1]];
+		color[2] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[2]];
+		color[3] = backEnd.lightMaterial->expressionRegisters[stage->colorStage.registers[3]];
+
+		// Set up the program uniforms
+		R_UniformMatrix4(backEnd.fogLightParms.lightMatrix, GL_TRUE, backEnd.localParms.lightMatrix);
+		R_UniformVector4(backEnd.fogLightParms.lightColor, color);
+
+		// Bind the textures
+		GL_BindMultitexture(stage->textureStage.texture, TMU_LIGHTPROJECTION);
+		GL_BindMultitexture(backEnd.lightMaterial->lightFalloffImage, TMU_LIGHTFALLOFF);
+
+		// Draw it
+		RB_DrawElementsStaticIndices(8, 6, indices);
+
+		// Check for errors
+		if (!r_ignoreGLErrors->integerValue)
+			GL_CheckForErrors();
+	}
+
+	// Restore the GL state
+	GL_SelectTexture(0);
+
+	// Unbind the program
+	GL_BindProgram(NULL);
 }
 
 /*
  ==================
- 
+ RB_DrawFogLightVolume
  ==================
 */
 static void RB_DrawFogLightVolume (){
 
+	static glIndex_t	indices[36] = {3, 2, 6, 3, 6, 7, 0, 1, 5, 0, 5, 4, 2, 3, 1, 2, 1, 0, 4, 5, 7, 4, 7, 6, 1, 3, 7, 1, 7, 5, 2, 0, 4, 2, 4, 6};
+
+	// Unbind the index buffer
+	GL_BindIndexBuffer(NULL);
+
+	// Unbind the vertex buffer
+	GL_BindVertexBuffer(NULL);
+
+	// Set the GL state
+	GL_LoadMatrix(GL_MODELVIEW, backEnd.viewParms.modelviewMatrix);
+
+	GL_DisableTexture();
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+
+	GL_Disable(GL_POLYGON_OFFSET_FILL);
+
+	GL_Disable(GL_BLEND);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Enable(GL_DEPTH_TEST);
+	GL_DepthFunc(GL_LEQUAL);
+
+	GL_Enable(GL_STENCIL_TEST);
+	GL_StencilFunc(GL_ALWAYS, 128, 255);
+	GL_StencilOpSeparate(GL_KEEP, GL_KEEP, GL_INCR_WRAP, GL_DECR_WRAP, GL_KEEP, GL_KEEP);
+
+	GL_DepthRange(0.0f, 1.0f);
+
+	GL_ColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(255);
+
+	// Enable depth clamp
+	qglEnable(GL_DEPTH_CLAMP);
+
+	// Clear the stencil buffer
+	qglClearStencil(128);
+	qglClear(GL_STENCIL_BUFFER_BIT);
+
+	// Set up the vertex array
+	qglVertexPointer(3, GL_FLOAT, 0, backEnd.light->data.corners);
+
+	// Draw it
+	RB_DrawElementsStaticIndices(8, 36, indices);
+
+	// Check for errors
+	if (!r_ignoreGLErrors->integerValue)
+		GL_CheckForErrors();
+
+	// Disable depth clamp
+	qglDisable(GL_DEPTH_CLAMP);
 }
 
 /*
@@ -1137,13 +1380,61 @@ static void RB_FogLightPass (int numMeshes, mesh_t *meshes){
 
 /*
  ==================
- 
+ RB_RenderFogLights
  ==================
 */
 void RB_RenderFogLights (int numLights, light_t *lights){
 
+	light_t *light;
+	int		i;
+
 	if (!numLights)
 		return;
+
+	// Development tool
+	if (r_skipFogLights->integerValue)
+		return;
+
+	QGL_LogPrintf("---------- RB_RenderFogLights ----------\n");
+
+	// Run through the lights
+	for (i = 0, light = lights; i < numLights; i++, light++){
+		if (!light->numInteractionMeshes){
+			if (!light->fogPlaneVisible)
+				continue;
+		}
+
+		// Set the light
+		backEnd.light = light;
+		backEnd.lightMaterial = light->material;
+
+		// Evaluate registers
+		RB_EvaluateRegisters(light->material, backEnd.floatTime, light->materialParms);
+
+		// Skip if condition evaluated to false
+		if (!light->material->expressionRegisters[light->material->conditionRegister])
+			continue;
+
+		// Set up the scissor
+		GL_Scissor(light->scissor.x, light->scissor.y, light->scissor.width, light->scissor.height);
+
+		// Draw the fog volume to the stencil buffer
+		RB_DrawFogLightVolume();
+
+		// Draw the surfaces
+		RB_FogLightPass(light->numInteractionMeshes, light->interactionMeshes);
+
+		// Draw the fog plane if visible
+		if (!light->fogPlaneVisible)
+			continue;
+
+		RB_DrawFogLightPlane();
+	}
+
+	// Restore the scissor
+	GL_Scissor(backEnd.scissor.x, backEnd.scissor.y, backEnd.scissor.width, backEnd.scissor.height);
+
+	QGL_LogPrintf("--------------------\n");
 }
 
 

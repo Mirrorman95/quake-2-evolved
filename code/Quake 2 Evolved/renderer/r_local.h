@@ -1070,6 +1070,9 @@ typedef struct {
 	mat4_t					modelviewMatrix;
 	mat4_t					modelviewProjectionMatrix;
 
+	float					fogDistance;
+	float					fogHeight;
+
 	bool					noShadows;
 
 	int						style;
@@ -1369,6 +1372,7 @@ typedef struct {
 	mat4_t					modelviewMatrix;
 	mat4_t					modelviewProjectionMatrix;
 	mat4_t					skyBoxMatrix;
+	mat4_t					mirrorMatrix;
 
 	// Mesh and light data
 	int						numMeshes[4];
@@ -1865,6 +1869,7 @@ typedef struct {
 	mat4_t					modelviewMatrix;
 	mat4_t					modelviewProjectionMatrix;
 	mat4_t					skyBoxMatrix;
+	mat4_t					mirrorMatrix;
 
 	int						numMeshes[4];
 	mesh_t *				meshes[4];
@@ -2165,7 +2170,6 @@ void			RB_DrawState (material_t *material, stage_t *stage);
 void			RB_BindTexture (material_t *material, texture_t *texture, int cinematicHandle);
 void			RB_BindMultitexture (material_t *material, texture_t *texture, int cinematicHandle, int unit);
 
-void			RB_ComputeTexturePlanes (material_t *material, textureStage_t *textureStage, vec4_t planes[4]);
 void			RB_ComputeTextureMatrix (material_t *material, textureStage_t *textureStage, mat4_t matrix);
 
 void			RB_SetupTextureStage (material_t *material, textureStage_t *textureStage);

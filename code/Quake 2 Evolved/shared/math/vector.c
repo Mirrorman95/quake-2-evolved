@@ -305,6 +305,18 @@ void VectorMA (const vec3_t v1, float scale, const vec3_t v2, vec3_t out){
 
 /*
  ==================
+ VectorSA
+ ==================
+*/
+void VectorSA (const vec3_t v1, float scale, const vec3_t v2, vec3_t out){
+
+	out[0] = v1[0] - v2[0] * scale;
+	out[1] = v1[1] - v2[1] * scale;
+	out[2] = v1[2] - v2[2] * scale;
+}
+
+/*
+ ==================
  VectorAverage
  ==================
 */

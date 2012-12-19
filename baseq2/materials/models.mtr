@@ -5,14 +5,19 @@
 
 models/misc/b_shell/bullet
 {
+	bumpMap			models/misc/b_shell/bullet_local.tga
+	diffuseMap		models/misc/b_shell/bullet_d.tga
+	specularMap		models/misc/b_shell/bullet_s.tga	
 	{
-
+		cubeMap		env/generic1
+		texGen		reflect
+		blend		GL_DST_COLOR, GL_ONE
 	}
 }
 
 models/misc/s_shell/shell
 {
-	{
-
-	}
+	bumpMap			models/misc/s_shell/shell_local.tga
+	diffuseMap		models/misc/s_shell/shell_d.tga
+	specularMap		models/misc/s_shell/shell_s.tga
 }

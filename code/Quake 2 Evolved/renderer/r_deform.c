@@ -46,7 +46,7 @@ static void RB_DeformExpand (material_t *material){
 
 	expand = material->expressionRegisters[material->deformRegisters[0]];
 
-	for (i = 0; i < backEnd.numVertices; i++)
+	for (i = 0; i < backEnd.numVertices; i++, vertices++)
 		VectorMA(vertices->xyz, expand, vertices->normal, vertices->xyz);
 }
 
@@ -69,13 +69,13 @@ static void RB_DeformMove (material_t *material){
 	move[1] = material->expressionRegisters[material->deformRegisters[1]];
 	move[2] = material->expressionRegisters[material->deformRegisters[2]];
 
-	for (i = 0; i < backEnd.numVertices; i++)
+	for (i = 0; i < backEnd.numVertices; i++, vertices++)
 		VectorAdd(vertices->xyz, move, vertices->xyz);
 }
 
 /*
  ==================
- 
+ RB_DeformSprite
  ==================
 */
 static void RB_DeformSprite (material_t *material){
@@ -85,7 +85,7 @@ static void RB_DeformSprite (material_t *material){
 	vec3_t		lVector, uVector;
 	vec3_t		center;
 	float		radius;
-	int			i;
+	int			i, j;
 
 	if (backEnd.numIndices != (backEnd.numVertices >> 2) * 6){
 		Com_DPrintf(S_COLOR_YELLOW "Material '%s' has 'deform sprite' with an odd index count\n", material->name);
@@ -125,8 +125,36 @@ static void RB_DeformSprite (material_t *material){
 		indices += 6;
 
 		// Modify vertices
+		vertices[0].xyz[0] = center[0] + lVector[0] + uVector[0];
+		vertices[0].xyz[1] = center[1] + lVector[1] + uVector[1];
+		vertices[0].xyz[2] = center[2] + lVector[2] + uVector[2];
+		vertices[1].xyz[0] = center[0] - lVector[0] + uVector[0];
+		vertices[1].xyz[1] = center[1] - lVector[1] + uVector[1];
+		vertices[1].xyz[2] = center[2] - lVector[2] + uVector[2];
+		vertices[2].xyz[0] = center[0] - lVector[0] - uVector[0];
+		vertices[2].xyz[1] = center[1] - lVector[1] - uVector[1];
+		vertices[2].xyz[2] = center[2] - lVector[2] - uVector[2];
+		vertices[3].xyz[0] = center[0] + lVector[0] - uVector[0];
+		vertices[3].xyz[1] = center[1] + lVector[1] - uVector[1];
+		vertices[3].xyz[2] = center[2] + lVector[2] - uVector[2];
 
-		vertices += 4;
+		vertices[0].st[0] = 0.0f;
+		vertices[0].st[1] = 0.0f;
+		vertices[1].st[0] = 1.0f;
+		vertices[1].st[1] = 0.0f;
+		vertices[2].st[0] = 1.0f;
+		vertices[2].st[1] = 1.0f;
+		vertices[3].st[0] = 0.0f;
+		vertices[3].st[1] = 1.0f;
+
+		for (j = 0; j < 4; j++){
+			vertices->color[0] = 255;
+			vertices->color[1] = 255;
+			vertices->color[2] = 255;
+			vertices->color[3] = 255;
+
+			vertices++;
+		}
 	}
 }
 
@@ -140,7 +168,7 @@ static void RB_DeformTube (material_t *material){
 	static int	edgeIndex[6][2] = {{0, 1}, {1, 2}, {2, 0}, {3, 4}, {4, 5}, {5, 3}};
 	glIndex_t	*indices = backEnd.indices;
 	glVertex_t	*vertices = backEnd.vertices;
-	vec3_t		dir, mid[2];
+	vec3_t		tmp, tmp2, dir, mid[2];
 	float		length, lengths[2];
 	int			edges[2];
 	int			index0, index1, index2, index3;
@@ -162,16 +190,59 @@ static void RB_DeformTube (material_t *material){
 	// Assume all the triangles are independent quads
 	for (i = 0; i < backEnd.numVertices; i += 4){
 		// Identify the two shortest edges
+		edges[0] = edges[1] = 0;
+		lengths[0] = lengths[1] = M_INFINITY;
+
+		for (j = 0; j < 6; j++){
+			VectorSubtract(vertices[indices[edgeIndex[j][0]]].xyz, vertices[indices[edgeIndex[j][1]]].xyz, tmp);
+
+			length = VectorLengthSquared(tmp);
+
+			if (length < lengths[0]){
+				edges[1] = edges[0];
+				lengths[1] = lengths[0];
+
+				edges[0] = j;
+				lengths[0] = length;
+			}
+			else if (length < lengths[1]){
+				edges[1] = j;
+				lengths[1] = length;
+			}
+		}
 
 		// Get indices
+		index0 = indices[edgeIndex[edges[0]][0]];
+		index1 = indices[edgeIndex[edges[0]][1]];
+		index2 = indices[edgeIndex[edges[1]][0]];
+		index3 = indices[edgeIndex[edges[1]][1]];
+
+		indices += 6;
 
 		// Compute lengths
+		lengths[0] = SqrtFast(lengths[0]) * 0.5f;
+		lengths[1] = SqrtFast(lengths[1]) * 0.5f;
 
 		// Compute mid points
+		VectorAverage(vertices[index0].xyz, vertices[index1].xyz, mid[0]);
+		VectorAverage(vertices[index2].xyz, vertices[index3].xyz, mid[1]);
 
 		// Compute direction
+		VectorSubtract(mid[1], mid[0], tmp2);
+
+		CrossProduct(tmp2, backEnd.localParms.viewAxis[0], dir);
+		VectorNormalizeFast(dir);
 
 		// Modify vertices, leaving texture coords unchanged
+
+		for (j = 0; j < 4; j++){
+			vertices->color[index0] = 255;
+			vertices->color[index1] = 255;
+			vertices->color[index2] = 255;
+			vertices->color[index3] = 255;
+
+			vertices++;
+		}
 	}
 }
 
@@ -185,7 +256,7 @@ static void RB_DeformBeam (material_t *material){
 	static int	edgeIndex[6][2] = {{0, 1}, {1, 2}, {2, 0}, {3, 4}, {4, 5}, {5, 3}};
 	glIndex_t	*indices = backEnd.indices;
 	glVertex_t	*vertices = backEnd.vertices;
-	vec3_t		dir, mid[2];
+	vec3_t		tmp, tmp2, tmp3, dir, mid[2];
 	float		length, lengths[2];
 	int			edges[2];
 	int			index0, index1, index2, index3;
@@ -207,16 +278,60 @@ static void RB_DeformBeam (material_t *material){
 	// Assume all the triangles are independent quads
 	for (i = 0; i < backEnd.numVertices; i += 4){
 		// Identify the two shortest edges
+		edges[0] = edges[1] = 0;
+		lengths[0] = lengths[1] = M_INFINITY;
+
+		for (j = 0; j < 6; j++){
+			VectorSubtract(vertices[indices[edgeIndex[j][0]]].xyz, vertices[indices[edgeIndex[j][1]]].xyz, tmp);
+
+			length = VectorLengthSquared(tmp);
+
+			if (length < lengths[0]){
+				edges[1] = edges[0];
+				lengths[1] = lengths[0];
+
+				edges[0] = j;
+				lengths[0] = length;
+			}
+			else if (length < lengths[1]){
+				edges[1] = j;
+				lengths[1] = length;
+			}
+		}
 
 		// Get indices
+		index0 = indices[edgeIndex[edges[0]][0]];
+		index1 = indices[edgeIndex[edges[0]][1]];
+		index2 = indices[edgeIndex[edges[1]][0]];
+		index3 = indices[edgeIndex[edges[1]][1]];
+
+		indices += 6;
 
 		// Compute lengths
+		lengths[0] = SqrtFast(lengths[0]) * 0.5f;
+		lengths[1] = SqrtFast(lengths[1]) * 0.5f;
 
 		// Compute mid points
+		VectorAverage(vertices[index0].xyz, vertices[index1].xyz, mid[0]);
+		VectorAverage(vertices[index2].xyz, vertices[index3].xyz, mid[1]);
 
 		// Compute direction
+		VectorSubtract(backEnd.localParms.viewOrigin, mid[0], tmp2);
+		VectorSubtract(mid[1], mid[0], tmp3);
+
+		CrossProduct(tmp2, tmp3, dir);
+		VectorNormalizeFast(dir);
 
 		// Modify vertices, leaving texture coords unchanged
+
+		for (j = 0; j < 4; j++){
+			vertices->color[index0] = 255;
+			vertices->color[index1] = 255;
+			vertices->color[index2] = 255;
+			vertices->color[index3] = 255;
+
+			vertices++;
+		}
 	}
 }
 

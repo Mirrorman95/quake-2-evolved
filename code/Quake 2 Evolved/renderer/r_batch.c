@@ -281,7 +281,7 @@ static void R_BatchAliasModel (meshData_t *data){
  ==================
  RB_BatchSprite
 
- TODO: utilize spriteOriented
+ TODO: utilize spriteOriented and rewrite the axis vector
  ==================
 */
 static void RB_BatchSprite (){
@@ -318,13 +318,12 @@ static void RB_BatchSprite (){
 	// Batch indices
 	indices = backEnd.indices + backEnd.numIndices;
 
-	for (i = 2; i < 4; i++){
-		indices[0] = backEnd.numVertices + 0;
-		indices[1] = backEnd.numVertices + i-1;
-		indices[2] = backEnd.numVertices + i;
-
-		indices += 3;
-	}
+	indices[0] = backEnd.numVertices;
+	indices[1] = backEnd.numVertices + 1;
+	indices[2] = backEnd.numVertices + 3;
+	indices[3] = backEnd.numVertices + 3;
+	indices[4] = backEnd.numVertices + 1;
+	indices[5] = backEnd.numVertices + 2;
 
 	backEnd.numIndices += 6;
 
@@ -371,6 +370,8 @@ static void RB_BatchSprite (){
 /*
  ==================
  RB_BatchBeam
+
+ TODO: view, side, dir vectors instaid of axis[3]
  ==================
 */
 static void RB_BatchBeam (){
@@ -381,21 +382,21 @@ static void RB_BatchBeam (){
 	float		length;
 	int			i;
 
-	// Find orientation vectors
+	// Compute view and side vectors
 	VectorSubtract(rg.renderView.origin, backEnd.entity->origin, axis[0]);
 	VectorSubtract(backEnd.entity->beamEnd, backEnd.entity->origin, axis[1]);
 
 	CrossProduct(axis[0], axis[1], axis[2]);
 	VectorNormalizeFast(axis[2]);
 
-	// Find normal
+	// Compute direction
 	CrossProduct(axis[1], axis[2], axis[0]);
 	VectorNormalizeFast(axis[0]);
 
-	// Scale by radius
+	// Scale by half the width
 	VectorScale(axis[2], backEnd.entity->beamWidth * 0.5f, axis[2]);
 
-	// Find segment length
+	// Compute segment length
 	if (!backEnd.entity->beamLength)
 		length = VectorLength(axis[1]) / 100.0f;
 	else
@@ -407,13 +408,12 @@ static void RB_BatchBeam (){
 	// Batch indices
 	indices = backEnd.indices + backEnd.numIndices;
 
-	for (i = 2; i < 4; i++){
-		indices[0] = backEnd.numVertices + 0;
-		indices[1] = backEnd.numVertices + i-1;
-		indices[2] = backEnd.numVertices + i;
-
-		indices += 3;
-	}
+	indices[0] = backEnd.numVertices;
+	indices[1] = backEnd.numVertices + 1;
+	indices[2] = backEnd.numVertices + 3;
+	indices[3] = backEnd.numVertices + 3;
+	indices[4] = backEnd.numVertices + 1;
+	indices[5] = backEnd.numVertices + 2;
 
 	backEnd.numIndices += 6;
 
