@@ -1118,9 +1118,9 @@ void R_LoadMap (const char *name, const char *skyName, float skyRotate, const ve
 	rg.worldEntity->model = rg.worldModel;
 
 	// Load caustic materials
-	rg.waterCausticsMaterial = R_FindMaterial("waterCaustics", MT_GENERIC, SURFACEPARM_NONE);
-	rg.slimeCausticsMaterial = R_FindMaterial("slimeCaustics", MT_GENERIC, SURFACEPARM_NONE);
-	rg.lavaCausticsMaterial = R_FindMaterial("lavaCaustics", MT_GENERIC, SURFACEPARM_NONE);
+	rg.waterCausticsMaterial = R_FindMaterial("gfx/caustics/water", MT_GENERIC, SURFACEPARM_NONE);
+	rg.slimeCausticsMaterial = R_FindMaterial("gfx/caustics/slime", MT_GENERIC, SURFACEPARM_NONE);
+	rg.lavaCausticsMaterial = R_FindMaterial("gfx/caustics/lava", MT_GENERIC, SURFACEPARM_NONE);
 
 	// Try to cache the geometry in static index and vertex buffers
 	R_CacheGeometry();

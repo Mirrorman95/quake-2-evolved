@@ -277,38 +277,6 @@ void RB_BindMultitexture (material_t *material, texture_t *texture, int cinemati
 
 /*
  ==================
- 
- ==================
-*/
-void RB_ComputeTexturePlanes (material_t *material, textureStage_t *textureStage, vec4_t planes[4]){
-
-	mat4_t	matrix;
-
-	if (textureStage->texGen == TG_EXPLICIT || textureStage->texGen == TG_NORMAL || textureStage->texGen == TG_REFLECT)
-		return;
-
-	if (textureStage->texGen == TG_VECTOR){
-		VectorCopy(textureStage->texGenVectors[0], planes[0]);
-		VectorCopy(textureStage->texGenVectors[1], planes[1]);
-
-		return;
-	}
-
-	if (textureStage->texGen == TG_SKYBOX){
-		Matrix4_Identity(matrix);
-		Matrix4_Translate(matrix, -backEnd.localParms.viewOrigin[0], -backEnd.localParms.viewOrigin[1], -backEnd.localParms.viewOrigin[2]);
-	}
-
-	if (textureStage->texGen == TG_SCREEN){
-
-		if (material->subviewType == ST_MIRROR){
-
-		}
-	}
-}
-
-/*
- ==================
  RB_ComputeTextureMatrix
  ==================
 */
@@ -375,16 +343,12 @@ void RB_ComputeTextureMatrix (material_t *material, textureStage_t *textureStage
 void RB_SetupTextureStage (material_t *material, textureStage_t *textureStage){
 
 	mat4_t matrix;
-	vec4_t planes[4];
 
 	// Enable texturing
 	GL_EnableTexture(textureStage->texture->target);
 
 	// Bind the texture
 	RB_BindTexture(material, textureStage->texture, textureStage->cinematicHandle);
-
-	// Set up the texture coords and matrix
-	RB_ComputeTexturePlanes(material, textureStage, planes);
 
 	switch (textureStage->texGen){
 	case TG_EXPLICIT:
@@ -407,8 +371,8 @@ void RB_SetupTextureStage (material_t *material, textureStage_t *textureStage){
 		GL_TexGen(GL_S, GL_OBJECT_LINEAR);
 		GL_TexGen(GL_T, GL_OBJECT_LINEAR);
 
-		qglTexGenfv(GL_S, GL_OBJECT_PLANE, planes[0]);
-		qglTexGenfv(GL_T, GL_OBJECT_PLANE, planes[1]);
+		qglTexGenfv(GL_S, GL_OBJECT_PLANE, textureStage->texGenVectors[0]);
+		qglTexGenfv(GL_T, GL_OBJECT_PLANE, textureStage->texGenVectors[1]);
 
 		if (!textureStage->numTexMods)
 			GL_LoadIdentity(GL_TEXTURE);
@@ -458,9 +422,9 @@ void RB_SetupTextureStage (material_t *material, textureStage_t *textureStage){
 		GL_TexGen(GL_T, GL_OBJECT_LINEAR);
 		GL_TexGen(GL_R, GL_OBJECT_LINEAR);
 
-		qglTexGenfv(GL_S, GL_OBJECT_PLANE, planes[0]);
-		qglTexGenfv(GL_T, GL_OBJECT_PLANE, planes[1]);
-		qglTexGenfv(GL_R, GL_OBJECT_PLANE, planes[2]);
+		qglTexGenfv(GL_S, GL_OBJECT_PLANE, &backEnd.viewParms.skyBoxMatrix[ 0]);
+		qglTexGenfv(GL_T, GL_OBJECT_PLANE, &backEnd.viewParms.skyBoxMatrix[ 4]);
+		qglTexGenfv(GL_R, GL_OBJECT_PLANE, &backEnd.viewParms.skyBoxMatrix[ 8]);
 
 		GL_LoadIdentity(GL_TEXTURE);
 
@@ -474,9 +438,9 @@ void RB_SetupTextureStage (material_t *material, textureStage_t *textureStage){
 		GL_TexGen(GL_T, GL_OBJECT_LINEAR);
 		GL_TexGen(GL_Q, GL_OBJECT_LINEAR);
 
-		qglTexGenfv(GL_S, GL_OBJECT_PLANE, planes[0]);
-		qglTexGenfv(GL_T, GL_OBJECT_PLANE, planes[1]);
-		qglTexGenfv(GL_Q, GL_OBJECT_PLANE, planes[3]);
+		qglTexGenfv(GL_S, GL_OBJECT_PLANE, &backEnd.viewParms.mirrorMatrix[ 0]);
+		qglTexGenfv(GL_T, GL_OBJECT_PLANE, &backEnd.viewParms.mirrorMatrix[ 4]);
+		qglTexGenfv(GL_Q, GL_OBJECT_PLANE, &backEnd.viewParms.mirrorMatrix[12]);
 
 		if (!textureStage->numTexMods)
 			GL_LoadIdentity(GL_TEXTURE);
@@ -659,6 +623,7 @@ void RB_CleanupColorStage (material_t *material, colorStage_t *colorStage){
 /*
  ==================
  
+ TODO: sun uniform types
  ==================
 */
 void RB_SetupShaderStage (material_t *material, shaderStage_t *shaderStage){
@@ -879,15 +844,15 @@ void RB_TransformLightForEntity (light_t *light, renderEntity_t *entity){
 
 /*
  ==================
- RB_ComputeLightMatrix
 
- TODO: fog light
+ TODO: fog light matrices
  ==================
 */
 void RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *material, textureStage_t *textureStage){
 
 	mat4_t	transformMatrix, entityMatrix, textureMatrix;
 	mat4_t	tmpMatrix;
+	float	distanceScale, heightScale;
 
 	// Compute a generic, ambient, or blend light
 	if (material->lightType != LT_FOG){
@@ -919,6 +884,22 @@ void RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *
 	}
 
 	// Compute a fog light
+	if (light->data.fogDistance < 1.0f)
+		distanceScale = 0.5f / 500.0f;
+	else
+		distanceScale = 0.5f / light->data.fogDistance;
+
+	if (light->data.fogHeight < 1.0f)
+		heightScale = 0.5f / 500.0f;
+	else
+		heightScale = 0.5f / light->data.fogHeight;
+
+	if (entity == rg.worldEntity){
+
+	}
+	else {
+
+	}
 }
 
 /*

@@ -1821,7 +1821,7 @@ static byte *R_ResampleImage (const byte *image, int inWidth, int inHeight, int 
 	int			x, y;
 	int			i;
 
-	buffer = ptr = (byte *)Mem_ClearedAlloc(outWidth * outHeight * 4, TAG_TEMPORARY);
+	buffer = ptr = (byte *)Mem_Alloc(outWidth * outHeight * 4, TAG_TEMPORARY);
 
 	fracStep = inWidth * 0x10000 / outWidth;
 

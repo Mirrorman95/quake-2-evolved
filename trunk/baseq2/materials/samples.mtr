@@ -1,0 +1,69 @@
+
+//
+// Deform Samples
+//
+
+samples/deformExpand
+{
+	deform 			expand 0.5
+	{
+		map 		_white
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+		red		1
+		green		1
+		blue		0
+	}
+}
+
+samples/deformMove
+{
+	deform 			move 5, 5, 5
+	{
+		map 		_white
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+		red		0
+		green		1
+		blue		1
+	}
+}
+
+samples/deformSprite
+{
+	deform 			sprite
+	{
+		map 		_white
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+		red		1
+		green		0
+		blue		0
+	}
+}
+
+samples/deformTube
+{
+	deform 			tube
+	{
+		map 		_white
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+		red		0
+		green		1
+		blue		0
+	}
+}
+
+samples/deformBeam
+{
+	deform 			beam
+	{
+		map 		_white
+		vertexColor
+		blend		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+		red		0
+		green		0
+		blue		1
+	}
+}

@@ -740,6 +740,8 @@ static void R_SetupMatrices (){
 
 	if (rg.worldModel && rg.worldModel->sky->rotate)
 		Matrix4_Rotate(rg.viewParms.skyBoxMatrix, rg.renderView.time * rg.worldModel->sky->rotate, rg.worldModel->sky->axis[0], rg.worldModel->sky->axis[1], rg.worldModel->sky->axis[2]);
+
+	// Compute mirror texture matrix if needed
 }
 
 /*

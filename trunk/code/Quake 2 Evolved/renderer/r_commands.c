@@ -131,6 +131,7 @@ void R_AddRenderViewCommand (){
 	Matrix4_Copy(rg.viewParms.modelviewMatrix, cmd->viewParms.modelviewMatrix);
 	Matrix4_Copy(rg.viewParms.modelviewProjectionMatrix, cmd->viewParms.modelviewProjectionMatrix);
 	Matrix4_Copy(rg.viewParms.skyBoxMatrix, cmd->viewParms.skyBoxMatrix);
+	Matrix4_Copy(rg.viewParms.mirrorMatrix, cmd->viewParms.mirrorMatrix);
 
 	cmd->viewParms.numMeshes[0] = rg.viewParms.numMeshes[0];
 	cmd->viewParms.numMeshes[1] = rg.viewParms.numMeshes[1];

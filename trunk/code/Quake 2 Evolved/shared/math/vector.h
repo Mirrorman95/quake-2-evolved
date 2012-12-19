@@ -65,6 +65,7 @@ void			VectorSubtract (const vec3_t v1, const vec3_t v2, vec3_t out);
 void			VectorScale (const vec3_t v, float scale, vec3_t out);
 void			VectorMultiply (const vec3_t v1, const vec3_t v2, vec3_t out);
 void			VectorMA (const vec3_t v1, float scale, const vec3_t v2, vec3_t out);
+void			VectorSA (const vec3_t v1, float scale, const vec3_t v2, vec3_t out);
 void			VectorAverage (const vec3_t v1, const vec3_t v2, vec3_t out);
 void			VectorMin (const vec3_t v1, const vec3_t v2, vec3_t out);
 void			VectorMax (const vec3_t v1, const vec3_t v2, vec3_t out);

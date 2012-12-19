@@ -1,0 +1,102 @@
+light 0
+{
+name                light_0
+origin              ( 239 -257 54 )
+radius              ( 200 200 200 )
+material            lights/default
+}
+light 1
+{
+name                light_1
+origin              ( 235 0 54 )
+radius              ( 200 200 200 )
+material            lights/default
+}
+light 2
+{
+name                light_2
+origin              ( 184 -365 286 )
+radius              ( 100 100 340 )
+material            lights/default
+}
+light 3
+{
+name                light_3
+origin              ( 1 266 54 )
+radius              ( 200 200 200 )
+material            lights/default
+}
+light 4
+{
+name                light_4
+origin              ( -153 -20 250 )
+radius              ( 100 100 300 )
+material            lights/default
+}
+light 5
+{
+name                light_5
+origin              ( -256 -176 56 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/default
+}
+light 6
+{
+name                light_6
+origin              ( -415 -97 -31 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/default
+}
+light 7
+{
+name                light_7
+origin              ( -409 94 -30 )
+radius              ( 150 150 150 )
+material            lights/default
+}
+light 8
+{
+name                light_8
+origin              ( -520 0 96 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/default
+}
+light 9
+{
+name                light_9
+origin              ( -650 0 98 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/default
+}
+light 10
+{
+name                light_10
+origin              ( -647 128 82 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/default
+}

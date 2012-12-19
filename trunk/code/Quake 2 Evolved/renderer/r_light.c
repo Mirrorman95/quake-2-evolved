@@ -635,6 +635,10 @@ static void R_SetupStaticLightData (lightData_t *lightData, bool inWorld){
 		Matrix4_Multiply(lightData->projectionMatrix, lightData->modelviewMatrix, lightData->modelviewProjectionMatrix);
 	}
 
+	// Set fog distance and height
+	lightData->fogDistance = lightData->parms.fogDistance;
+	lightData->fogHeight = lightData->parms.fogHeight;
+
 	// Set no shadows
 	lightData->noShadows = lightData->parms.noShadows;
 
@@ -656,9 +660,9 @@ static void R_SetupStaticLightData (lightData_t *lightData, bool inWorld){
 			lightData->area = -1;
 		}
 		else {
-			R_ClusterPVS(leaf->cluster, pvs);
+//			R_ClusterPVS(leaf->cluster, pvs);
 
-			lightData->pvs = pvs;
+			lightData->pvs = CM_ClusterPVS(leaf->cluster);
 			lightData->area = leaf->area;
 		}
 	}
@@ -871,6 +875,10 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 		Matrix4_Multiply(lightData->projectionMatrix, lightData->modelviewMatrix, lightData->modelviewProjectionMatrix);
 	}
 
+	// Set fog distance and height
+	lightData->fogDistance = renderLight->fogDistance;
+	lightData->fogHeight = renderLight->fogHeight;
+
 	// Set no shadows
 	lightData->noShadows = renderLight->noShadows;
 
@@ -926,19 +934,116 @@ static bool R_ViewInLightVolume (){
 	return true;
 }
 
+rect_t FromBounds (const vec3_t mins, const vec3_t maxs){
+
+	rect_t rect;
+
+	rect.x = FloatToShort(mins[0]);
+	rect.y = FloatToShort(mins[1]);
+	rect.width = FloatToShort(maxs[0]);
+	rect.height = FloatToShort(maxs[1]);
+
+	return rect;
+}
+
+void ExpandSelf (rect_t rect, const short size){
+
+	rect.x -= size;
+	rect.y -= size;
+	rect.width += size;
+	rect.height += size;
+}
+
+void Clip (rect_t rect, rect_t rect2){
+
+	rect.x = Max(rect.x, rect2.x);
+	rect.y = Max(rect.y, rect2.y);
+	rect.width = Min(rect.width, rect2.width);
+	rect.height = Min(rect.height, rect2.height);
+}
+
 /*
  ==================
 
- TODO: for some reason the coords are scaled down to a 640x480 viewport which is totally wrong
+ TODO: this has a problem with GL_Scissor i think...
  ==================
 */
 static void R_SetupScissor (light_t *light){
+
+	static int	cornerIndices[6][4] = {{3, 2, 6, 7}, {0, 1, 5, 4}, {2, 3, 1, 0}, {4, 5, 7, 6}, {1, 3, 7, 5}, {2, 0, 4, 6}};
+	vec3_t		points[2][MAX_POLYGON_POINTS];
+	int			numPoints;
+	vec3_t		mins, maxs;
+	vec3_t		ndc;
+	int			pingPong = 0;
+	int			i, j;
 
 	r_skipLightScissors->integerValue = 1;
 
 	// If scissor testing is disabled
 	if (r_skipLightScissors->integerValue){
 		light->scissor = rg.viewParms.scissor;
+		return;
+	}
+
+	// Clip the light volume to the view frustum
+	ClearBounds(mins, maxs);
+
+	for (i = 0; i < 6; i++){
+		numPoints = 4;
+
+		VectorCopy(light->data.corners[cornerIndices[i][0]], points[pingPong][0]);
+		VectorCopy(light->data.corners[cornerIndices[i][1]], points[pingPong][1]);
+		VectorCopy(light->data.corners[cornerIndices[i][2]], points[pingPong][2]);
+		VectorCopy(light->data.corners[cornerIndices[i][3]], points[pingPong][3]);
+
+		for (j = 0; j < NUM_FRUSTUM_PLANES; j++){
+			if (!(rg.viewParms.planeBits & BIT(j)))
+				continue;
+
+			if (!R_ClipPolygon(numPoints, points[pingPong], rg.viewParms.frustum[j], ON_EPSILON, &numPoints, points[!pingPong]))
+				break;
+
+			pingPong ^= 1;
+		}
+
+		if (j != NUM_FRUSTUM_PLANES)
+			continue;
+
+		// Add the clipped points
+		for (j = 0; j < numPoints; j++){
+			// Transform into normalized device coordinates
+			R_TransformWorldToDevice(points[pingPong][j], ndc, rg.viewParms.modelviewProjectionMatrix);
+
+			// Add it
+			AddPointToBounds(ndc, mins, maxs);
+		}
+	}
+
+	if (BoundsIsCleared(mins, maxs)){
+		light->scissor.x = 0;
+		light->scissor.y = 0;
+		light->scissor.width = 0;
+		light->scissor.height = 0;
+
+		return;
+	}
+
+	// Transform into screen space
+	R_TransformDeviceToScreen(mins, mins, rg.viewParms.viewport);
+	R_TransformDeviceToScreen(maxs, maxs, rg.viewParms.viewport);
+
+	// Set up the scissor
+	light->scissor = FromBounds(mins, maxs);
+	ExpandSelf(light->scissor, 1);
+	Clip(light->scissor, rg.viewParms.scissor);
+
+	if (RectIsCleared(light->scissor)){
+		light->scissor.x = 0;
+		light->scissor.y = 0;
+		light->scissor.width = 0;
+		light->scissor.height = 0;
+
 		return;
 	}
 }
@@ -1062,6 +1167,9 @@ static void R_AddLight (lightData_t *lightData, material_t *material, bool viewI
 
 	// Set up the scissor
 	R_SetupScissor(light);
+
+	if (!RectSize(light->scissor))
+		return;
 
 	// Set up the depth bounds
 	R_SetupDepthBounds(light);
