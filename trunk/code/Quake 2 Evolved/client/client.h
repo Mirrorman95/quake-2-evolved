@@ -143,6 +143,7 @@ typedef struct {
 	material_t *			halfDamageShellMaterial;
 	material_t *			genericShellMaterial;
 	material_t *			laserBeamMaterial;
+	material_t *			laserBeamBFGMaterial;
 	material_t *			grappleBeamMaterial;
 	material_t *			lightningBeamMaterial;
 	material_t *			heatBeamMaterial;
@@ -458,12 +459,16 @@ extern cvar_t *				cl_particleVertexLight;
 extern cvar_t *				cl_markTime;
 extern cvar_t *				cl_brassTime;
 extern cvar_t *				cl_blood;
+extern cvar_t *				cl_testModelPitch;
+extern cvar_t *				cl_testModelYaw;
+extern cvar_t *				cl_testModelRoll;
+extern cvar_t *				cl_testModelAnimate;
+extern cvar_t *				cl_testModelRotatePitch;
+extern cvar_t *				cl_testModelRotateYaw;
+extern cvar_t *				cl_testModelRotateRoll;
 extern cvar_t *				cl_testGunX;
 extern cvar_t *				cl_testGunY;
 extern cvar_t *				cl_testGunZ;
-extern cvar_t *				cl_testModelAnimate;
-extern cvar_t *				cl_testModelRotate;
-extern cvar_t *				cl_stereoSeparation;
 extern cvar_t *				cl_drawCrosshair;
 extern cvar_t *				cl_crosshairX;
 extern cvar_t *				cl_crosshairY;
@@ -1037,31 +1042,24 @@ void			CL_AddTempEntities ();
 /*
  ==============================================================================
 
- VIEW DRAWING
+ CLIENT COMMANDS
 
  ==============================================================================
 */
 
-void			CL_ClearTestModel ();
-void			CL_ClearTestSprite ();
-void			CL_ClearTestBeam ();
-void			CL_ClearTestSound ();
+void			CL_UpdateTestTools ();
+void			CL_ClearTestTools ();
 
-void			CL_TestModel_f ();
-void			CL_TestGun_f ();
-void			CL_TestMaterial_f ();
-void			CL_TestMaterialParm_f ();
-void			CL_NextFrame_f ();
-void			CL_PrevFrame_f ();
-void			CL_NextSkin_f ();
-void			CL_PrevSkin_f ();
-void			CL_TestSprite_f ();
-void			CL_TestBeam_f ();
-void			CL_TestSound_f ();
-void			CL_TestDecal_f ();
-void			CL_Where_f ();
-void			CL_SizeUp_f ();
-void			CL_SizeDown_f ();
+void			CL_AddCommands ();
+void			CL_ShutdownCommands ();
+
+/*
+ ==============================================================================
+
+ VIEW DRAWING
+
+ ==============================================================================
+*/
 
 void			CL_RenderActiveFrame ();
 

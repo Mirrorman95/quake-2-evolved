@@ -178,8 +178,6 @@ void R_RefreshLightEditor (){
 /*
  ==================
  R_LightEditorUpdateCallback
-
- TODO: getting a invalid index value
  ==================
 */
 void R_LightEditorUpdateCallback (int index, lightParms_t *parms){

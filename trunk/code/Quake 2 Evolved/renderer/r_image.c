@@ -62,12 +62,12 @@ static cubeMapFace_t		r_cubeMapFaces[2][6] = {
 		{"nz"     , false, false, false}
 	},
 	{
-		{"forward", false, false, true },
-		{"back"   , true , true , true },
-		{"left"   , false, true , false},
-		{"right"  , true , false, false},
-		{"up"     , false, false, true },
-		{"down"   , false, false, true }
+		{"rt"	  , false, false, true },
+		{"lf"	  , true , true	, true },
+		{"bk"	  , false, true	, false},
+		{"ft"	  , true , false, false},
+		{"up"	  , false, false, true },
+		{"dn"	  , false, false, true }
 	}
 };
 
@@ -601,7 +601,7 @@ static byte *R_AddImages (const byte *in1, const byte *in2, int width, int heigh
 	byte	*image, *out;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, in1 += 4, in2 += 4, out += 4){
@@ -625,7 +625,7 @@ static byte *R_SubtractImages (const byte *in1, const byte *in2, int width, int 
 	byte	*image, *out;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, in1 += 4, in2 += 4, out += 4){
@@ -649,7 +649,7 @@ static byte *R_ModulateImages (const byte *in1, const byte *in2, int width, int 
 	byte	*image, *out;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, in1 += 4, in2 += 4, out += 4){
@@ -673,7 +673,7 @@ static byte *R_BiasImage (const byte *in, int width, int height, const vec4_t bi
 	byte	*image, *out;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, in += 4, out += 4){
@@ -697,7 +697,7 @@ static byte *R_ScaleImage (const byte *in, int width, int height, const vec4_t s
 	byte	*image, *out;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, in += 4, out += 4){
@@ -721,7 +721,7 @@ static byte *R_InvertImageColor (const byte *in, int width, int height){
 	byte	*image, *out;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, in += 4, out += 4){
@@ -745,7 +745,7 @@ static byte *R_InvertImageAlpha (const byte *in, int width, int height){
 	byte	*image, *out;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, in += 4, out += 4){
@@ -771,7 +771,7 @@ static byte *R_MakeImageIntensity (const byte *in, int width, int height){
 	int		intensity;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, in += 4, out += 4){
@@ -803,7 +803,7 @@ static byte *R_MakeImageAlpha (const byte *in, int width, int height){
 	int		alpha;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, in += 4, out += 4){
@@ -837,7 +837,7 @@ static byte *R_HeightMapToNormalMap (const byte *in, int width, int height, floa
 	int		index;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, out += 4){
@@ -899,7 +899,7 @@ static byte *R_AddNormalMaps (const byte *in1, const byte *in2, int width, int h
 	vec3_t	normal;
 	int		x, y;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, in1 += 4, in2 += 4, out += 4){
@@ -946,7 +946,7 @@ static byte *R_SmoothNormalMap (const byte *in, int width, int height, bool wrap
 	int		x, y;
 	int		i;
 
-	image = out = (byte *)Mem_ClearedAlloc(width * height * 4, TAG_TEMPORARY);
+	image = out = (byte *)Mem_Alloc(width * height * 4, TAG_TEMPORARY);
 
 	for (y = 0; y < height; y++){
 		for (x = 0; x < width; x++, out += 4){
@@ -2112,6 +2112,10 @@ static bool R_LoadImageFormat (const char *name, const char *realName, textureWr
 		// Development tool
 		if (r_writeImagePrograms->integerValue)
 			R_WriteImageProgram(realName, imgData, imgWidth, imgHeight);
+
+		*image = imgData;
+		*width = imgWidth;
+		*height = imgHeight;
 
 		return true;
 	}

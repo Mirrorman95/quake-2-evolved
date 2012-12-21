@@ -516,9 +516,12 @@ static void R_AddEntityLightInteractions (light_t *light, bool lightInFrustum, b
 		else
 			suppressShadows = false;
 
+		// FIXME: use Com_Error here or just ignore?, i did continue; for now since we SHOULD not
+		// get a error...
+
 		// Add the entity
 		if (!entity->model)
-			Com_Error(ERR_DROP, "R_AddEntityLightInteractions: NULL model");
+			continue;
 
 		switch (entity->model->type){
 		case MODEL_INLINE:

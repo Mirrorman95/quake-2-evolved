@@ -1,0 +1,54 @@
+
+lights/square
+{
+	{
+		zeroClamp
+		map		lights/squarelight.tga
+		colored
+	}
+}
+
+lights/square_bright
+{
+	{
+		zeroClamp
+		map		lights/squarelight_bright.tga
+		colored
+	}
+}
+
+lights/square_uberbright
+{
+	{
+		zeroClamp
+		map		lights/squarelight_uberbright.tga
+		colored
+	}
+}
+
+lights/round
+{
+	{
+		zeroClamp
+		map		lights/roundlight.tga
+		colored
+	}
+}
+
+lights/round_bright
+{
+	{
+		zeroClamp
+		map		lights/roundlight_bright.tga
+		colored
+	}
+}
+
+lights/round_uberbright
+{
+	{
+		zeroClamp
+		map		lights/roundlight_uberbright.tga
+		colored
+	}
+}

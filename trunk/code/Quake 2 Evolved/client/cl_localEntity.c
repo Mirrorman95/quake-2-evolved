@@ -425,7 +425,6 @@ static void CL_AddEjectBrass (localEntity_t *le){
 		}
 
 		VectorCopy(trace.endpos, le->entity.origin);
-		VectorCopy(trace.endpos, le->entity.oldOrigin);
 
 		R_AddEntityToScene(&le->entity);
 		return;
@@ -455,7 +454,6 @@ static void CL_AddEjectBrass (localEntity_t *le){
 
 	// Still in free fall
 	VectorCopy(origin, le->entity.origin);
-	VectorCopy(origin, le->entity.oldOrigin);
 
 	R_AddEntityToScene(&le->entity);
 }
@@ -653,9 +651,9 @@ void CL_WaterSplash (const vec3_t org, const vec3_t dir){
 
 	le->entity.type = RE_BEAM;
 	VectorCopy(org, le->entity.origin);
-	VectorMA(le->entity.origin, 15.0f, dir, le->entity.oldOrigin);
-	le->entity.frame = 7.5;
-	le->entity.oldFrame = 15;
+	VectorMA(le->entity.origin, 15.0f, dir, le->entity.beamEnd);
+	le->entity.beamWidth = 7.5f;
+	le->entity.beamLength = 15.0f;
 	le->entity.material = cl.media.waterPlumeMaterial;
 
 	// Spray
@@ -715,9 +713,9 @@ void CL_ExplosionWaterSplash (const vec3_t org){
 
 	le->entity.type = RE_BEAM;
 	VectorCopy(trace.endpos, le->entity.origin);
-	VectorMA(le->entity.origin, 60.0f, trace.plane.normal, le->entity.oldOrigin);
-	le->entity.frame = 80;
-	le->entity.oldFrame = 60;
+	VectorMA(le->entity.origin, 60.0f, trace.plane.normal, le->entity.beamEnd);
+	le->entity.beamWidth = 80.0f;
+	le->entity.beamLength = 60.0f;
 	le->entity.material = cl.media.waterPlumeMaterial;
 
 	// Spray
@@ -787,9 +785,9 @@ void CL_LaserBeam (const vec3_t start, const vec3_t end, int width, int color, b
 
 	le->entity.type = RE_BEAM;
 	VectorCopy(start, le->entity.origin);
-	VectorCopy(end, le->entity.oldOrigin);
-	le->entity.frame = width;
-	le->entity.oldFrame = 50;
+	VectorCopy(end, le->entity.beamEnd);
+	le->entity.beamWidth = width;
+	le->entity.beamLength = 50.0f;
 	le->entity.material = material;
 
 	// HACK: the four beam colors are encoded in 32 bits

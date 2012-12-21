@@ -661,7 +661,7 @@ void CL_ParseTempEntity (){
 		MSG_ReadPos(&net_message, pos);
 		MSG_ReadPos(&net_message, pos2);
 
-		CL_LaserBeam(pos, pos2, 4, 0xD0D1D2D3, 75, 100, cl.media.laserBeamMaterial);
+		CL_LaserBeam(pos, pos2, 4, 0xD0D1D2D3, 75, 100, cl.media.laserBeamBFGMaterial);
 
 		break;
 	case TE_BUBBLETRAIL:
@@ -936,12 +936,11 @@ static void CL_AddBeams (){
 		}
 
 		// Add the beam entity
-		Mem_Fill(&entity, 0, sizeof(entity));
+		Mem_Fill(&entity, 0, sizeof(renderEntity_t));
 
 		if (beam->type != BEAM_PARASITE){
 			entity.type = RE_BEAM;
 			VectorCopy(origin, entity.origin);
-			VectorAdd(origin, vec, entity.oldOrigin);
 			MakeRGBA(entity.materialParms, 1.0f, 1.0f, 1.0f, 1.0f);
 
 			switch (beam->type){
@@ -979,7 +978,6 @@ static void CL_AddBeams (){
 
 		while (distance > 0.0f){
 			VectorCopy(origin, entity.origin);
-			VectorCopy(origin, entity.oldOrigin);
 
 			R_AddEntityToScene(&entity);
 

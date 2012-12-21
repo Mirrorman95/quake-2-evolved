@@ -263,7 +263,7 @@ static void CL_RegisterGraphics (){
 	cl.media.grenadeExplosionMaterial = R_RegisterMaterial("grenadeExplosion", false);
 	cl.media.grenadeExplosionWaterMaterial = R_RegisterMaterial("grenadeExplosionWater", false);
 	cl.media.bfgExplosionMaterial = R_RegisterMaterial("bfgExplosion", false);
-	cl.media.bfgBallMaterial = R_RegisterMaterial("bfgBall", false);
+	cl.media.bfgBallMaterial = R_RegisterMaterial("gfx/sprites/bfg", false);
 	cl.media.plasmaBallMaterial = R_RegisterMaterial("plasmaBall", false);
 	cl.media.waterPlumeMaterial = R_RegisterMaterial("waterPlume", false);
 	cl.media.waterSprayMaterial = R_RegisterMaterial("waterSpray", false);
@@ -282,6 +282,7 @@ static void CL_RegisterGraphics (){
 	cl.media.genericShellMaterial = R_RegisterMaterial("gfx/shells/generic", false);
 
 	cl.media.laserBeamMaterial = R_RegisterMaterial("gfx/beams/laser", false);
+	cl.media.laserBeamBFGMaterial = R_RegisterMaterial("gfx/beams/laserBFG", false);
 	cl.media.grappleBeamMaterial = R_RegisterMaterial("gfx/beams/grapple", false);
 	cl.media.lightningBeamMaterial = R_RegisterMaterial("gfx/beams/lightning", false);
 	cl.media.heatBeamMaterial = R_RegisterMaterial("gfx/beams/heat", false);
@@ -457,10 +458,7 @@ void CL_FreeLevel (){
 	CL_ClearParticles();
 
 	// Clear the testing utilities
-	CL_ClearTestModel();
-	CL_ClearTestSprite();
-	CL_ClearTestBeam();
-	CL_ClearTestSound ();
+	CL_ClearTestTools();
 }
 
 

@@ -1,23 +1,42 @@
 
+// TODO: needs dust and fix the shader
+
 gfx/beams/laser
 {
 	twoSided
 	{
-		map		gfx/beams/laser_flat.tga
-		colored
-		blend		add
+		shaderQuality == 2
+
+		shader		heatHaze
+
+		shaderParm	u_BumpScale		0, 0
+		shaderParm	u_BumpScroll		0, 0
+		shaderParm	u_DistortionScale	0
+		shaderParm	u_AlphaModulate		0
+
+		shaderMap	u_AlphaMap		makeAlpha(gfx/beams/laser_flat_mask.tga)
+		shaderMap	u_BumpMap		normalMap gfx/beams/laser_flat_local.tga
+		shaderMap	u_ColorMap		_currentColor
 	}
 	{
-		map		gfx/beams/laser_noise.tga
-		scroll		time * 0.45, 0
+		map 		gfx/beams/laser_flat.tga
 		colored
-		blend		add
+		blend 		add
+	}
+}
+
+// TODO: make this like Doom 3 but with a heatHaze shader
+
+gfx/beams/laserBFG
+{
+	twoSided
+	{
+		shaderQuality == 2
 	}
 	{
-		map		gfx/beams/laser_noise.tga
-		scroll		time * -0.45, 0
+		map 		gfx/beams/laser_bfg.tga
 		colored
-		blend		add
+		blend 		add
 	}
 }
 

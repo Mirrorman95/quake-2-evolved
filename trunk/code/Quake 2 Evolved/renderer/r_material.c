@@ -3620,7 +3620,15 @@ static material_t *R_CreateMaterial (const char *name, materialType_t type, surf
 		else if (material->surfaceParm & SURFACEPARM_SKY){
 			material->flags = MF_NOOVERLAYS | MF_NOSHADOWS;
 
-			material->stages[material->numStages].textureStage.texture = R_FindCubeTexture(Str_VarArgs("%s", material->name), TF_NOPICMIP | TF_UNCOMPRESSED, TF_LINEAR, false);
+			// TODO: there are more unit textures, make like Str_SPrintf(name, sizeof(name), "unit%i_, material->name);
+			// and then just copy the name in
+
+			// HACK: we add the seperator in automatically which makes this name invalid so we
+			// adjust it a bit
+			if (!Str_ICompare(material->name, "unit1_"))
+				Str_Copy(material->name, "unit1", sizeof(material->name));
+
+			material->stages[material->numStages].textureStage.texture = R_FindCubeTexture(Str_VarArgs("env/%s", material->name), TF_NOPICMIP | TF_UNCOMPRESSED, TF_LINEAR, true);
 			if (!material->stages[material->numStages].textureStage.texture){
 				Com_Printf(S_COLOR_YELLOW "WARNING: couldn't find texture for material '%s', using default\n", material->name);
 

@@ -374,6 +374,8 @@ static void UI_PlayerSetup_Callback (void *self, int event){
 /*
  ==================
  UI_PlayerSetup_Ownerdraw
+
+ TODO: model position is messed up in the various ratios...
  ==================
 */
 static void UI_PlayerSetup_Ownerdraw (void *self){
@@ -382,13 +384,15 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 	renderEntity_t	renderEntity;
 	renderLight_t	renderLight;
 	renderView_t	renderView;
-	vec4_t			iconTrans = {1.0f, 1.0f, 1.0f, 0.5f};
+	char			path[MAX_OSPATH];
+	vec4_t			iconTrans = {1.00f, 1.00f, 1.00f, 0.50f};
 	vec3_t			angles;
-	char			path[MAX_QPATH];
 	int				x = 630, y = 226, w = 316, h = 316;
 
-	switch (item->id){
-	case ID_VIEW:
+	if (item->id == ID_VIEW){
+		// Clear the scene
+		R_ClearScene();
+
 		// Draw the background
 		Str_SPrintf(path, sizeof(path), "players/%s/%s_i", uiPlayerSetup.currentModel, uiPlayerSetup.currentSkin);
 		UI_ScaleCoords(&x, &y, &w, &h);
@@ -396,20 +400,17 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 		UI_DrawPic(x, y, w, h, iconTrans, path);
 		UI_DrawPic(item->x, item->y, item->width, item->height, colorWhite, uiPlayerSetup.view.pic);
 
-		R_ClearScene();
-
 		// Draw the player model
 		Mem_Fill(&renderEntity, 0, sizeof(renderEntity_t));
 
 		renderEntity.type = RE_MODEL;
 
-		VectorSet(renderEntity.origin, 80.0f, -80.0f, 0.0f);
-		VectorCopy(renderEntity.origin, renderEntity.oldOrigin);
-		VectorSet(angles, 0.0f, (uiStatic.realTime & 4095) * 360.0f / 4096.0f, 0.0f);
-		AnglesToMat3(angles, renderEntity.axis);
-
 		Str_SPrintf(path, sizeof(path), "players/%s/tris.md2", uiPlayerSetup.currentModel);
 		renderEntity.model = R_RegisterModel(path);
+
+		VectorSet(renderEntity.origin, 80.0f, 100.0f, -30.0f);
+		VectorSet(angles, 0.0f, (uiStatic.realTime & 4095) * 360.0f / 4096.0f, 0.0f);
+		AnglesToMat3(angles, renderEntity.axis);
 
 		renderEntity.allowInView = VIEW_MAIN;
 		renderEntity.allowShadowInView = VIEW_MAIN;
@@ -428,18 +429,17 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 
 		R_AddEntityToScene(&renderEntity);
 
-		// Also draw the default weapon model
+		// Draw the default weapon model
 		Mem_Fill(&renderEntity, 0, sizeof(renderEntity_t));
 
 		renderEntity.type = RE_MODEL;
 
-		VectorSet(renderEntity.origin, 80.0f, -80.0f, 0.0f);
-		VectorCopy(renderEntity.origin, renderEntity.oldOrigin);
-		VectorSet(angles, 0.0f, (uiStatic.realTime & 4095) * 360.0f / 4096.0f, 0.0f);
-		AnglesToMat3(angles, renderEntity.axis);
-
 		Str_SPrintf(path, sizeof(path), "players/%s/weapon.md2", uiPlayerSetup.currentModel);
 		renderEntity.model = R_RegisterModel(path);
+
+		VectorSet(renderEntity.origin, 80.0f, 100.0f, -30.0f);
+		VectorSet(angles, 0.0f, (uiStatic.realTime & 4095) * 360.0f / 4096.0f, 0.0f);
+		AnglesToMat3(angles, renderEntity.axis);
 
 		renderEntity.allowInView = VIEW_MAIN;
 		renderEntity.allowShadowInView = VIEW_MAIN;
@@ -458,11 +458,10 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 
 		R_AddEntityToScene(&renderEntity);
 
-		// Add a light
+		// Add the light
 		Mem_Fill(&renderLight, 0, sizeof(renderLight_t));
 
 		renderLight.type = RL_POINT;
-		renderLight.lightNum = 0;
 
 		VectorSet(renderLight.origin, 0.0f, -50.0f, 0.0f);
 		VectorClear(renderLight.center);
@@ -470,8 +469,22 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 
 		VectorSet(renderLight.radius, 200.0f, 200.0f, 200.0f);
 
+		renderLight.xMin = 0.0f;
+		renderLight.xMax = 0.0f;
+
+		renderLight.yMin = 0.0f;
+		renderLight.yMax = 0.0f;
+
+		renderLight.zFar = 0.0f;
+		renderLight.zNear = 0.0f;
+
+		renderLight.noShadows = false;
+
 		renderLight.fogDistance = 500.0f;
 		renderLight.fogHeight = 500.0f;
+
+		renderLight.style = 0;
+		renderLight.detailLevel = 0;
 
 		renderLight.allowInView = VIEW_MAIN;
 
@@ -488,7 +501,7 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 
 		R_AddLightToScene(&renderLight);
 
-		// Create and render the scene
+		// Render the scene
 		Mem_Fill(&renderView, 0, sizeof(renderView_t));
 
 		renderView.x = item->x + (item->width / 12);
@@ -502,26 +515,23 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 		renderView.vertAdjust = V_NONE;
 		renderView.vertPercent = 1.0f;
 
+		Matrix3_Identity(renderView.axis);
+
 		renderView.fovX = DEFAULT_FOV;
 		renderView.fovY = UI_PlayerSetup_CalcFov(renderView.fovX, renderView.width, renderView.height);
 		renderView.fovScale = renderView.fovX * (1.0f / DEFAULT_FOV);
 
-		Matrix3_Copy(mat3_identity, renderView.axis);
-
 		renderView.time = MS2SEC(uiStatic.realTime);
 
 		R_RenderScene(&renderView, false);
-
-		break;
-	default:
+	}
+	else {
 		if (uiPlayerSetup.menu.items[uiPlayerSetup.menu.cursor] == self)
 			UI_DrawPic(item->x, item->y, item->width, item->height, colorWhite, UI_MOVEBOXFOCUS);
 		else
 			UI_DrawPic(item->x, item->y, item->width, item->height, colorWhite, UI_MOVEBOX);
 
 		UI_DrawPic(item->x, item->y, item->width, item->height, colorWhite, ((menuBitmap_t *)self)->pic);
-
-		break;
 	}
 }
 
