@@ -146,3 +146,20 @@ void LerpAngles (const vec3_t from, const vec3_t to, float frac, vec3_t out){
 		out[i] = from[i] + (to[i] - from[i]) * frac;
 	}
 }
+
+/*
+ ==================
+ AnglesNormalize360
+ ==================
+*/
+void AnglesNormalize360 (float pitch, float yaw, float roll){
+
+	if (pitch < 0.0f || pitch >= 360.0f)
+		pitch -= 360.0f * Floor(pitch * (1.0f / 360.0f));
+
+	if (yaw < 0.0f || yaw >= 360.0f)
+		yaw -= 360.0f * Floor(yaw * (1.0f / 360.0f));
+
+	if (roll < 0.0f || roll >= 360.0f)
+		roll -= 360.0f * Floor(roll * (1.0f / 360.0f));
+}

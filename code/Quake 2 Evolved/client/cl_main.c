@@ -26,7 +26,8 @@
 //
 
 // TODO:
-// - File downloading
+// - file downloading
+// - cvar clean up
 
 
 #include "client.h"
@@ -72,12 +73,16 @@ cvar_t *					cl_particleVertexLight;
 cvar_t *					cl_markTime;
 cvar_t *					cl_brassTime;
 cvar_t *					cl_blood;
+cvar_t *					cl_testModelPitch;
+cvar_t *					cl_testModelYaw;
+cvar_t *					cl_testModelRoll;
+cvar_t *					cl_testModelAnimate;
+cvar_t *					cl_testModelRotatePitch;
+cvar_t *					cl_testModelRotateYaw;
+cvar_t *					cl_testModelRotateRoll;
 cvar_t *					cl_testGunX;
 cvar_t *					cl_testGunY;
 cvar_t *					cl_testGunZ;
-cvar_t *					cl_testModelAnimate;
-cvar_t *					cl_testModelRotate;
-cvar_t *					cl_stereoSeparation;
 cvar_t *					cl_drawCrosshair;
 cvar_t *					cl_crosshairX;
 cvar_t *					cl_crosshairY;
@@ -100,7 +105,7 @@ cvar_t *					cl_drawIcons;
 cvar_t *					cl_drawStatus;
 cvar_t *					cl_drawInventory;
 cvar_t *					cl_drawLayout;
-cvar_t *					cl_newHUD;
+cvar_t *					cl_newHUD;							// TODO: remove
 cvar_t *					cl_allowDownload;
 cvar_t *					cl_rconPassword;
 cvar_t *					cl_rconAddress;
@@ -1808,12 +1813,16 @@ static void CL_Register (){
 	cl_markTime = CVar_Register("cl_markTime", "15000", CVAR_INTEGER, CVAR_ARCHIVE, NULL, 0, 20000);
 	cl_brassTime = CVar_Register("cl_brassTime", "2500", CVAR_INTEGER, CVAR_ARCHIVE, NULL, 0, 5000);
 	cl_blood = CVar_Register("cl_blood", "1", CVAR_BOOL, CVAR_ARCHIVE, "Draw blood decals", 0, 0);
+	cl_testModelPitch = CVar_Register("cl_testModelPitch", "0.0", CVAR_FLOAT, CVAR_CHEAT | CVAR_GAME, "Test model pitch", 0.0f, 360.0f);
+	cl_testModelYaw = CVar_Register("cl_testModelYaw", "0.0", CVAR_FLOAT, CVAR_CHEAT | CVAR_GAME, "Test model yaw", 0.0f, 360.0f);
+	cl_testModelRoll = CVar_Register("cl_testModelRoll", "0.0", CVAR_FLOAT, CVAR_CHEAT | CVAR_GAME, "Test model roll", 0.0f, 360.0f);
+	cl_testModelAnimate = CVar_Register("cl_testModelAnimate", "0", CVAR_BOOL, CVAR_CHEAT, "Test model animation", 0, 0);
+	cl_testModelRotatePitch = CVar_Register("cl_testModelRotatePitch", "0.0", CVAR_FLOAT, CVAR_CHEAT, "Test model rotation pitch", 0.0f, 0.0f);
+	cl_testModelRotateYaw = CVar_Register("cl_testModelRotateYaw", "0.0", CVAR_FLOAT, CVAR_CHEAT, "Test model rotation yaw", 0.0f, 0.0f);
+	cl_testModelRotateRoll = CVar_Register("cl_testModelRotateRoll", "0.0", CVAR_FLOAT, CVAR_CHEAT, "Test model rotation roll", 0.0f, 0.0f);	
 	cl_testGunX = CVar_Register("cl_testGunX", "0", CVAR_FLOAT, CVAR_CHEAT, "Test gun X position", 0.0f, 100.0f);
 	cl_testGunY = CVar_Register("cl_testGunY", "0", CVAR_FLOAT, CVAR_CHEAT, "Test gun Y position", 0.0f, 100.0f);
-	cl_testGunZ = CVar_Register("cl_testGunZ", "0", CVAR_FLOAT, CVAR_CHEAT, "Test gun Z position", 0.0f, 100.0f);
-	cl_testModelAnimate = CVar_Register("cl_testModelAnimate", "0", CVAR_BOOL, CVAR_CHEAT, "Test model animation", 0, 0);
-	cl_testModelRotate = CVar_Register("cl_testModelRotate", "0.0", CVAR_FLOAT, CVAR_CHEAT, "Test model rotation", 0.0f, 100.0f);
-	cl_stereoSeparation = CVar_Register("cl_stereoSeparation", "0.4", CVAR_FLOAT, CVAR_ARCHIVE, NULL, 0.0f, 1.0f);
+	cl_testGunZ = CVar_Register("cl_testGunZ", "0", CVAR_FLOAT, CVAR_CHEAT, "Test gun Z position", 0.0f, 100.0f);	
 	cl_drawCrosshair = CVar_Register("cl_drawCrosshair", "1", CVAR_BOOL, CVAR_ARCHIVE, "Draw the crosshair", 0, 0);
 	cl_crosshairX = CVar_Register("cl_crosshairX", "0", CVAR_INTEGER, CVAR_ARCHIVE, "Crosshair X position", 0, 100);
 	cl_crosshairY = CVar_Register("cl_crosshairY", "0", CVAR_INTEGER, CVAR_ARCHIVE, "Crosshair Y position", 0, 100);
@@ -1843,6 +1852,8 @@ static void CL_Register (){
 	cl_itemBob = CVar_Register("cl_itemBob", "1", CVAR_BOOL, CVAR_ARCHIVE, "Make items bob up and down continuously", 0, 0);
 
 	// Add commands
+	CL_AddCommands();
+
 	Cmd_AddCommand("precache", CL_Precache_f, "Precaches files for the current map", NULL);
 	Cmd_AddCommand("changing", CL_Changing_f, "Change map", NULL);
 	Cmd_AddCommand("cmd", CL_ForwardToServer_f, "Forward to server command", NULL);
@@ -1860,21 +1871,7 @@ static void CL_Register (){
 	Cmd_AddCommand("configstrings", CL_ConfigStrings_f, "Shows config strings", NULL);
 	Cmd_AddCommand("record", CL_Record_f, "Records a demo", NULL);
 	Cmd_AddCommand("stoprecord", CL_StopRecord_f, "Stops demo recording", NULL);
-	Cmd_AddCommand("testSprite", CL_TestSprite_f, "Tests a sprite", Cmd_ArgCompletion_MaterialName);
-	Cmd_AddCommand("testBeam", CL_TestBeam_f, "Tests a beam", Cmd_ArgCompletion_MaterialName);
-	Cmd_AddCommand("testSound", CL_TestSound_f, "Tests a sound", NULL);
-	Cmd_AddCommand("testDecal", CL_TestDecal_f, "Tests a decal", Cmd_ArgCompletion_MaterialName);
-	Cmd_AddCommand("testModel", CL_TestModel_f, "Tests a model", Cmd_ArgCompletion_ModelName);
-	Cmd_AddCommand("testGun", CL_TestGun_f, "Tests the current test model as a gun model", NULL);
-	Cmd_AddCommand("testMaterial", CL_TestMaterial_f, "Tests a material on the current test model", Cmd_ArgCompletion_MaterialName);
-	Cmd_AddCommand("testMaterialParm", CL_TestMaterialParm_f, "Tests a material parm on the current test model", NULL);
-	Cmd_AddCommand("nextframe", CL_NextFrame_f, NULL, NULL);
-	Cmd_AddCommand("prevframe", CL_PrevFrame_f, NULL, NULL);
-	Cmd_AddCommand("nextskin", CL_NextSkin_f, NULL, NULL);
-	Cmd_AddCommand("prevskin", CL_PrevSkin_f, NULL, NULL);
-	Cmd_AddCommand("where", CL_Where_f, "Shows the current view position and angles", NULL);
-	Cmd_AddCommand("sizeup", CL_SizeUp_f, NULL, NULL);
-	Cmd_AddCommand("sizedown", CL_SizeDown_f, NULL, NULL);
+
 	Cmd_AddCommand("centerview", CL_CenterView_f, NULL, NULL);
 	Cmd_AddCommand("+zoom", CL_ZoomDown_f, NULL, NULL);
 	Cmd_AddCommand("-zoom", CL_ZoomUp_f, NULL, NULL);
@@ -1970,21 +1967,6 @@ static void CL_Unregister (){
 	Cmd_RemoveCommand("configstrings");
 	Cmd_RemoveCommand("record");
 	Cmd_RemoveCommand("stoprecord");
-	Cmd_RemoveCommand("testSprite");
-	Cmd_RemoveCommand("testBeam");
-	Cmd_RemoveCommand("testSound");
-	Cmd_RemoveCommand("testDecal");
-	Cmd_RemoveCommand("testModel");
-	Cmd_RemoveCommand("testGun");
-	Cmd_RemoveCommand("testShader");
-	Cmd_RemoveCommand("testShaderParm");
-	Cmd_RemoveCommand("nextframe");
-	Cmd_RemoveCommand("prevframe");
-	Cmd_RemoveCommand("nextskin");
-	Cmd_RemoveCommand("prevskin");
-	Cmd_RemoveCommand("where");
-	Cmd_RemoveCommand("sizeup");
-	Cmd_RemoveCommand("sizedown");
 	Cmd_RemoveCommand("centerview");
 	Cmd_RemoveCommand("+zoom");
 	Cmd_RemoveCommand("-zoom");

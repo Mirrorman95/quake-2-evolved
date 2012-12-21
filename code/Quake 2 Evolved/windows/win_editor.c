@@ -186,6 +186,8 @@ void WIN_ApplyLightParameters (){
 		return;
 
 	// Read the controls
+	parms.index = win_lightParmsEditor.editIndex;
+
 	if (GetWindowText(win_lightParmsEditor.hWndNameValue, string, sizeof(string)))
 		Str_Copy(parms.name, string, sizeof(parms.name));
 	else

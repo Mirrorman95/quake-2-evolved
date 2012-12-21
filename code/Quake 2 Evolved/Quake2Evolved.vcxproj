@@ -125,6 +125,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\cl_cinematic.c" />
+    <ClCompile Include="client\cl_commands.c" />
     <ClCompile Include="client\cl_console.c" />
     <ClCompile Include="client\cl_demo.c" />
     <ClCompile Include="client\cl_draw.c" />

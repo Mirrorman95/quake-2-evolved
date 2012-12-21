@@ -141,8 +141,8 @@ static bool S_LoadWAV (const char *name, short **wave, int *rate, int *samples){
 	if (header.wChannels != 1)
 		Com_Error(ERR_DROP, "S_LoadWAV: only mono sounds supported (%s)", name);
 
-	if (header.wBitsPerSample != 16)
-		Com_Error(ERR_DROP, "S_LoadWAV: only 16 bit sounds supported (%s)", name);
+//	if (header.wBitsPerSample != 16)
+//		Com_Error(ERR_DROP, "S_LoadWAV: only 16 bit sounds supported (%s)", name);
 
 	// Find the data chunk
 	if (!S_FindChunk(&file, "data"))

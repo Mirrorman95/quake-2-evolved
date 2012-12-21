@@ -844,8 +844,7 @@ void RB_TransformLightForEntity (light_t *light, renderEntity_t *entity){
 
 /*
  ==================
-
- TODO: fog light matrices
+ RB_ComputeLightMatrix
  ==================
 */
 void RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *material, textureStage_t *textureStage){
@@ -894,12 +893,33 @@ void RB_ComputeLightMatrix (light_t *light, renderEntity_t *entity, material_t *
 	else
 		heightScale = 0.5f / light->data.fogHeight;
 
-	if (entity == rg.worldEntity){
+	backEnd.localParms.lightMatrix[ 0] = backEnd.localParms.viewMatrix[ 0] * distanceScale;
+	backEnd.localParms.lightMatrix[ 4] = backEnd.localParms.viewMatrix[ 4] * distanceScale;
+	backEnd.localParms.lightMatrix[ 8] = backEnd.localParms.viewMatrix[ 8] * distanceScale;
+	backEnd.localParms.lightMatrix[12] = backEnd.localParms.viewMatrix[12] * distanceScale + 0.5f;
 
+	backEnd.localParms.lightMatrix[ 1] = backEnd.localParms.viewMatrix[ 2] * distanceScale;
+	backEnd.localParms.lightMatrix[ 5] = backEnd.localParms.viewMatrix[ 6] * distanceScale;
+	backEnd.localParms.lightMatrix[ 9] = backEnd.localParms.viewMatrix[10] * distanceScale;
+	backEnd.localParms.lightMatrix[13] = backEnd.localParms.viewMatrix[14] * distanceScale + 0.5f;
+
+	if (entity == rg.worldEntity){
+		backEnd.localParms.lightMatrix[ 2] = light->data.fogPlane.normal[0] * heightScale;
+		backEnd.localParms.lightMatrix[ 6] = light->data.fogPlane.normal[1] * heightScale;
+		backEnd.localParms.lightMatrix[10] = light->data.fogPlane.normal[2] * heightScale;
+		backEnd.localParms.lightMatrix[14] = -light->data.fogPlane.dist * heightScale + 0.5f;
 	}
 	else {
-
+		backEnd.localParms.lightMatrix[ 2] = DotProduct(entity->axis[0], light->data.fogPlane.normal) * heightScale;
+		backEnd.localParms.lightMatrix[ 6] = DotProduct(entity->axis[1], light->data.fogPlane.normal) * heightScale;
+		backEnd.localParms.lightMatrix[10] = DotProduct(entity->axis[2], light->data.fogPlane.normal) * heightScale;
+		backEnd.localParms.lightMatrix[14] = (DotProduct(entity->origin, light->data.fogPlane.normal) - light->data.fogPlane.dist) * heightScale + 0.5f;
 	}
+
+	backEnd.localParms.lightMatrix[ 3] = 0.0f;
+	backEnd.localParms.lightMatrix[ 7] = 0.0f;
+	backEnd.localParms.lightMatrix[11] = 0.0f;
+	backEnd.localParms.lightMatrix[15] = (DotProduct(backEnd.viewParms.origin, light->data.fogPlane.normal) - light->data.fogPlane.dist) * heightScale + 0.5f;
 }
 
 /*

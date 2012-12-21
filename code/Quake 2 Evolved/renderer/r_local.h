@@ -1099,6 +1099,11 @@ void			R_AllocLightMeshes ();
 void			R_GenerateLightMeshes (struct light_s *light);
 void			R_ClearLightMeshes ();
 
+void			R_RefreshLightEditor ();
+
+void			R_InitLightEditor ();
+void			R_ShutdownLightEditor ();
+
 /*
  ==============================================================================
 

@@ -1,0 +1,56 @@
+
+
+//
+// BFG Ball
+//
+
+gfx/sprites/bfg
+{
+	twoSided
+	{
+		shaderQuality == 2
+
+		shader		heatHaze
+
+		shaderParm	u_BumpScale		0.25, 0.25
+		shaderParm	u_BumpScroll		0, 0
+		shaderParm	u_DistortionScale	5
+		shaderParm	u_AlphaModulate		1.0
+
+		shaderMap	u_AlphaMap		makeAlpha(gfx/sprites/bfg_mask.tga)
+		shaderMap	u_BumpMap		normalMap gfx/sprites/bfg_local.tga
+		shaderMap	u_ColorMap		_currentColor
+	}
+	{
+		clamp
+		map		gfx/sprites/bfg_main.tga
+		colored
+		blend 		add
+		rotate		time * -300
+	}
+	{
+		clamp
+		map		gfx/sprites/bfg_core1.tga
+		colored
+		blend		add
+		rotate		time * 360
+	}
+	{
+		clamp
+		map		gfx/sprites/bfg_core2.tga
+		colored
+		blend		add
+		rotate		time * -360
+	}
+	{
+		clamp
+		map		gfx/sprites/bfg_core3.tga
+		colored
+		blend		add
+		rotate		time * 180
+	}
+}
+
+//
+// Plasma Ball
+//

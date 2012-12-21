@@ -40,6 +40,7 @@ void			AnglesToMat3 (const vec3_t angles, vec3_t axis[3]);
 float			AngleMod (float angle);
 float			LerpAngle (float from, float to, float frac);
 void			LerpAngles (const vec3_t from, const vec3_t to, float frac, vec3_t out);
+void			AnglesNormalize360 (float pitch, float yaw, float roll);
 
 
 #endif	// __MATH_ANGLES_H__

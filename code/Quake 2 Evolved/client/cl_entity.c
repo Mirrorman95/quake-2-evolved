@@ -880,14 +880,17 @@ static void CL_AddEntityTrails (centity_t *centity, renderEntity_t *entity, uint
 */
 void CL_AddPacketEntities (){
 
-	renderEntity_t        entity;
+	renderEntity_t	entity;
+	entity_state_t	*state;
 	centity_t		*centity;
-    entity_state_t	*state;
+	clientInfo_t    *clientInfo;
 	vec3_t			origin, angles, autoRotateAxis[3];
-	float			scale;
 	int				animAll, animAllFast, anim01, anim23;
-    int             i, weapon;
-    clientInfo_t    *clientInfo;
+	bool			isClient;
+	uint			delta;
+	float			scale;
+	int				weapon;
+	int				i;
 
 	// Some items auto-rotate
 	VectorSet(angles, 0.0f, AngleMod(cl.time * 0.1f), 0.0f);
@@ -899,33 +902,38 @@ void CL_AddPacketEntities (){
 	anim01 = (animAll & 1);
 	anim23 = (animAll & 1) + 2;
 
-	Mem_Fill(&entity, 0, sizeof(entity));
+	Mem_Fill(&entity, 0, sizeof(renderEntity_t));
 
 	for (i = 0; i < cl.frame.numEntities; i++){
 		state = &cl.parseEntities[(cl.frame.parseEntitiesIndex + i) & (MAX_PARSE_ENTITIES - 1)];
 
 		centity = &cl.entities[state->number];
 
-		// Calculate origin
-		if (state->renderfx & (RF_FRAMELERP|RF_BEAM)){
-			// Step origin discretely, because the frames do the
-			// animation properly
-			VectorCopy(centity->current.origin, entity.origin);
-			VectorCopy(centity->current.old_origin, entity.oldOrigin);
-		}
-		else {
-			// Interpolate origin
-			entity.origin[0] = entity.oldOrigin[0] = centity->prev.origin[0] + (centity->current.origin[0] - centity->prev.origin[0]) * cl.lerpFrac;
-			entity.origin[1] = entity.oldOrigin[1] = centity->prev.origin[1] + (centity->current.origin[1] - centity->prev.origin[1]) * cl.lerpFrac;
-			entity.origin[2] = entity.oldOrigin[2] = centity->prev.origin[2] + (centity->current.origin[2] - centity->prev.origin[2]) * cl.lerpFrac;
-		}
+		isClient = state->number == cl.clientNum;
 
 		// Add laser beams
 		if (state->renderfx & RF_BEAM){
-			CL_LaserBeam(entity.origin, entity.oldOrigin, state->frame, state->skinnum, 75, 1, cl.media.laserBeamMaterial);
+			CL_LaserBeam(centity->current.origin, centity->current.old_origin, state->frame, state->skinnum, 75, 1, cl.media.laserBeamMaterial);
 
-			VectorCopy(entity.origin, centity->lerpOrigin);
+			VectorCopy(centity->current.origin, centity->lerpOrigin);
 			continue;
+		}
+
+		// Interpolate origin
+		if (isClient && !cl_thirdPerson->integerValue && cl_predict->integerValue && !(cl.playerState->pmove.pm_flags & PMF_NO_PREDICTION)){
+			// Use predicted values
+			VectorMA(cl.predictedOrigin, -(1.0 - cl.lerpFrac), cl.predictedError, entity.origin);
+
+	        // Smooth out stair climbing
+			delta = cls.realTime - cl.predictedStepTime;
+			if (delta < 100)
+				entity.origin[2] -= cl.predictedStep * (100 - delta) * 0.01f;
+		}
+		else {
+			if (state->renderfx & RF_FRAMELERP)
+				VectorLerp(centity->current.old_origin, centity->current.origin, cl.lerpFrac, entity.origin);
+			else
+				VectorLerp(centity->prev.origin, centity->current.origin, cl.lerpFrac, entity.origin);
 		}
 
 		// BFG and Phalanx effects are just sprites
@@ -957,7 +965,6 @@ void CL_AddPacketEntities (){
 			if (cl_itemBob->integerValue){
 				scale = 0.005f + centity->current.number * 0.00001f;
 				entity.origin[2] += 4 + cos((cl.time + 1000) *  scale) * 4;
-				entity.oldOrigin[2] += 4 + cos((cl.time + 1000) *  scale) * 4;
 			}
 		}
 		else if (state->effects & EF_SPINNINGLIGHTS){
@@ -969,10 +976,7 @@ void CL_AddPacketEntities (){
 		}
 		else {
 			// Interpolate angles
-			angles[0] = LerpAngle(centity->prev.angles[0], centity->current.angles[0], cl.lerpFrac);
-			angles[1] = LerpAngle(centity->prev.angles[1], centity->current.angles[1], cl.lerpFrac);
-			angles[2] = LerpAngle(centity->prev.angles[2], centity->current.angles[2], cl.lerpFrac);
-
+			LerpAngles(centity->prev.angles, centity->current.angles, cl.lerpFrac, angles);
 			AnglesToMat3(angles, entity.axis);
 		}
 
@@ -1049,7 +1053,7 @@ void CL_AddPacketEntities (){
 		// Render effects
 		entity.renderFX = state->renderfx;
 
-		if (state->number == cl.clientNum && !cl_thirdPerson->integerValue)
+		if (isClient && !cl_thirdPerson->integerValue)
 			entity.renderFX |= RF_VIEWERMODEL;		// Only draw from mirrors
 
 		// Add to refresh list
@@ -1155,7 +1159,7 @@ void CL_AddViewWeapon (){
         return;
 
 	// Don't add if in wide angle view
-	if (cl.playerState->fov > 90.0f)
+	if (cl.playerState->fov > DEFAULT_FOV)
 		return;
 
 	// Don't add if testing a gun model
@@ -1172,7 +1176,7 @@ void CL_AddViewWeapon (){
 	Mem_Fill(&gun, 0, sizeof(renderEntity_t));
 
 	gun.type = RE_MODEL;
-	gun.renderFX = RF_MINLIGHT | RF_WEAPONMODEL;
+	gun.renderFX = RF_WEAPONMODEL;
 	gun.depthHack = true;
 	gun.model = cl.media.gameModels[cl.playerState->gunindex];
 	gun.backLerp = 1.0f - cl.lerpFrac;
@@ -1187,13 +1191,11 @@ void CL_AddViewWeapon (){
 	gun.materialParms[MATERIALPARM_MODE] = 0.0f;
 
     // Set up gun position and angles
-	gun.origin[0] = gun.oldOrigin[0] = cl.renderView.origin[0] + cl.oldPlayerState->gunoffset[0] + (cl.playerState->gunoffset[0] - cl.oldPlayerState->gunoffset[0]) * cl.lerpFrac;
-	gun.origin[1] = gun.oldOrigin[1] = cl.renderView.origin[1] + cl.oldPlayerState->gunoffset[1] + (cl.playerState->gunoffset[1] - cl.oldPlayerState->gunoffset[1]) * cl.lerpFrac;
-	gun.origin[2] = gun.oldOrigin[2] = cl.renderView.origin[2] + cl.oldPlayerState->gunoffset[2] + (cl.playerState->gunoffset[2] - cl.oldPlayerState->gunoffset[2]) * cl.lerpFrac;
+	VectorLerp(cl.oldPlayerState->gunoffset, cl.playerState->gunoffset, cl.lerpFrac, gun.origin);
+	VectorAdd(gun.origin, cl.renderView.origin, gun.origin);
 
-	angles[0] = cl.renderViewAngles[0] + LerpAngle(cl.oldPlayerState->gunangles[0], cl.playerState->gunangles[0], cl.lerpFrac);
-	angles[1] = cl.renderViewAngles[1] + LerpAngle(cl.oldPlayerState->gunangles[1], cl.playerState->gunangles[1], cl.lerpFrac);
-	angles[2] = cl.renderViewAngles[2] + LerpAngle(cl.oldPlayerState->gunangles[2], cl.playerState->gunangles[2], cl.lerpFrac);
+	LerpAngles(cl.oldPlayerState->gunangles, cl.playerState->gunangles, cl.lerpFrac, angles);
+	VectorAdd(angles, cl.renderViewAngles, angles);
 
 	AnglesToMat3(angles, gun.axis);
 

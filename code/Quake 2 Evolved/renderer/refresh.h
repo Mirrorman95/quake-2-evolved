@@ -165,7 +165,7 @@ typedef struct {
 	vec3_t					axis[3];
 
 	// Previous data for lerping
-	vec3_t					oldOrigin;
+	int						frame;
 	int						oldFrame;
 
 	float					backLerp;
@@ -187,8 +187,6 @@ typedef struct {
 	int						allowShadowInView;	// For per-view allow/suppress
 
 	int						skinIndex;
-
-	int						frame;
 
 	// Material
 	material_t *			material;
@@ -228,8 +226,8 @@ typedef struct {
 	float					fogHeight;
 
 	// Light attributes
-	int						detailLevel;
 	int						style;
+	int						detailLevel;
 
 	int						allowInView;		// For per-view allow/suppress
 

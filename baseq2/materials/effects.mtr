@@ -1,9 +1,28 @@
 
 //
+// Water Plume, Spary, And Wake
+//
+
+gfx/effects/water/waterPlume
+{
+
+}
+
+gfx/effects/water/waterSpray
+{
+
+}
+
+gfx/effects/water/waterWake
+{
+
+}
+
+//
 // Rocket Explosion
 //
 
-rocketExplosion
+gfx/effects/explosions/rocketExplosion
 {
 	twoSided
 	{
@@ -64,7 +83,7 @@ rocketExplosion
 	}
 }
 
-rocketExplosionWater
+gfx/effects/explosions/rocketExplosionWater
 {
 	sort			underwater
 	twoSided
@@ -79,7 +98,7 @@ rocketExplosionWater
 // Grenade Explosion
 //
 
-grenadeExplosion
+gfx/effects/explosions/grenadeExplosion
 {
 	twoSided
 	{
@@ -94,7 +113,7 @@ grenadeExplosion
 	}
 }
 
-grenadeExplosionWater
+gfx/effects/explosions/grenadeExplosionWater
 {
 	sort			underwater
 	twoSided
@@ -109,7 +128,7 @@ grenadeExplosionWater
 // BFG Explosion
 //
 
-bfgExplosion
+gfx/effects/explosions/bfgExplosion
 {
 	twoSided
 	{

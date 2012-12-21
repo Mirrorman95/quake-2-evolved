@@ -25,7 +25,7 @@
 // cl_cinematic.c - Cinematic playback
 //
 
-// TODO!!!
+// TODO:
 // - use handle based indices for drawing
 // - move huffman into it's own file?
 

@@ -1,22 +1,25 @@
 
+// TODO!!!
 textures/e1u1/bluwter
 {
 	sort 			refractive
 	noShadows
-
-	// High quality render path
 	{
-		shaderQuality == 2
-	}
+		shader		water
 
-	// Medium quality render path
-	{
-		shaderQuality == 1
-	}
+		shaderParm	u_BumpScale		0.2, 0.5, 0.2, 0.2
+		shaderParm	u_BumpScroll		time * -.025, 0, time * .05, 0
+		shaderParm	u_DistortionScale	0.2, 0.2
+		shaderParm	u_FadeDepth		300.0
+		shaderParm	u_ColorTint		0.1, 0.1, 0.1
+		shaderParm	u_FresnelParms		0, 0, 0
+		shaderParm	u_SpecularColor		1, 1, 1
+		shaderParm	u_SpecularParms		1, 1
 
-	// Low quality render path
-	{
-		shaderQuality == 0
+		shaderMap	u_BumpMap		normalMap textures/e1u1/water_local.tga
+		shaderMap	u_DepthMap		_currentDepth
+		shaderMap	u_RefractionMap		_currentColor
+		shaderMap	u_ReflectionMap		cubeMap env/generic1
 	}
 }
 
@@ -24,8 +27,6 @@ textures/e1u1/wndow0_3
 {
 	forceOverlays
 	sort 			refractive
-	
-	// High quality render path
 	{
 		shaderQuality == 2
 
@@ -40,8 +41,6 @@ textures/e1u1/wndow0_3
 		shaderMap	u_RefractionMap		_currentColor
 		shaderMap	u_ReflectionMap		cubeMap env/generic1
 	}
-
-	// Medium quality render path
 	{
 		shaderQuality == 1
 
@@ -56,8 +55,6 @@ textures/e1u1/wndow0_3
 		shaderMap	u_RefractionMap		_currentColor
 		shaderMap	u_ReflectionMap		cubeMap env/generic1
 	}
-
-	// Low quality render path
 	{
 		shaderQuality == 0
 	}

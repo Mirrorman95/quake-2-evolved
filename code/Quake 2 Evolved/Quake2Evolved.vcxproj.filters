@@ -587,6 +587,9 @@
     <ClCompile Include="shared\math\rect.c">
       <Filter>Source Files\shared\math</Filter>
     </ClCompile>
+    <ClCompile Include="client\cl_commands.c">
+      <Filter>Source Files\client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="windows\q2.ico">

@@ -430,6 +430,9 @@ static void R_SetupStaticLightData (lightData_t *lightData, bool inWorld){
 	vec3_t		lVector, rVector;
 	vec3_t		dVector, uVector;
 	vec3_t		nVector, fVector;
+	vec3_t		edge[2];
+	vec3_t		planeNormal;
+	float		planeDist;
 	float		ratio;
 	float		distance, maxDistance;
 	int			i;
@@ -558,6 +561,15 @@ static void R_SetupStaticLightData (lightData_t *lightData, bool inWorld){
 	lightData->lightRange = maxDistance + 8.0f;
 
 	// Compute the fog plane
+	VectorSubtract(lightData->corners[3], lightData->corners[2], edge[0]);
+	VectorSubtract(lightData->corners[1], lightData->corners[2], edge[1]);
+	CrossProduct(edge[1], edge[0], planeNormal);
+	VectorNormalize(planeNormal);
+
+	planeDist = DotProduct(lightData->corners[0], planeNormal);
+
+	VectorCopy(planeNormal, lightData->fogPlane.normal);
+	lightData->fogPlane.dist = planeDist;
 
 	// Compute the transformation matrices
 	if (lightData->type != RL_PROJECTED){
@@ -682,6 +694,9 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 	vec3_t	lVector, rVector;
 	vec3_t	dVector, uVector;
 	vec3_t	nVector, fVector;
+	vec3_t	edge[2];
+	vec3_t	planeNormal;
+	float	planeDist;
 	float	ratio;
 	float	distance, maxDistance;
 	int		i;
@@ -798,6 +813,15 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 	lightData->lightRange = maxDistance + 8.0f;
 
 	// Compute the fog plane
+	VectorSubtract(lightData->corners[3], lightData->corners[2], edge[0]);
+	VectorSubtract(lightData->corners[1], lightData->corners[2], edge[1]);
+	CrossProduct(edge[1], edge[0], planeNormal);
+	VectorNormalize(planeNormal);
+
+	planeDist = DotProduct(lightData->corners[0], planeNormal);
+
+	VectorCopy(planeNormal, lightData->fogPlane.normal);
+	lightData->fogPlane.dist = planeDist;
 
 	// Compute the transformation matrices
 	if (lightData->type != RL_PROJECTED){
@@ -1125,8 +1149,9 @@ static void R_SetupNearClipVolume (light_t *light){
 
 /*
  ==================
- 
- TODO: fog plane
+ R_AddLight
+
+ TODO: make sure the plane sides are correct for the fog plane
  ==================
 */
 static void R_AddLight (lightData_t *lightData, material_t *material, bool viewInLight){
@@ -1178,6 +1203,17 @@ static void R_AddLight (lightData_t *lightData, material_t *material, bool viewI
 	R_SetupNearClipVolume(light);
 
 	// Determine fog plane visibility
+	if (PointOnPlaneSide(rg.renderView.origin, 0.0f, &light->data.fogPlane) != PLANESIDE_BACK)
+		light->fogPlaneVisible = false;
+	else {
+		light->fogPlaneVisible = true;
+
+		// If the vis bounds don't intersect it, the fog plane is not visible
+		if (rg.viewParms.primaryView){
+			if (BoxOnPlaneSide(rg.viewParms.visMins, rg.viewParms.visMaxs, &light->data.fogPlane) != PLANESIDE_CROSS)
+				light->fogPlaneVisible = false;
+		}
+	}
 
 	// Generate light interaction meshes
 	R_GenerateLightMeshes(light);
