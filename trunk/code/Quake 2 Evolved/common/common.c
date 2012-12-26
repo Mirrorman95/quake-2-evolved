@@ -75,7 +75,7 @@ bool						com_initialized = false;
 cvar_t *					com_version;
 cvar_t *					com_developer;
 cvar_t *					dedicated;
-cvar_t *					paused;
+cvar_t *					com_paused;
 cvar_t *					com_timeDemo;
 cvar_t *					fixedtime;
 cvar_t *					timescale;
@@ -620,7 +620,7 @@ static void Com_Pause_f (){
 		return;
 	}
 
-	CVar_SetVariableInteger("paused", !paused->integerValue, false);
+	CVar_SetVariableInteger("paused", !com_paused->integerValue, false);
 }
 
 
@@ -925,7 +925,7 @@ void Com_Init (const char *cmdLine){
 	com_version = CVar_Register("version", Str_VarArgs("%s (%s)", ENGINE_VERSION, __DATE__), CVAR_STRING, CVAR_SERVERINFO | CVAR_READONLY, "Game version", 0, 0);
 	com_developer = CVar_Register("com_developer", "0", CVAR_BOOL, 0, "Developer mode", 0, 0);
 	dedicated = CVar_Register("dedicated", "0", CVAR_BOOL, CVAR_INIT, "Dedicated server", 0, 0);
-	paused = CVar_Register("paused", "0", CVAR_BOOL, CVAR_CHEAT, "Pauses the game", 0, 0);
+	com_paused = CVar_Register("paused", "0", CVAR_BOOL, CVAR_CHEAT, "Pauses the game", 0, 0);
 	com_timeDemo = CVar_Register("com_timeDemo", "0", CVAR_BOOL, CVAR_CHEAT, "Timing a demo", 0, 0);
 	fixedtime = CVar_Register("fixedtime", "0", CVAR_INTEGER, CVAR_CHEAT, "Fixed time", 0, 1000);
 	timescale = CVar_Register("timescale", "1", CVAR_FLOAT, CVAR_CHEAT, "Time scale", 0.0f, 1000.0f);

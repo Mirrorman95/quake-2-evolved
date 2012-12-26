@@ -54,3 +54,8 @@ gfx/sprites/bfg
 //
 // Plasma Ball
 //
+
+gfx/sprites/plasma
+{
+
+}

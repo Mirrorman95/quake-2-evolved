@@ -1,25 +1,25 @@
 
-fireBlend
+gfx/screen/fireBlend
 {
 
 }
 
-waterBlurBlend
+gfx/screen/waterBlurBlend
 {
 
 }
 
-doubleVisionBlend
+gfx/screen/doubleVisionBlend
 {
 
 }
 
-underWaterVisionBlend
+gfx/screen/underWaterVisionBlend
 {
 
 }
 
-irGogglesBlend
+gfx/screen/irGogglesBlend
 {
 
 }

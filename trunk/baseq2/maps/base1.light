@@ -217,6 +217,12 @@ light 16
 {
 name                light_16
 origin              ( -548 616 -31 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/square_uberbright
 color               ( 1 1 0.501961 )
 }
@@ -224,6 +230,12 @@ light 17
 {
 name                light_17
 origin              ( -548 808 -31 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/square_uberbright
 color               ( 1 1 0.501961 )
 }
@@ -244,6 +256,12 @@ light 19
 {
 name                light_19
 origin              ( -989 864 25 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/round_uberbright
 color               ( 1 0.627451 0.258824 )
 }
@@ -251,6 +269,12 @@ light 20
 {
 name                light_20
 origin              ( -904 1073 25 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/square_uberbright
 color               ( 1 1 0.501961 )
 }
@@ -258,6 +282,12 @@ light 21
 {
 name                light_21
 origin              ( -904 1200 25 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/square_uberbright
 color               ( 1 1 0.501961 )
 }
@@ -265,6 +295,12 @@ light 22
 {
 name                light_22
 origin              ( -904 1328 25 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/square_uberbright
 color               ( 1 1 0.501961 )
 }
@@ -272,6 +308,12 @@ light 23
 {
 name                light_23
 origin              ( -904 1504 25 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/square_uberbright
 color               ( 1 1 0.501961 )
 }
@@ -279,6 +321,12 @@ light 24
 {
 name                light_24
 origin              ( -904 1632 25 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/square_uberbright
 color               ( 1 1 0.501961 )
 }
@@ -286,6 +334,12 @@ light 25
 {
 name                light_25
 origin              ( -1032 1632 25 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/square_uberbright
 color               ( 1 1 0.501961 )
 }
@@ -720,15 +774,10 @@ color               ( 1 0.627451 0.258824 )
 light 59
 {
 name                light_59
-origin              ( -126 881 317 )
+origin              ( -189 880 320 )
 radius              ( 700 700 1000 )
-xMin                0
-xMax                0
-yMin                0
-yMax                0
-zNear               0
-zFar                0
-material            lights/default
+material            lights/round_uberbright
+color               ( 1 0.501961 0 )
 }
 light 60
 {
@@ -759,287 +808,571 @@ light 62
 {
 name                light_62
 origin              ( -1157 1791 53 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 63
 {
 name                light_63
 origin              ( -1202 1516 59 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 64
 {
 name                light_64
 origin              ( -1172 1522 -35 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 65
 {
 name                light_65
 origin              ( -1237 1532 -31 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 66
 {
 name                light_66
 origin              ( -1517 1616 394 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 67
 {
 name                light_67
 origin              ( -1313 1569 368 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 68
 {
 name                light_68
 origin              ( -1261 1695 368 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 69
 {
 name                light_69
 origin              ( -1151 1283 185 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 70
 {
 name                light_70
 origin              ( -1301 1309 350 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 71
 {
 name                light_71
 origin              ( -1533 1241 182 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 72
 {
 name                light_72
 origin              ( -1914 1235 183 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 73
 {
 name                light_73
 origin              ( -1949 1455 397 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 74
 {
 name                light_74
 origin              ( -1634 1889 -30 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 75
 {
 name                light_75
 origin              ( -1793 1898 -31 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 76
 {
 name                light_76
 origin              ( -1953 1898 -32 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 77
 {
 name                light_77
 origin              ( -2019 1817 -29 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 78
 {
 name                light_78
 origin              ( -2037 1694 -38 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 79
 {
 name                light_79
 origin              ( -2038 1342 -36 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 80
 {
 name                light_80
 origin              ( -1887 1238 -33 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 81
 {
 name                light_81
 origin              ( -1755 1233 -35 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 82
 {
 name                light_82
 origin              ( -1632 1229 -37 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 83
 {
 name                light_83
 origin              ( -1439 1231 -35 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 84
 {
 name                light_84
 origin              ( -1248 1237 -33 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 85
 {
 name                light_85
 origin              ( -1153 1316 -31 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 86
 {
 name                light_86
 origin              ( -1157 1369 -27 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 87
 {
 name                light_87
 origin              ( -2013 1533 72 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 88
 {
 name                light_88
-origin              ( -493 1147 450 )
-material            lights/default
+origin              ( -500 1209 450 )
+radius              ( 700 600 900 )
+material            lights/round_uberbright
+color               ( 1 0.501961 0 )
 }
 light 89
 {
 name                light_89
 origin              ( 651 -417 189 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 90
 {
 name                light_90
 origin              ( 165 -568 197 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 91
 {
 name                light_91
 origin              ( 1080 -189 53 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 92
 {
 name                light_92
 origin              ( 1152 -110 52 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 93
 {
 name                light_93
 origin              ( 816 -97 218 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 94
 {
 name                light_94
 origin              ( 605 -4 50 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 95
 {
 name                light_95
 origin              ( 595 -127 52 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 96
 {
 name                light_96
 origin              ( 767 437 55 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 97
 {
 name                light_97
 origin              ( 1022 429 54 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 98
 {
 name                light_98
 origin              ( 1285 163 45 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 99
 {
 name                light_99
 origin              ( 1289 247 20 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 100
 {
 name                light_100
 origin              ( 888 225 209 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 101
 {
 name                light_101
 origin              ( 733 202 199 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 102
 {
 name                light_102
 origin              ( 734 356 230 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 103
 {
 name                light_103
 origin              ( 910 45 220 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 104
 {
 name                light_104
 origin              ( 1018 75 -135 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 105
 {
 name                light_105
 origin              ( 624 10 -132 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 106
 {
 name                light_106
 origin              ( 603 178 -158 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 107
 {
 name                light_107
 origin              ( 601 227 -161 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 108
 {
 name                light_108
 origin              ( 1014 -191 -136 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }
 light 109
 {
 name                light_109
 origin              ( 633 -202 -136 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
 material            lights/default
 }

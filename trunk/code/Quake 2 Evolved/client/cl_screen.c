@@ -41,79 +41,30 @@
 /*
  ==================
  CL_PlayCinematic
-
- TODO: replace Com_DefaultPath
  ==================
 */
 void CL_PlayCinematic (const char *name){
 
-	char	path[MAX_OSPATH], extension[8];
+	char	path[MAX_QPATH];
 
-	// Stop any playing cinematics
+	// Stop the cinematic
 	CL_StopCinematic();
 
 	Com_DPrintf("CL_PlayCinematic( %s )\n", name);
 
-	// Get the file extension
-	Str_Copy(extension, name, sizeof(extension));
-	Str_StripFileExtension(extension);
-
-	if (!Str_ICompare(extension, ".pcx")){
+	// Get the extension name
+	if (!Str_ICompare(name+Str_Length(name)-4, ".pcx")){
 		Str_Copy(path, name, sizeof(path));
 		Com_DefaultPath(path, sizeof(path), "pics");
 	}
 	else {
 		Str_Copy(path, name, sizeof(path));
 		Com_DefaultPath(path, sizeof(path), "video");
-		Str_DefaultFileExtension(path, sizeof(path), ".cin");
+		Com_DefaultExtension(path, sizeof(path), ".cin");
 	}
 
 	// Play the cinematic
-	cls.playingCinematic = CIN_PlayCinematic(path, CIN_SYSTEM);
-	if (!cls.playingCinematic){
-		Com_Printf("Cinematic %s not found\n", path);
-
-		CL_FinishCinematic();
-		return;
-	}
-
-	// Run a frame
-	if (CIN_UpdateCinematic())
-		return;
-
-	// Did not get a valid frame
-	CL_StopCinematic();
-	CL_FinishCinematic();
-}
-
-/*
- ==================
- CL_RunCinematic
- ==================
-*/
-void CL_RunCinematic (){
-
-	if (!cls.playingCinematic)
-		return;
-
-	if (CIN_UpdateCinematic())
-		return;
-
-	CL_StopCinematic();
-	CL_FinishCinematic();
-}
-
-/*
- ==================
- CL_DrawCinematic
- ==================
-*/
-void CL_DrawCinematic (){
-
-	if (!cls.playingCinematic)
-		return;
-
-	CIN_DrawCinematic();
+	cls.cinematicHandle = CIN_PlayCinematic(path, CIN_SYSTEM);
 }
 
 /*
@@ -128,9 +79,8 @@ void CL_StopCinematic (){
 
 	Com_DPrintf("CL_StopCinematic()\n");
 
-	CIN_StopCinematic();
-
-	cls.playingCinematic = false;
+	CIN_StopCinematic(cls.cinematicHandle);
+	cls.cinematicHandle = 0;
 }
 
 /*
@@ -160,6 +110,19 @@ void CL_FinishCinematic (){
 	MSG_Print(&cls.netChan.message, Str_VarArgs("nextserver %i\n", cl.serverCount));
 }
 
+/*
+ ==================
+ 
+ ==================
+*/
+static bool CL_DrawCinematic (){
+
+	if (!cls.playingCinematic)
+		return false;
+
+	return true;
+}
+
 
 // ============================================================================
 
@@ -176,11 +139,12 @@ void CL_UpdateScreen (){
 
 	switch (cls.state){
 	case CA_DISCONNECTED:
-		// If playing a cinematic, draw it, else, update the menu
-		if (cls.playingCinematic)
-			CL_DrawCinematic();
-		else
-			UI_UpdateMenu(cls.realTime);
+		// If playing a cinematic, draw it
+		if (CL_DrawCinematic())
+			break;
+
+		// Draw the main menu
+		UI_UpdateMenu(cls.realTime);
 
 		break;
 	case CA_CONNECTING:
@@ -199,11 +163,12 @@ void CL_UpdateScreen (){
 			break;
 		}
 
-		// Draw a cinematic or game view
-		if (cls.playingCinematic)
-			CL_DrawCinematic();
-		else
-			CL_RenderActiveFrame();
+		// If playing a cinematic, draw it
+		if (CL_DrawCinematic())
+			break;
+
+		// Update the in-game view
+		CL_RenderActiveFrame();
 
 		// Draw the main menu UI on top of the game view
 		UI_UpdateMenu(cls.realTime);

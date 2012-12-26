@@ -1061,8 +1061,8 @@ void UI_Shutdown (){
 	Cmd_RemoveCommand("menu_credits");
 
 	// Make sure we stop a playing cinematic
-	if (uiStatic.playingCinematic)
-		CIN_StopCinematic();
+//	if (uiStatic.playingCinematic)
+//		CIN_StopCinematic();
 
 	// Free all UI system allocations
 	Mem_Fill(&uiStatic, 0, sizeof(uiStatic_t));

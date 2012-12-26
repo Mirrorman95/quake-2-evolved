@@ -117,7 +117,7 @@ static const char *UI_Cinematics_KeyFunc (int key){
 		if (uiStatic.playingCinematic){
 			uiStatic.playingCinematic = false;
 
-			CIN_StopCinematic();
+//			CIN_StopCinematic();
 		}
 
 		break;
@@ -136,10 +136,10 @@ static void UI_Cinematics_Callback (void *self, int event){
 	menuCommon_t	*item = (menuCommon_t *)self;
 
 	if (event == QM_CHANGED){
-		if (uiStatic.playingCinematic)
-			CIN_StopCinematic();
+//		if (uiStatic.playingCinematic)
+//			CIN_StopCinematic();
 
-		uiStatic.playingCinematic = CIN_PlayCinematic(uiCinematics.cinematicFiles[uiCinematics.cinList.curItem], CIN_LOOPING | CIN_SILENT);
+//		uiStatic.playingCinematic = CIN_PlayCinematic(uiCinematics.cinematicFiles[uiCinematics.cinList.curItem], CIN_LOOPING | CIN_SILENT);
 		return;
 	}
 
@@ -151,7 +151,7 @@ static void UI_Cinematics_Callback (void *self, int event){
 		if (uiStatic.playingCinematic){
 			uiStatic.playingCinematic = false;
 
-			CIN_StopCinematic();
+//			CIN_StopCinematic();
 		}
 
 		UI_PopMenu();
@@ -162,7 +162,7 @@ static void UI_Cinematics_Callback (void *self, int event){
 		if (uiStatic.playingCinematic){
 			uiStatic.playingCinematic = false;
 
-			CIN_StopCinematic();
+//			CIN_StopCinematic();
 		}
 
 		Cmd_ExecuteText(CMD_EXEC_APPEND, Str_VarArgs("playCinematic %s\n", uiCinematics.cinematics[uiCinematics.cinList.curItem]));
@@ -188,8 +188,8 @@ static void UI_Cinematics_Ownerdraw (void *self){
 		UI_FillRect(x, y, w, h, colorBlack);
 
 		if (uiStatic.playingCinematic){
-			CIN_UpdateCinematic();
-			CIN_DrawCinematic();
+//			CIN_UpdateCinematic();
+//			CIN_DrawCinematic();
 		}
 
 		UI_DrawPic(item->x, item->y, item->width, item->height, colorWhite, ((menuBitmap_t *)self)->pic);
@@ -282,8 +282,8 @@ static void UI_Cinematics_Init (){
 	UI_AddItem(&uiCinematics.menu, (void *)&uiCinematics.cinPreview);
 
 	// Start playing first cinematic in list
-	if (uiCinematics.cinematicFiles[uiCinematics.cinList.curItem][0])
-		uiStatic.playingCinematic = CIN_PlayCinematic(uiCinematics.cinematicFiles[uiCinematics.cinList.curItem], CIN_LOOPING | CIN_SILENT);
+//	if (uiCinematics.cinematicFiles[uiCinematics.cinList.curItem][0])
+//		uiStatic.playingCinematic = CIN_PlayCinematic(uiCinematics.cinematicFiles[uiCinematics.cinList.curItem], CIN_LOOPING | CIN_SILENT);
 }
 
 /*

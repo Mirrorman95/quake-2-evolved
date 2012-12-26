@@ -1,0 +1,426 @@
+
+//
+// Adrenaline
+//
+
+models/items/adrenal/skin
+{
+	bumpMap			models/items/adrenal/skin_local.tga
+	diffuseMap		models/items/adrenal/skin_d.tga
+	{
+		specularmap	models/items/adrenal/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+	{
+		map		models/items/adrenal/skin_add.tga
+		blend		add
+		rgb		randomflicker[time * 0.3]
+	}
+}
+
+//
+// Bullets Ammo
+//
+
+models/items/ammo/bullets/medium/skin
+{
+	bumpMap			models/items/ammo/bullets/medium/skin_local.tga
+	diffuseMap		models/items/ammo/bullets/medium/skin_d.tga
+	{
+		specularmap	models/items/ammo/bullets/medium/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Cells Ammo
+//
+
+models/items/ammo/cells/medium/skin
+{
+	bumpMap			models/items/ammo/cells/medium/skin_local.tga
+	diffuseMap		models/items/ammo/cells/medium/skin_d.tga
+	{
+		specularmap	models/items/ammo/cells/medium/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Grenades Ammo
+//
+
+models/items/ammo/grenades/medium/skin
+{
+	bumpMap			models/items/ammo/grenades/medium/skin_local.tga
+	diffuseMap		models/items/ammo/grenades/medium/skin_d.tga
+	{
+		specularmap	models/items/ammo/grenades/medium/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Nuke Ammo
+//
+
+models/items/ammo/nuke/skin
+{
+	bumpMap			models/items/ammo/nuke/skin_local.tga
+	diffuseMap		models/items/ammo/nuke/skin_d.tga
+	{
+		specularmap	models/items/ammo/nuke/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Rockets Ammo
+//
+
+models/items/ammo/rockets/medium/skin
+{
+	bumpMap			models/items/ammo/rockets/medium/skin_local.tga
+	diffuseMap		models/items/ammo/rockets/medium/skin_d.tga
+	{
+		specularmap	models/items/ammo/rockets/medium/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Shells Ammo
+//
+
+models/items/ammo/shells/medium/skin
+{
+	bumpMap			models/items/ammo/shells/medium/skin_local.tga
+	diffuseMap		models/items/ammo/shells/medium/skin_d.tga
+	{
+		specularmap	models/items/ammo/shells/medium/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Slugs Ammo
+//
+
+models/items/ammo/slugs/medium/skin
+{
+	bumpMap			models/items/ammo/slugs/medium/skin_local.tga
+	diffuseMap		models/items/ammo/slugs/medium/skin_d.tga
+	{
+		specularmap	models/items/ammo/slugs/medium/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Body Armor
+//
+
+models/items/armor/body/skin
+{
+	bumpMap			models/items/armor/body/skin_local.tga
+	diffuseMap		models/items/armor/body/skin_d.tga
+	{
+		specularmap	models/items/armor/body/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Combat Armor
+//
+
+models/items/armor/combat/skin
+{
+	bumpMap			models/items/armor/combat/skin_local.tga
+	diffuseMap		models/items/armor/combat/skin_d.tga
+	{
+		specularmap	models/items/armor/combat/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Jacket Armor
+//
+
+models/items/armor/jacket/skin
+{
+	bumpMap			models/items/armor/jacket/skin_local.tga
+	diffuseMap		models/items/armor/jacket/skin_d.tga
+	{
+		specularmap	models/items/armor/jacket/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Screen Armor
+//
+
+models/items/armor/screen/skin
+{
+	bumpMap			models/items/armor/screen/skin_local.tga
+	diffuseMap		models/items/armor/screen/skin_d.tga
+	{
+		specularmap	models/items/armor/screen/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Shard Armor
+//
+
+models/items/armor/shard/skin
+{
+	bumpMap			models/items/armor/shard/skin_local.tga
+	diffuseMap		models/items/armor/shard/skin_d.tga
+	{
+		specularmap	models/items/armor/shard/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Shield Armor
+//
+
+models/items/armor/shield/skin
+{
+	bumpMap			models/items/armor/shield/skin_local.tga
+	diffuseMap		models/items/armor/shield/skin_d.tga
+	{
+		specularmap	models/items/armor/shield/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Bandolier
+//
+
+models/items/band/skin
+{
+	bumpMap			models/items/band/skin_local.tga
+	diffuseMap		models/items/band/skin_d.tga
+	{
+		specularmap	models/items/band/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Breather
+//
+
+models/items/breather/skin
+{
+	bumpMap			models/items/breather/skin_local.tga
+	diffuseMap		models/items/breather/skin_d.tga
+	{
+		specularmap	models/items/breather/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// John Carmack Head
+//
+
+models/items/c_head/skin
+{
+	bumpMap			models/items/c_head/skin_local.tga
+	diffuseMap		models/items/c_head/skin_d.tga
+	{
+		specularmap	models/items/c_head/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Environment Suit
+//
+
+models/items/enviro/skin
+{
+	bumpMap			models/items/enviro/skin_local.tga
+	diffuseMap		models/items/enviro/skin_d.tga
+	{
+		specularmap	models/items/enviro/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Large Healing
+//
+
+models/items/healing/large/skin
+{
+	bumpMap			models/items/healing/large/skin_local.tga
+	diffuseMap		models/items/healing/large/skin_d.tga
+	{
+		specularmap	models/items/healing/large/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+	{
+		map		models/items/healing/large/skin_add.tga
+		blend		add
+		rgb		randomflicker[time * 0.3]
+	}
+}
+
+//
+// Medium Healing
+//
+
+models/items/healing/medium/skin
+{
+	bumpMap			models/items/healing/medium/skin_local.tga
+	diffuseMap		models/items/healing/medium/skin_d.tga
+	{
+		specularmap	models/items/healing/medium/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+	{
+		map		models/items/healing/medium/skin_add.tga
+		blend		add
+		rgb		randomflicker[time * 0.3]
+	}
+}
+
+//
+// Stimpack
+//
+
+models/items/healing/stimpack/skin
+{
+	bumpMap			models/items/healing/stimpack/skin_local.tga
+	diffuseMap		models/items/healing/stimpack/skin_d.tga
+	{
+		specularmap	models/items/healing/stimpack/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+	{
+		map		models/items/healing/stimpack/skin_add.tga
+		blend		add
+		rgb		randomflicker[time * 0.3]
+	}
+}
+
+//
+// Invulnerability
+//
+
+models/items/invulner/skin
+{
+	bumpMap			models/items/invulner/skin_local.tga
+	diffuseMap		models/items/invulner/skin_d.tga
+	{
+		specularmap	models/items/invulner/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Data CD
+//
+
+models/items/keys/data_cd/skin
+{
+	bumpMap			models/items/keys/data_cd/skin_local.tga
+	diffuseMap		models/items/keys/data_cd/skin_d.tga
+	{
+		specularmap	models/items/keys/data_cd/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Blue Key
+//
+
+models/items/keys/key/skin
+{
+	bumpMap			models/items/keys/key/skin_local.tga
+	diffuseMap		models/items/keys/key/skin_d.tga
+	{
+		specularmap	models/items/keys/key/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Security Pass
+//
+
+models/items/keys/pass/skin
+{
+	bumpMap			models/items/keys/pass/skin_local.tga
+	diffuseMap		models/items/keys/pass/skin_d.tga
+	{
+		specularmap	models/items/keys/pass/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Mega Health
+//
+
+models/items/mega_h/skin
+{
+	bumpMap			models/items/mega_h/skin_local.tga
+	diffuseMap		models/items/mega_h/skin_d.tga
+	{
+		specularmap	models/items/mega_h/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Backpack
+//
+
+models/items/pack/skin
+{
+	bumpMap			models/items/pack/skin_local.tga
+	diffuseMap		models/items/pack/skin_d.tga
+	{
+		specularmap	models/items/pack/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Quad Damage
+//
+
+models/items/quaddama/skin
+{
+	bumpMap			models/items/quaddama/skin_local.tga
+	diffuseMap		models/items/quaddama/skin_d.tga
+	{
+		specularmap	models/items/quaddama/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Silencer
+//
+
+models/items/silencer/skin
+{
+	bumpMap			models/items/silencer/skin_local.tga
+	diffuseMap		models/items/silencer/skin_d.tga
+	{
+		specularmap	models/items/silencer/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}

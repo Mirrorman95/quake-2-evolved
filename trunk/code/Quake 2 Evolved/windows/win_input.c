@@ -272,7 +272,7 @@ static void IN_MouseMove (usercmd_t *userCmd){
 	}
 
 	// If game is not active or paused, don't move
-	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || paused->integerValue)
+	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || com_paused->integerValue)
 		return;
 
 	if (m_filter->integerValue){

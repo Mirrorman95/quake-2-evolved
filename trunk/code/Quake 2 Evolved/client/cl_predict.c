@@ -241,7 +241,7 @@ void CL_PredictMovement (){
 	int		frame, step;
 	pmove_t	pm;
 
-	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || paused->integerValue)
+	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || com_paused->integerValue)
 		return;
 
 	if (!cl_predict->integerValue || (cl.frame.playerState.pmove.pm_flags & PMF_NO_PREDICTION)){

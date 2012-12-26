@@ -252,22 +252,22 @@ static void CL_RegisterGraphics (){
 
 	cl.media.bloodBlendMaterial = R_RegisterMaterial("bloodBlend", false);
 
-	cl.media.fireScreenMaterial = R_RegisterMaterialNoMip("fireScreen");
-	cl.media.waterBlurMaterial = R_RegisterMaterialNoMip("waterBlur");
-	cl.media.doubleVisionMaterial = R_RegisterMaterialNoMip("doubleVision");
-	cl.media.underWaterVisionMaterial = R_RegisterMaterialNoMip("underWaterVision");
-	cl.media.irGogglesMaterial = R_RegisterMaterialNoMip("irGoggles");
+	cl.media.fireScreenMaterial = R_RegisterMaterialNoMip("gfx/screen/fireScreen");
+	cl.media.waterBlurMaterial = R_RegisterMaterialNoMip("gfx/screen/waterBlur");
+	cl.media.doubleVisionMaterial = R_RegisterMaterialNoMip("gfx/screen/doubleVision");
+	cl.media.underWaterVisionMaterial = R_RegisterMaterialNoMip("gfx/screen/underWaterVision");
+	cl.media.irGogglesMaterial = R_RegisterMaterialNoMip("gfx/screen/irGoggles");
 
-	cl.media.rocketExplosionMaterial = R_RegisterMaterial("rocketExplosion", false);
-	cl.media.rocketExplosionWaterMaterial = R_RegisterMaterial("rocketExplosionWater", false);
-	cl.media.grenadeExplosionMaterial = R_RegisterMaterial("grenadeExplosion", false);
-	cl.media.grenadeExplosionWaterMaterial = R_RegisterMaterial("grenadeExplosionWater", false);
-	cl.media.bfgExplosionMaterial = R_RegisterMaterial("bfgExplosion", false);
+	cl.media.rocketExplosionMaterial = R_RegisterMaterial("gfx/effects/explosions/rocketExplosion", false);
+	cl.media.rocketExplosionWaterMaterial = R_RegisterMaterial("gfx/effects/explosions/rocketExplosionWater", false);
+	cl.media.grenadeExplosionMaterial = R_RegisterMaterial("gfx/effects/explosions/grenadeExplosion", false);
+	cl.media.grenadeExplosionWaterMaterial = R_RegisterMaterial("gfx/effects/explosions/grenadeExplosionWater", false);
+	cl.media.bfgExplosionMaterial = R_RegisterMaterial("gfx/effects/explosions/bfgExplosion", false);
 	cl.media.bfgBallMaterial = R_RegisterMaterial("gfx/sprites/bfg", false);
-	cl.media.plasmaBallMaterial = R_RegisterMaterial("plasmaBall", false);
-	cl.media.waterPlumeMaterial = R_RegisterMaterial("waterPlume", false);
-	cl.media.waterSprayMaterial = R_RegisterMaterial("waterSpray", false);
-	cl.media.waterWakeMaterial = R_RegisterMaterial("waterWake", false);
+	cl.media.plasmaBallMaterial = R_RegisterMaterial("gfx/sprites/plasma", false);
+	cl.media.waterPlumeMaterial = R_RegisterMaterial("gfx/effects/water/waterPlume", false);
+	cl.media.waterSprayMaterial = R_RegisterMaterial("gfx/effects/water/waterSpray", false);
+	cl.media.waterWakeMaterial = R_RegisterMaterial("gfx/effects/water/waterWake", false);
 	cl.media.nukeShockwaveMaterial = R_RegisterMaterial("nukeShockwave", false);
 	cl.media.bloodSplatMaterial[0] = R_RegisterMaterial("bloodSplat", false);
 	cl.media.bloodSplatMaterial[1] = R_RegisterMaterial("greenBloodSplat", false);
