@@ -102,14 +102,14 @@ static bool R_ParseLight (script_t *script){
 
 	Str_Copy(lightData->parms.material, "lights/default", sizeof(lightData->parms.material));
 
-	lightData->parms.materialParms[MATERIALPARM_RED] = 1.0f;
-	lightData->parms.materialParms[MATERIALPARM_GREEN] = 1.0f;
-	lightData->parms.materialParms[MATERIALPARM_BLUE] = 1.0f;
-	lightData->parms.materialParms[MATERIALPARM_ALPHA] = 1.0f;
-	lightData->parms.materialParms[MATERIALPARM_TIMEOFFSET] = 0.0f;
-	lightData->parms.materialParms[MATERIALPARM_DIVERSITY] = 0.0f;
-	lightData->parms.materialParms[MATERIALPARM_MISC] = 0.0f;
-	lightData->parms.materialParms[MATERIALPARM_MODE] = 0.0f;
+	lightData->parms.materialParms[0] = 1.0f;
+	lightData->parms.materialParms[1] = 1.0f;
+	lightData->parms.materialParms[2] = 1.0f;
+	lightData->parms.materialParms[3] = 1.0f;
+	lightData->parms.materialParms[4] = 0.0f;
+	lightData->parms.materialParms[5] = 0.0f;
+	lightData->parms.materialParms[6] = 0.0f;
+	lightData->parms.materialParms[7] = 0.0f;
 
 	// Parse the light parameters
 	if (!PS_ExpectTokenString(script, &token, "{", true)){
@@ -470,14 +470,14 @@ static void R_SetupStaticLightData (lightData_t *lightData, bool inWorld){
 	}
 
 	// Set the material parameters
-	lightData->materialParms[MATERIALPARM_RED] = lightData->parms.materialParms[MATERIALPARM_RED];
-	lightData->materialParms[MATERIALPARM_GREEN] = lightData->parms.materialParms[MATERIALPARM_GREEN];
-	lightData->materialParms[MATERIALPARM_BLUE] = lightData->parms.materialParms[MATERIALPARM_BLUE];
-	lightData->materialParms[MATERIALPARM_ALPHA] = lightData->parms.materialParms[MATERIALPARM_ALPHA];
-	lightData->materialParms[MATERIALPARM_TIMEOFFSET] = lightData->parms.materialParms[MATERIALPARM_TIMEOFFSET];
-	lightData->materialParms[MATERIALPARM_DIVERSITY] = lightData->parms.materialParms[MATERIALPARM_DIVERSITY];
-	lightData->materialParms[MATERIALPARM_MISC] = lightData->parms.materialParms[MATERIALPARM_MISC];
-	lightData->materialParms[MATERIALPARM_MODE] = lightData->parms.materialParms[MATERIALPARM_MODE];
+	lightData->materialParms[0] = lightData->parms.materialParms[0];
+	lightData->materialParms[1] = lightData->parms.materialParms[1];
+	lightData->materialParms[2] = lightData->parms.materialParms[2];
+	lightData->materialParms[3] = lightData->parms.materialParms[3];
+	lightData->materialParms[4] = lightData->parms.materialParms[4];
+	lightData->materialParms[5] = lightData->parms.materialParms[5];
+	lightData->materialParms[6] = lightData->parms.materialParms[6];
+	lightData->materialParms[7] = lightData->parms.materialParms[7];
 
 	// Compute the origin, direction, and axis
 	AnglesToMat3(lightData->parms.angles, axis);
@@ -724,14 +724,14 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 	}
 
 	// Set the material parameters
-	lightData->materialParms[MATERIALPARM_RED] = renderLight->materialParms[MATERIALPARM_RED];
-	lightData->materialParms[MATERIALPARM_GREEN] = renderLight->materialParms[MATERIALPARM_GREEN];
-	lightData->materialParms[MATERIALPARM_BLUE] = renderLight->materialParms[MATERIALPARM_BLUE];
-	lightData->materialParms[MATERIALPARM_ALPHA] = renderLight->materialParms[MATERIALPARM_ALPHA];
-	lightData->materialParms[MATERIALPARM_TIMEOFFSET] = renderLight->materialParms[MATERIALPARM_TIMEOFFSET];
-	lightData->materialParms[MATERIALPARM_DIVERSITY] = renderLight->materialParms[MATERIALPARM_DIVERSITY];
-	lightData->materialParms[MATERIALPARM_MISC] = renderLight->materialParms[MATERIALPARM_MISC];
-	lightData->materialParms[MATERIALPARM_MODE] = renderLight->materialParms[MATERIALPARM_MODE];
+	lightData->materialParms[0] = renderLight->materialParms[0];
+	lightData->materialParms[1] = renderLight->materialParms[1];
+	lightData->materialParms[2] = renderLight->materialParms[2];
+	lightData->materialParms[3] = renderLight->materialParms[3];
+	lightData->materialParms[4] = renderLight->materialParms[4];
+	lightData->materialParms[5] = renderLight->materialParms[5];
+	lightData->materialParms[6] = renderLight->materialParms[6];
+	lightData->materialParms[7] = renderLight->materialParms[7];
 
 	// Compute the origin, direction, and axis
 	if (lightData->type == RL_POINT || lightData->type == RL_CUBIC){
@@ -1181,14 +1181,14 @@ static void R_AddLight (lightData_t *lightData, material_t *material, bool viewI
 	// Fill it in
 	light->data = *lightData;
 	light->material = material;
-	light->materialParms[MATERIALPARM_RED] = lightData->materialParms[MATERIALPARM_RED] * rg.lightStyles[lightData->style].rgb[0];
-	light->materialParms[MATERIALPARM_GREEN] = lightData->materialParms[MATERIALPARM_GREEN] * rg.lightStyles[lightData->style].rgb[1];
-	light->materialParms[MATERIALPARM_BLUE] = lightData->materialParms[MATERIALPARM_BLUE] * rg.lightStyles[lightData->style].rgb[2];
-	light->materialParms[MATERIALPARM_ALPHA] = lightData->materialParms[MATERIALPARM_ALPHA];
-	light->materialParms[MATERIALPARM_TIMEOFFSET] = lightData->materialParms[MATERIALPARM_TIMEOFFSET];
-	light->materialParms[MATERIALPARM_DIVERSITY] = lightData->materialParms[MATERIALPARM_DIVERSITY];
-	light->materialParms[MATERIALPARM_MISC] = lightData->materialParms[MATERIALPARM_MISC];
-	light->materialParms[MATERIALPARM_MODE] = lightData->materialParms[MATERIALPARM_MODE];
+	light->materialParms[0] = lightData->materialParms[0] * rg.lightStyles[lightData->style].rgb[0];
+	light->materialParms[1] = lightData->materialParms[1] * rg.lightStyles[lightData->style].rgb[1];
+	light->materialParms[2] = lightData->materialParms[2] * rg.lightStyles[lightData->style].rgb[2];
+	light->materialParms[3] = lightData->materialParms[3];
+	light->materialParms[4] = lightData->materialParms[4];
+	light->materialParms[5] = lightData->materialParms[5];
+	light->materialParms[6] = lightData->materialParms[6];
+	light->materialParms[7] = lightData->materialParms[7];
 
 	// Set up the scissor
 	R_SetupScissor(light);

@@ -346,7 +346,7 @@ void S_UpdateLoopingSounds (){
 	channel_t		*channel;
 	int				i, j;
 
-	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || paused->integerValue)
+	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || com_paused->integerValue)
 		return;
 
 	for (i = 0; i < snd.numSoundEntities; i++){

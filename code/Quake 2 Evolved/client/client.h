@@ -354,6 +354,8 @@ typedef struct {
 	int						fpsIndex;
 	int						fpsTimes[FPS_FRAMES];
 
+	bool					playingCinematic;	// True if playing a cinematic
+
 	// Screen rendering information
 	glConfig_t				glConfig;
 	alConfig_t				alConfig;
@@ -387,8 +389,8 @@ typedef struct {
 	bool					demoWaiting;
 	char					demoName[MAX_QPATH];
 
-	// Cinematic information
-	bool					playingCinematic;
+	// Active cinematic handle
+	int						cinematicHandle;
 } clientStatic_t;
 
 // =====================================================================
@@ -1010,6 +1012,8 @@ void			CL_DrawPicFixedByName (float x, float y, const char *pic);
 
 void			CL_DrawLoading ();
 
+void			CL_DrawViewBlends ();
+
 void			CL_Draw2D ();
 
 /*
@@ -1023,7 +1027,6 @@ void			CL_Draw2D ();
 void			CL_PlayCinematic (const char *name);
 void			CL_StopCinematic ();
 void			CL_FinishCinematic ();
-void			CL_DrawCinematic ();
 
 void			CL_UpdateScreen ();
 

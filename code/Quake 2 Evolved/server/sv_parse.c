@@ -527,7 +527,7 @@ static void SV_ParseMove (client_t *client, bool moveIssued){
 		return;
 	}
 
-	if (!paused->integerValue){
+	if (!com_paused->integerValue){
 		dropped = client->netChan.dropped;
 		if (dropped < 20){
 			while (dropped > 2){

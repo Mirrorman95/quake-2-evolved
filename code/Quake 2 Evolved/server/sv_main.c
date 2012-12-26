@@ -852,7 +852,7 @@ static void SV_CheckTimeOuts (){
 static void SV_RunGameFrame (){
 
 	// Don't run if paused
-	if (paused->integerValue && sv_maxClients->integerValue == 1)
+	if (com_paused->integerValue && sv_maxClients->integerValue == 1)
 		return;
 
 	sv.frameNum++;

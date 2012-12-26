@@ -459,7 +459,7 @@ void SV_SendClientMessages (void){
 	int			i, r, length = 0;
 
 	// Read the next demo message if needed
-	if ((sv.state == SS_DEMO && sv.demoFile) && !paused->integerValue){
+	if ((sv.state == SS_DEMO && sv.demoFile) && !com_paused->integerValue){
 		r = FS_Read(sv.demoFile, &length, sizeof(length));
 		if (r != 4){
 			SV_DemoCompleted();

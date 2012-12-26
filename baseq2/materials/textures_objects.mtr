@@ -1,0 +1,204 @@
+
+// TODO:
+// - gibs needs a different specular level
+
+//
+// Barrel
+//
+
+models/objects/barrels/skin
+{
+	bumpMap			models/objects/barrels/skin_local.tga
+	diffuseMap		models/objects/barrels/skin_d.tga
+	{
+		specularmap	models/objects/barrels/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Arm Gib
+//
+
+models/objects/gibs/arm/skin
+{
+	bumpMap			models/objects/gibs/arm/skin_local.tga
+	diffuseMap		models/objects/gibs/arm/skin_d.tga
+	{
+		specularmap	models/objects/gibs/arm/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Bone Gib
+//
+
+models/objects/gibs/bone/skin
+{
+	bumpMap			models/objects/gibs/bone/skin_local.tga
+	diffuseMap		models/objects/gibs/bone/skin_d.tga
+	{
+		specularmap	models/objects/gibs/bone/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Bone2 Gib
+//
+
+models/objects/gibs/bone2/skin
+{
+	bumpMap			models/objects/gibs/bone2/skin_local.tga
+	diffuseMap		models/objects/gibs/bone2/skin_d.tga
+	{
+		specularmap	models/objects/gibs/bone2/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Chest Gib
+//
+
+models/objects/gibs/chest/skin
+{
+	bumpMap			models/objects/gibs/chest/skin_local.tga
+	diffuseMap		models/objects/gibs/chest/skin_d.tga
+	{
+		specularmap	models/objects/gibs/chest/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Gear Gib
+//
+
+models/objects/gibs/gear/skin
+{
+	bumpMap			models/objects/gibs/gear/skin_local.tga
+	diffuseMap		models/objects/gibs/gear/skin_d.tga
+	{
+		specularmap	models/objects/gibs/gear/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Head Gib
+//
+
+models/objects/gibs/head/skin
+{
+	bumpMap			models/objects/gibs/head/skin_local.tga
+	diffuseMap		models/objects/gibs/head/skin_d.tga
+	{
+		specularmap	models/objects/gibs/head/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Head2 Gib
+//
+
+models/objects/gibs/head2/skin
+{
+	bumpMap			models/objects/gibs/head2/skin_local.tga
+	diffuseMap		models/objects/gibs/head2/skin_d.tga
+	{
+		specularmap	models/objects/gibs/head2/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Player Head Gib
+//
+
+models/objects/gibs/head2/player
+{
+	bumpMap			models/objects/gibs/head2/player_local.tga
+	diffuseMap		models/objects/gibs/head2/player_d.tga
+	{
+		specularmap	models/objects/gibs/head2/player_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Skull Gib
+//
+
+models/objects/gibs/skull/skin
+{
+	bumpMap			models/objects/gibs/skull/skin_local.tga
+	diffuseMap		models/objects/gibs/skull/skin_d.tga
+	{
+		specularmap	models/objects/gibs/skull/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Small Meat Gib
+//
+
+models/objects/gibs/sm_meat/skin
+{
+	bumpMap			models/objects/gibs/sm_meat/skin_local.tga
+	diffuseMap		models/objects/gibs/sm_meat/skin_d.tga
+	{
+		specularmap	models/objects/gibs/sm_meat/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Small Metal Gib
+//
+
+models/objects/gibs/sm_metal/skin
+{
+	bumpMap			models/objects/gibs/sm_metal/skin_local.tga
+	diffuseMap		models/objects/gibs/sm_metal/skin_d.tga
+	{
+		specularmap	models/objects/gibs/sm_metal/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Grenade Projectile
+//
+
+models/objects/grenade/skin
+{
+	bumpMap			models/objects/grenade/skin_local.tga
+	diffuseMap		models/objects/grenade/skin_d.tga
+	{
+		specularmap	models/objects/grenade/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Grenade
+//
+
+models/objects/grenade2/skin
+{
+	bumpMap			models/objects/grenade2/skin_local.tga
+	diffuseMap		models/objects/grenade2/skin_d.tga
+	{
+		specularmap	models/objects/grenade2/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+	{
+		map		models/objects/grenade2/skin_add.tga
+		blend		add
+		rgb		randomflicker[time * 0.3]
+	}
+}

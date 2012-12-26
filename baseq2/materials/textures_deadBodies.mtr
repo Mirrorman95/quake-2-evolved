@@ -1,0 +1,14 @@
+
+//
+// Dead Marine Body
+//
+
+models/deadbods/dude/dead1
+{
+	bumpMap			models/deadbods/dude/dead1_local.tga
+	diffuseMap		models/deadbods/dude/dead1_d.tga
+	{
+		specularmap	models/deadbods/dude/dead1_s.tga
+		specularParms	4.0, 2.0
+	}
+}

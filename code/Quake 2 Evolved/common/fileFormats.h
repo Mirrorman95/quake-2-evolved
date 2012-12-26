@@ -241,14 +241,15 @@ typedef struct {
 #define ROQ_QUAD_INFO				0x1001
 #define ROQ_QUAD_CODEBOOK			0x1002
 #define ROQ_QUAD_VQ					0x1011
+#define ROQ_QUAD_JPEG				0x1012
 
 #define ROQ_SOUND_MONO				0x1020
 #define ROQ_SOUND_STEREO			0x1021
 
 #define ROQ_VQ_MOT					0x0000
-#define ROQ_VQ_FCC					0x0001
-#define ROQ_VQ_SLD					0x0002
-#define ROQ_VQ_CCC					0x0003
+#define ROQ_VQ_FCC					0x4000
+#define ROQ_VQ_SLD					0x8000
+#define ROQ_VQ_CCC					0xC000
 
 typedef struct {
 	word					id;
@@ -257,9 +258,7 @@ typedef struct {
 } roqChunk_t;
 
 typedef struct {
-	byte					y[4];
-	byte					u;
-	byte					v;
+	byte					pixel[4][4];
 } roqQuadVector_t;
 
 typedef struct {

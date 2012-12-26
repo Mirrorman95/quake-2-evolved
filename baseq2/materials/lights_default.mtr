@@ -1,0 +1,50 @@
+
+lights/default
+{
+	lightFalloffImage	_falloff
+	{
+		map		_attenuation
+		colored
+	}
+}
+
+lights/ambient
+{
+	ambientLight
+	lightFalloffImage	_noFalloff
+	{
+		map		_noAttenuation
+		colored
+	}
+}
+
+lights/glare
+{
+	blendLight
+	lightFalloffImage	_noFalloff
+	{
+		blend		add
+		map		_noAttenuation
+		colored
+	}
+}
+
+lights/fog
+{
+	fogLight
+	lightFalloffImage	_fogEnter
+	{
+		map		_fog
+		colored
+	}
+}
+
+lights/fogGlobal
+{
+	fogLight
+	lightFalloffImage	_white
+	{
+		map		_fog
+		colored
+	}
+}

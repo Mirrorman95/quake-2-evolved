@@ -244,11 +244,6 @@ void			UI_Bitmap_Draw (menuBitmap_t *b);
 */
 
 typedef struct {
-	char					name[MAX_QPATH];
-	cinHandle_t				handle;
-} uiCin_t;
-
-typedef struct {
 	menuFramework_t *		menuActive;
 	menuFramework_t	*		menuStack[UI_MAX_MENUDEPTH];
 	int						menuDepth;

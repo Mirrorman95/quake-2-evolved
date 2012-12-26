@@ -228,7 +228,7 @@ extern int					com_timeSound;
 extern cvar_t *				com_version;
 extern cvar_t *				com_developer;
 extern cvar_t *				dedicated;
-extern cvar_t *				paused;
+extern cvar_t *				com_paused;
 extern cvar_t *				com_timeDemo;
 extern cvar_t *				fixedtime;
 extern cvar_t *				timescale;

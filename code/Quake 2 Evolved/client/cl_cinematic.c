@@ -26,63 +26,34 @@
 //
 
 // TODO:
-// - use handle based indices for drawing
-// - move huffman into it's own file?
+// - figure out how to handle framebuffers and then continue the work
 
 
 #include "client.h"
 
 
 typedef struct {
-	char					name[MAX_OSPATH];
+	bool					playing;
+
+	bool					isRoQ;
+
+	char					name[MAX_PATH_LENGTH];
 	int						flags;
 
 	fileHandle_t			file;
 	int						size;
 	int						offset;
-	int						header;
 
-	bool					isRoQ;
-	
-	int						vidWidth;
-	int						vidHeight;
-	byte *					vidBuffer;
-
-	int						rawWidth;
-	int						rawHeight;
-	byte *					rawBuffer;
-
-	int						sndRate;
-	int						sndWidth;
-	int						sndChannels;
+	int						startTime;
 
 	int						frameRate;
-	int						startTime;
-	int						currentFrame;
 
-	bool					playing;
+	int						frameCount;
 
-	// PCX stuff
-	byte *					pcxBuffer;
+	roqChunk_t				chunk;
 
-	// Huffman stuff
-	byte *					hBuffer;
-
-	uint					hPalette[256];
-
-	int *					hNodes;
-	int						hNumNodes[256];
-
-	int						hUsed[512];
-	int						hCount[512];
-
-	// RoQ stuff
-	byte *					roqCache;
-	byte *					roqBuffers[2];
-
-	roqChunk_t				roqChunk;
-	roqQuadVector_t			roqCells[256];
-	roqQuadCell_t			roqQuadCells[256];
+	roqQuadVector_t			quadVectors[256];
+	roqQuadCell_t			quadCells[256];
 } cinematic_t;
 
 static short				cin_v2rTable[256];
@@ -94,50 +65,15 @@ static short				cin_sqrTable[256];
 
 static short				cin_soundSamples[ROQ_CHUNK_MAX_SIZE >> 1];
 
-static cinematic_t			cin;
+static cinematic_t			cin_cinematics[MAX_CINEMATICS];
 
-
-/*
- ==============================================================================
-
- HUFFMAN TABLES
-
- ==============================================================================
-*/
 
 /*
  ==================
  
  ==================
 */
-static void CIN_SetupFile (){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-static int CIN_SmallestNode (int numNodes){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-static void CIN_SetupHuffTables (){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-static void CIN_ReadPalette (){
+static void CIN_ResampleVideo (cinematic_t *cin){
 
 }
 
@@ -145,7 +81,7 @@ static void CIN_ReadPalette (){
 /*
  ==============================================================================
 
- CINEMATIC DATA DECODING
+ ROQ DECODING
 
  ==============================================================================
 */
@@ -156,7 +92,7 @@ static void CIN_ReadPalette (){
  
  ==================
 */
-static void CIN_DecodeBlock (byte *dst0, byte *dst1, int y1, int y2, int y3, int y4, int u, int v){
+static void CIN_QuadVector4x4 (cinematic_t *cin, int x, int y, const byte *indices){
 
 }
 
@@ -165,7 +101,7 @@ static void CIN_DecodeBlock (byte *dst0, byte *dst1, int y1, int y2, int y3, int
  
  ==================
 */
-static void CIN_ApplyVector2x2 (int x, int y, const roqQuadVector_t *cell){
+static void CIN_QuadVector8x8 (cinematic_t *cin, int x, int y, const byte *indices){
 
 }
 
@@ -174,7 +110,7 @@ static void CIN_ApplyVector2x2 (int x, int y, const roqQuadVector_t *cell){
  
  ==================
 */
-static void CIN_ApplyVector4x4 (int x, int y, const roqQuadVector_t *cell){
+static void CIN_MotionBlock4x4 (cinematic_t *cin, int x, int y, int xMean, int yMean, int xyMotion){
 
 }
 
@@ -183,7 +119,7 @@ static void CIN_ApplyVector4x4 (int x, int y, const roqQuadVector_t *cell){
  
  ==================
 */
-static void CIN_ApplyMotion4x4 (int x, int y, byte mv){
+static void CIN_MotionBlock8x8 (cinematic_t *cin, int x, int y, int xMean, int yMean, int xyMotion){
 
 }
 
@@ -192,7 +128,7 @@ static void CIN_ApplyMotion4x4 (int x, int y, byte mv){
  
  ==================
 */
-static void CIN_ApplyMotion8x8 (int x, int y, byte mv){
+static void CIN_DecodeInfo (cinematic_t *cin, const byte *data){
 
 }
 
@@ -201,7 +137,7 @@ static void CIN_ApplyMotion8x8 (int x, int y, byte mv){
  
  ==================
 */
-static void CIN_ResampleVideoFrame (){
+static void CIN_DecodeCodebook (cinematic_t *cin, const byte *data){
 
 }
 
@@ -210,27 +146,8 @@ static void CIN_ResampleVideoFrame (){
  
  ==================
 */
-static void CIN_DecodeInfo (){
+static void CIN_DecodeVideo (cinematic_t *cin, const byte *data){
 
-}
-
-/*
- ==================
- 
- ==================
-*/
-static void CIN_DecodeCodebook (){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-static void CIN_DecodeVideo (const byte *data){
-
-	roqChunk_t	*chunk = &cin.roqChunk;
 }
 
 /*
@@ -238,25 +155,24 @@ static void CIN_DecodeVideo (const byte *data){
  CIN_DecodeSoundMono
  ==================
 */
-static void CIN_DecodeSoundMono (const byte *data){
+static void CIN_DecodeSoundMono (cinematic_t *cin, const byte *data){
 
-	roqChunk_t	*chunk = &cin.roqChunk;
-	int			prev;
-	int			i;
+	int		prev;
+	int		i;
 
-	if (cin.flags & CIN_SILENT)
+	if (cin->flags & CIN_SILENT)
 		return;
 
-	prev = chunk->flags;
+	prev = cin->chunk.flags;
 
-	for (i = 0; i < chunk->size; i++){
+	for (i = 0; i < cin->chunk.size; i++){
 		prev = (short)(prev + cin_sqrTable[data[i]]);
 
 		cin_soundSamples[i] = (short)prev;
 	}
 
 	// Submit the sound samples
-	S_RawSamples(cin_soundSamples, chunk->size, 22050, false, 1.0f);
+	S_RawSamples(cin_soundSamples, cin->chunk.size, 22050, false, 1.0f);
 }
 
 /*
@@ -264,19 +180,18 @@ static void CIN_DecodeSoundMono (const byte *data){
  CIN_DecodeSoundStereo
  ==================
 */
-static void CIN_DecodeSoundStereo (const byte *data){
+static void CIN_DecodeSoundStereo (cinematic_t *cin, const byte *data){
 
-	roqChunk_t	*chunk = &cin.roqChunk;
-	int			prevL, prevR;
-	int			i;
+	int		prevL, prevR;
+	int		i;
 
-	if (cin.flags & CIN_SILENT)
+	if (cin->flags & CIN_SILENT)
 		return;
 
-	prevL = (chunk->flags & 0xFF00) << 0;
-	prevR = (chunk->flags & 0x00FF) << 8;
+	prevL = (cin->chunk.flags & 0xFF00) << 0;
+	prevR = (cin->chunk.flags & 0x00FF) << 8;
 
-	for (i = 0; i < chunk->size; i += 2){
+	for (i = 0; i < cin->chunk.size; i += 2){
 		prevL = (short)(prevL + cin_sqrTable[data[i+0]]);
 		prevR = (short)(prevR + cin_sqrTable[data[i+1]]);
 
@@ -285,7 +200,93 @@ static void CIN_DecodeSoundStereo (const byte *data){
 	}
 
 	// Submit the sound samples
-	S_RawSamples(cin_soundSamples, chunk->size >> 1, 22050, true, 1.0f);
+	S_RawSamples(cin_soundSamples, cin->chunk.size >> 1, 22050, true, 1.0f);
+}
+
+/*
+ ==================
+ CIN_DecodeRoQChunk
+ ==================
+*/
+static bool CIN_DecodeRoQChunk (cinematic_t *cin){
+
+	byte	buffer[ROQ_CHUNK_HEADER_SIZE + ROQ_CHUNK_MAX_SIZE];
+	byte	*data;
+
+	if (cin->offset >= cin->size)
+		return false;	// Finished
+
+	data = buffer;
+
+	// Read and decode the first chunk header if needed
+	if (cin->offset == ROQ_CHUNK_HEADER_SIZE){
+		cin->offset += FS_Read(cin->file, buffer, ROQ_CHUNK_HEADER_SIZE);
+
+		cin->chunk.id = data[0] | (data[1] << 8);
+		cin->chunk.size = data[2] | (data[3] << 8) | (data[4] << 16) | (data[5] << 24);
+		cin->chunk.flags = data[6] | (data[7] << 8);
+	}
+
+	// Read the chunk data and the next chunk header
+	if (cin->chunk.size > ROQ_CHUNK_MAX_SIZE)
+		Com_Error(ERR_DROP, "CIN_DecodeChunk: bad chunk size (%u)", cin->chunk.size);
+
+	if (cin->offset + cin->chunk.size >= cin->size)
+		cin->offset += FS_Read(cin->file, buffer, cin->chunk.size);
+	else
+		cin->offset += FS_Read(cin->file, buffer, cin->chunk.size + ROQ_CHUNK_HEADER_SIZE);
+
+	// Decode the chunk data
+	switch (cin->chunk.id){
+	case ROQ_QUAD_INFO:
+		CIN_DecodeInfo(cin, data);
+		break;
+	case ROQ_QUAD_CODEBOOK:
+		CIN_DecodeCodebook(cin, data);
+		break;
+	case ROQ_QUAD_VQ:
+		CIN_DecodeVideo(cin, data);
+		break;
+	case ROQ_SOUND_MONO:
+		CIN_DecodeSoundMono(cin, data);
+		break;
+	case ROQ_SOUND_STEREO:
+		CIN_DecodeSoundStereo(cin, data);
+		break;
+	default:
+		Com_Error(ERR_DROP, "CIN_DecodeChunk: bad chunk id (%u)", cin->chunk.id);
+	}
+
+	data += cin->chunk.size;
+
+	// Decode the next chunk header if needed
+	if (cin->offset >= cin->size)
+		return true;
+
+	cin->chunk.id = data[0] | (data[1] << 8);
+	cin->chunk.size = data[2] | (data[3] << 8) | (data[4] << 16) | (data[5] << 24);
+	cin->chunk.flags = data[6] | (data[7] << 8);
+
+	return true;
+}
+
+
+/*
+ ==============================================================================
+
+ CIN DECODING
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void CIN_DecodePalette (cinematic_t *cin){
+
 }
 
 /*
@@ -293,121 +294,63 @@ static void CIN_DecodeSoundStereo (const byte *data){
  
  ==================
 */
-static void CIN_DecodeSound (){
+static void CIN_DecodeCinVideo (cinematic_t *cin){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void CIN_DecodeCinSound (cinematic_t *cin){
 
 	byte	data[0x40000];
 	int		start, end;
 	int		samples;
 	int		length;
 
-	if (cin.flags & CIN_SILENT)
+	if (cin->flags & CIN_SILENT)
 		return;
-
-	start = cin.currentFrame * cin.sndRate/14;
-	end = (cin.currentFrame+1) * cin.sndRate/14;
-	samples = end - start;
-	length = samples * cin.sndWidth * cin.sndChannels;
-
-	FS_Read(cin.file, data, length);
-	cin.offset += length;
-
-	// Submit the sound samples
 }
 
 /*
  ==================
- CIN_DecodeRoQ
+ CIN_DecodeCinChunk
  ==================
 */
-static bool CIN_DecodeRoQ (){
+static bool CIN_DecodeCinChunk (cinematic_t *cin){
 
-	roqChunk_t	*chunk = &cin.roqChunk;
-	byte		buffer[ROQ_CHUNK_HEADER_SIZE + ROQ_CHUNK_MAX_SIZE];
-	byte		*data;
+	int		command;
 
-	if (cin.offset >= cin.size)
-		return false;	// Finished
+	// Read the command
+	FS_Read(cin->file, &command, sizeof(command));
+	cin->offset += sizeof(command);
 
-	data = buffer;
+	command = LittleLong(command);
+	if (command == 2)
+		return false;	// Reached the end
 
-	// Read and decode the first chunk header if needed
-	if (cin.offset == ROQ_CHUNK_HEADER_SIZE){
-		cin.offset += FS_Read(cin.file, buffer, ROQ_CHUNK_HEADER_SIZE);
+	if (cin->offset >= cin->size)
+		return false;	// Frame goes past the end
 
-		chunk->id = data[0] | (data[1] << 8);
-		chunk->size = data[2] | (data[3] << 8) | (data[4] << 16) | (data[5] << 24);
-		chunk->flags = data[6] | (data[7] << 8);
-	}
+	// Decode the palette
+	if (command == 1)
+		CIN_DecodePalette(cin);
 
-	// Read the chunk data and the next chunk header
-	if (chunk->size > ROQ_CHUNK_MAX_SIZE)
-		Com_Error(ERR_DROP, "CIN_DecodeChunk: bad chunk size (%u)", chunk->size);
+	if (cin->offset >= cin->size)
+		return false;	// Invalid frame
 
-	if (cin.offset + chunk->size >= cin.size)
-		cin.offset += FS_Read(cin.file, buffer, chunk->size);
-	else
-		cin.offset += FS_Read(cin.file, buffer, chunk->size + ROQ_CHUNK_HEADER_SIZE);
+	// Decode the video
+	CIN_DecodeCinVideo(cin);
 
-	// Decode the chunk data
-	switch (chunk->id){
-	case ROQ_QUAD_INFO:
-		CIN_DecodeInfo();
-		break;
-	case ROQ_QUAD_CODEBOOK:
-		CIN_DecodeCodebook();
-		break;
-	case ROQ_QUAD_VQ:
-		CIN_DecodeVideo(data);
-		break;
-	case ROQ_SOUND_MONO:
-		CIN_DecodeSoundMono(data);
-		break;
-	case ROQ_SOUND_STEREO:
-		CIN_DecodeSoundStereo(data);
-		break;
-	default:
-		Com_Error(ERR_DROP, "CIN_DecodeChunk: bad chunk id (%u)", chunk->id);
-	}
+	if (cin->offset >= cin->size)
+		return false;	// Invalid frame
 
-	data += chunk->size;
+	// Decode the sound
+	CIN_DecodeCinSound(cin);
 
-	// Decode the next chunk header if needed
-	if (cin.offset >= cin.size)
-		return true;
-
-	chunk->id = data[0] | (data[1] << 8);
-	chunk->size = data[2] | (data[3] << 8) | (data[4] << 16) | (data[5] << 24);
-	chunk->flags = data[6] | (data[7] << 8);
-
-	return true;
-}
-
-/*
- ==================
- 
- ==================
-*/
-static bool CIN_DecodeStaticCinematic (){
-
-	return false;	// TODO: should be true
-}
-
-
-/*
- ==================
- CIN_DecodeChunk
- ==================
-*/
-static bool CIN_DecodeChunk (){
-
-	if (cin.isRoQ){
-		if (!CIN_DecodeRoQ())
-			return false;
-	}
-	else {
-		if (!CIN_DecodeStaticCinematic())
-			return false;
-	}
+	cin->frameCount++;
 
 	return true;
 }
@@ -416,7 +359,7 @@ static bool CIN_DecodeChunk (){
 /*
  ==============================================================================
 
- STATIC PCX CINEMATIC LOADING
+ PCX LOADING
 
  ==============================================================================
 */
@@ -424,20 +367,19 @@ static bool CIN_DecodeChunk (){
 
 /*
  ==================
- CIN_StaticCinematic
+ CIN_LoadPCX
+
+ TODO: fill in cinematic_t
  ==================
 */
-static bool CIN_StaticCinematic (const char *name, int flags){
+static bool CIN_LoadPCX (cinematic_t *cin, const char *name, int flags){
 
 	pcxHeader_t	*header;
-	byte		*data, *image;
+	byte		*data, *pcxData;
 	byte		*in, *out;
 	byte		palette[768];
-	char		loadName[MAX_OSPATH];
 	int			x, y, length;
 	int			dataByte, runLength;
-
-	Str_SPrintf(loadName, sizeof(loadName), "%s.pcx", name);
 
 	// Load the file
 	length = FS_ReadFile(name, (void **)&data);
@@ -459,17 +401,17 @@ static bool CIN_StaticCinematic (const char *name, int flags){
 	in = &header->data;
 
 	if (header->manufacturer != 0x0A || header->version != 5 || header->encoding != 1)
-		Com_Error(ERR_DROP, "CIN_StaticCinematic: invalid PCX header (%s)\n", name);
+		Com_Error(ERR_DROP, "CIN_LoadPCX: invalid PCX header (%s)\n", name);
 
 	if (header->bitsPerPixel != 8 || header->colorPlanes != 1)
-		Com_Error(ERR_DROP, "CIN_StaticCinematic: only 8 bit PCX images supported (%s)\n", name);
+		Com_Error(ERR_DROP, "CIN_LoadPCX: only 8 bit PCX images supported (%s)\n", name);
 		
 	if (header->xMax <= 0 || header->yMax <= 0 || header->xMax >= 640 || header->yMax >= 480)
-		Com_Error(ERR_DROP, "CIN_StaticCinematic: bad image size (%i x %i) (%s)\n", header->xMax, header->yMax, name);
+		Com_Error(ERR_DROP, "CIN_LoadPCX: bad image size (%i x %i) (%s)\n", header->xMax, header->yMax, name);
 
-	Mem_Copy(palette, data + length - 768, 768);
+	Mem_Copy(palette, (byte *)data + length - 768, 768);
 
-	image = out = (byte *)Mem_ClearedAlloc((header->xMax+1) * (header->yMax+1) * 4, TAG_TEMPORARY);
+	pcxData = out = (byte *)Mem_ClearedAlloc((header->xMax+1) * (header->yMax+1) * 4, TAG_TEMPORARY);
 
 	for (y = 0; y <= header->yMax; y++){
 		for (x = 0; x <= header->xMax; ){
@@ -495,10 +437,11 @@ static bool CIN_StaticCinematic (const char *name, int flags){
 	}
 
 	if (in - data > length){
-		Com_DPrintf(S_COLOR_YELLOW "R_LoadPCX: PCX file was malformed (%s)\n", name);
+		Com_DPrintf(S_COLOR_YELLOW "CIN_LoadPCX: PCX file was malformed (%s)\n", name);
 
 		FS_FreeFile(data);
-		Mem_Free(image);
+		Mem_Free(pcxData);
+		pcxData = NULL;
 
 		return false;
 	}
@@ -506,11 +449,26 @@ static bool CIN_StaticCinematic (const char *name, int flags){
 	// Free the file data
 	FS_FreeFile(data);
 
-	// Setup the cinematic file
-	CIN_SetupFile();
+	// Fill it in
+	cin->playing = true;
 
-	// Resample if needed
-	CIN_ResampleVideoFrame();
+	cin->isRoQ = false;
+
+	Str_Copy(cin->name, name, sizeof(cin->name));
+	cin->flags = flags;
+
+	cin->file = 0;
+	cin->size = 0;
+	cin->offset = 0;
+
+	cin->startTime = 0;
+
+	cin->frameRate = 0;
+
+	cin->frameCount = -1;
+
+	// Resample video if needed
+	CIN_ResampleVideo(cin);
 
 	return true;
 }
@@ -521,126 +479,92 @@ static bool CIN_StaticCinematic (const char *name, int flags){
 
 /*
  ==================
- CIN_UpdateCinematic
+ CIN_HandleForCinematic
  ==================
 */
-bool CIN_UpdateCinematic (){
+static cinematic_t *CIN_HandleForCinematic (int *handle){
 
-	int		frame;
+	cinematic_t	*cin;
+	int			i;
 
-	// Check if playing a cinematic
-	if (!cin.playing)
-		return false;
-
-	// Static image
-	if (cin.currentFrame == -1)
-		return true;
-
-	// If we don't have a frame yet, set the start time
-	if (cin.currentFrame == 0)
-		cin.startTime = cls.realTime;
-
-	// Check if a new frame is needed
-	frame = (cls.realTime - cin.startTime) * cin.frameRate / 1000;
-	if (frame < 1)
-		frame = 1;
-
-	// Never drop too many frames in a row because it stalls
-	if (frame > cin.currentFrame + 100 / cin.frameRate){
-		cin.startTime = cls.realTime - cin.currentFrame * 1000 / cin.frameRate;
-
-		frame = (cls.realTime - cin.startTime) * cin.frameRate / 1000;
-		if (frame < 1)
-			frame = 1;
+	for (i = 0, cin = cin_cinematics; i < MAX_CINEMATICS; i++, cin++){
+		if (!cin->playing)
+			break;
 	}
 
-	// Get the desired frame
-	while (frame > cin.currentFrame){
-		// Read the next frame
-		if (CIN_DecodeChunk())
-			continue;
+	if (i == MAX_CINEMATICS)
+		Com_Error(ERR_DROP, "CIN_HandleForCinematic: none free");
 
-		// Make sure we don't get stuck into an infinite loop
-		if (cin.currentFrame == 0)
-			return false;
+	*handle = i + 1;
 
-		// Restart the cinematic if needed
-		if (cin.flags & CIN_LOOPING){
-			FS_Seek(cin.file, cin.header, FS_SEEK_SET);
-			cin.offset = cin.header;
-
-			cin.startTime = cls.realTime;
-			cin.currentFrame = 0;
-
-			frame = 1;
-			continue;
-		}
-
-		// Finished
-		return false;
-	}
-
-	return true;
+	return cin;
 }
 
 /*
  ==================
- 
+ CIN_GetCinematicByHandle
  ==================
 */
-void CIN_DrawCinematic (){
+static cinematic_t *CIN_GetCinematicByHandle (int handle){
 
-	byte	*buffer;
+	cinematic_t	*cin;
 
-	// Check if playing a cinematic
-	if (!cin.playing)
-		return;
+	if (handle <= 0 || handle > MAX_CINEMATICS)
+		Com_Error(ERR_DROP, "CIN_GetCinematicByHandle: handle out of range");
 
-	// Select a source buffer
-	if (cin.rawWidth != cin.vidWidth || cin.rawHeight != cin.vidHeight)
-		buffer = cin.rawBuffer;
-	else
-		buffer = cin.vidBuffer;
+	cin = &cin_cinematics[handle - 1];
 
-	// Update the cinematic texture
+	if (!cin->playing)
+		Com_Error(ERR_DROP, "CIN_GetCinematicByHandle: invalid handle");
 
-	// Draw it
+	return cin;
 }
 
 /*
  ==================
  CIN_PlayCinematic
+
+ TODO: read the .cin file header
+ TODO: fill in cinematic_t
  ==================
 */
-bool CIN_PlayCinematic (const char *name, int flags){
+int	CIN_PlayCinematic (const char *name, int flags){
 
+	cinematic_t		*cin;
 	fileHandle_t	file;
 	byte			buffer[ROQ_CHUNK_HEADER_SIZE];
 	word			id, fps;
-	bool			isRoQ;
 	char			checkName[MAX_OSPATH], loadName[MAX_OSPATH];
+	bool			isRoQ;
+	int				handle;
 	int				size;
+	int				i;
 
-	if (!name || !name[0])
-		Com_Error(ERR_DROP, "CIN_PlayCinematic: NULL cinematic name");
+	// Check if already playing
+	for (i = 0, cin = cin_cinematics; i < MAX_CINEMATICS; i++, cin++){
+		if (!cin->playing)
+			continue;
 
-	if (Str_Length(name) >= MAX_OSPATH)
-		Com_Error(ERR_DROP, "CIN_PlayCinematic: cinematic name exceeds MAX_OSPATH");
+		if (!Str_ICompare(cin->name, name)){
+			if (cin->flags != flags)
+				continue;
 
-	// Check if playing a cinematic
-	if (cin.playing)
-		CIN_StopCinematic();
-
-	if (flags & CIN_SYSTEM){
-		// Make sure sounds aren't playing
-		S_StopAllSounds();
-
-		// Force menu and console off
-		UI_SetActiveMenu(UI_CLOSEMENU);
-		Con_Close();
+			return i + 1;
+		}
 	}
 
-	// Strip extension
+	// Get a free handle
+	cin = CIN_HandleForCinematic(&handle);
+
+	if (flags & CIN_SYSTEM){
+		cls.playingCinematic = true;
+
+		S_StopAllSounds();
+
+		Com_Printf("Playing cinematic %s\n", name);
+	}
+
+	// Strip file extension
 	Str_Copy(checkName, name, sizeof(checkName));
 	Str_StripFileExtension(checkName);
 
@@ -648,13 +572,13 @@ bool CIN_PlayCinematic (const char *name, int flags){
 	Str_SPrintf(loadName, sizeof(loadName), "%s.pcx", checkName);
 
 	if (FS_FileExists(loadName)){
-		if (!CIN_StaticCinematic(checkName, flags))
-			return false;
+		if (!CIN_LoadPCX(cin, checkName, flags))
+			return 0;
 
-		return true;
+		return handle;
 	}
 
-	// Try to open a RoQ or CUN file
+	// Open the file
 	Str_SPrintf(loadName, sizeof(loadName), "%s.RoQ", checkName);
 
 	size = FS_OpenFile(loadName, FS_READ, &file);
@@ -666,144 +590,149 @@ bool CIN_PlayCinematic (const char *name, int flags){
 		size = FS_OpenFile(loadName, FS_READ, &file);
 		if (file)
 			isRoQ = false;
-		else
-			return false;
+		else {
+			if (flags & CIN_SYSTEM){
+				cls.playingCinematic = false;
+
+				Com_Printf("Cinematic %s not found\n", name);
+			}
+
+			return 0;
+		}
 	}
 
-	// Read the file header
 	if (isRoQ){
+		// Read the file header
 		FS_Read(file, buffer, ROQ_CHUNK_HEADER_SIZE);
 
 		id = buffer[0] | (buffer[1] << 8);
 		fps = buffer[6] | (buffer[7] << 8);
 
 		if (id != ROQ_ID){
-			Com_DPrintf("Cinematic %s is not a RoQ file\n", name);
-
 			FS_CloseFile(file);
 
-			return false;
+			if (flags & CIN_SYSTEM){
+				cls.playingCinematic = false;
+
+				Com_Printf("Cinematic %s is not a RoQ file\n", name);
+			}
+
+			return 0;
 		}
 
 		// Fill it in
-		Str_Copy(cin.name, checkName, sizeof(cin.name));
-		cin.flags = flags;
+		cin->playing = true;
 
-		cin.file = file;
-		cin.size = size;
-		cin.offset = ROQ_CHUNK_HEADER_SIZE;
-		cin.header = ROQ_CHUNK_HEADER_SIZE;
+		cin->isRoQ = isRoQ;
 
-		cin.isRoQ = true;
+		Str_Copy(cin->name, name, sizeof(cin->name));
+		cin->flags = flags;
 
-		cin.vidWidth = 0;
-		cin.vidHeight = 0;
-		cin.vidBuffer = NULL;
+		cin->file = file;
+		cin->size = size;
+		cin->offset = ROQ_CHUNK_HEADER_SIZE;
 
-		cin.rawWidth = 0;
-		cin.rawHeight = 0;
-		cin.rawBuffer = NULL;
+		cin->startTime = 0;
 
-		// TODO: these are not needed for RoQ since we set them directly
-		cin.sndRate = 22050;
-		cin.sndWidth = 2;
-		cin.sndChannels = 0;
+		cin->frameRate = (fps) ? fps : 30;
 
-		cin.frameRate = (fps) ? fps : 30;
-
-		cin.startTime = 0;
-		cin.currentFrame = 0;
-
-		cin.playing = true;
-
-		cin.roqCache = NULL;
+		cin->frameCount = 0;
 	}
 	else {
-		FS_Read(file, &cin.vidWidth, sizeof(cin.vidWidth));
-		FS_Read(file, &cin.vidHeight, sizeof(cin.vidHeight));
-		FS_Read(file, &cin.sndRate, sizeof(cin.sndRate));
-		FS_Read(file, &cin.sndWidth, sizeof(cin.sndWidth));
-		FS_Read(file, &cin.sndChannels, sizeof(cin.sndChannels));
+		// Read the file header
 
 		// Fill it in
-		Str_Copy(cin.name, checkName, sizeof(cin.name));
-		cin.flags = flags;
+		cin->playing = true;
 
-		cin.file = file;
-		cin.size = size;
-		cin.offset = 20;
-		cin.header = 20;
+		cin->isRoQ = isRoQ;
 
-		cin.isRoQ = false;
+		Str_Copy(cin->name, name, sizeof(cin->name));
+		cin->flags = flags;
 
-		cin.vidWidth = LittleLong(cin.vidWidth);
-		cin.vidHeight = LittleLong(cin.vidHeight);
-		cin.vidBuffer = NULL;
+		cin->file = file;
+		cin->size = size;
+		cin->offset = 20;
 
-		// TODO: Q2e 0.68 uses hardware limits here instaid of a fixed size, maybe it's better
+		cin->startTime = 0;
 
-		cin.rawWidth = 256;
-		cin.rawHeight = 256;
+		cin->frameRate = 14;
 
-		if (cin.rawWidth != cin.vidWidth || cin.rawHeight != cin.vidHeight)
-			cin.rawBuffer = (byte *)Mem_ClearedAlloc(cin.rawWidth * cin.rawHeight * 4, TAG_TEMPORARY);
-
-		cin.sndRate = LittleLong(cin.sndRate);
-		cin.sndWidth = LittleLong(cin.sndWidth);
-		cin.sndChannels = LittleLong(cin.sndChannels);
-
-		cin.frameRate = 14;
-		cin.startTime = 0;
-		cin.currentFrame = 0;
-
-		cin.playing = true;
-
-		cin.hBuffer =(byte *) Mem_ClearedAlloc(cin.vidWidth * cin.vidHeight * 4, TAG_TEMPORARY);
-
-		CIN_SetupHuffTables();
+		cin->frameCount = 0;
 	}
 
-	// TODO: start streaming if not CIN_SILIENT
-
-	return true;
+	return handle;
 }
 
 /*
  ==================
- CIN_StopCinematic
+ 
  ==================
 */
-void CIN_StopCinematic (){
-	
-	// Check if playing a cinematic
-	if (!cin.playing)
-		return;
+cinData_t CIN_UpdateCinematic (int handle, int time){
+
+	cinematic_t	*cin;
+	cinData_t	data;
+	int			frame;
+
+	cin = CIN_GetCinematicByHandle(handle);
+
+	// TODO: check if cin->frameCount == -1 (static image)
+
+	// If we don't have a frame yet, set the start time
+	if (!cin->frameCount)
+		cin->startTime = time;
+
+	// Check if a new frame is needed
+	frame = (time - cin->startTime) * cin->frameRate / 1000;
+	if (frame < 1)
+		frame = 1;
+
+	// TODO: check if dropping frames
+
+	// Get the desired frame
+	while (frame > cin->frameCount){
+		// Decode a chunk
+		if (cin->isRoQ){
+			if (CIN_DecodeRoQChunk(cin))
+				continue;
+		}
+		else {
+			if (CIN_DecodeCinChunk(cin))
+				continue;
+		}
+
+		// TODO!!!
+	}
+
+	// TODO!!!
+
+	return data;
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void CIN_StopCinematic (int handle){
+
+	cinematic_t	*cin;
+
+	cin = CIN_GetCinematicByHandle(handle);
 
 	// Stop the cinematic
-	if (!(cin.flags & CIN_SILENT))
+	if (cin->flags & CIN_SYSTEM){
+		cls.playingCinematic = false;
+
+		// Make sure sounds aren't playing
 		S_StopAllSounds();
-
-	// Free the frame buffers
-	if (cin.rawBuffer)
-		Mem_Free(cin.rawBuffer);
-
-	if (cin.pcxBuffer)
-		Mem_Free(cin.pcxBuffer);
-
-	if (cin.hBuffer)
-		Mem_Free(cin.hBuffer);
-	if (cin.hNodes)
-		Mem_Free(cin.hNodes);
-
-	// Free RoQ cache
-	if (cin.roqCache)
-		Mem_Free(cin.roqCache);
+	}
 
 	// Close the file
-	if (cin.file)
-		FS_CloseFile(cin.file);
+	if (cin->file)
+		FS_CloseFile(cin->file);
 
-	Mem_Fill(&cin, 0, sizeof(cinematic_t));
+	Mem_Fill(cin, 0, sizeof(cinematic_t));
 }
 
 
@@ -828,13 +757,12 @@ static void CIN_PlayCinematic_f (){
 		return;
 	}
 
-	// If running a local server, kill it and reissue
+	// If running a local server, kill it
 	SV_Shutdown("Server quit\n", false);
 
-	// Disconnect from server
-	CL_Disconnect(false);
+	// If connected to a server, disconnect
+	CL_Disconnect(true);
 
-	// Play the cinematic
 	CL_PlayCinematic(Cmd_Argv(1));
 }
 
@@ -898,12 +826,25 @@ void CIN_Init (){
 */
 void CIN_Shutdown (){
 
+	cinematic_t	*cin;
+	int			i;
+
 	// Remove commands
 	Cmd_RemoveCommand("playCinematic");
 	Cmd_RemoveCommand("listCinematics");
 
 	// Stop all the cinematics
+	cls.playingCinematic = false;
+
+	for (i = 0, cin = cin_cinematics; i < MAX_CINEMATICS; i++, cin++){
+		if (!cin->playing)
+			continue;
+
+		// Close the file
+		if (cin->file)
+			FS_CloseFile(cin->file);
+	}
 
 	// Clear cinematic list
-	Mem_Fill(&cin, 0, sizeof(cinematic_t));
+	Mem_Fill(cin_cinematics, 0, sizeof(cin_cinematics));
 }

@@ -30,7 +30,7 @@
 #define __CINEMATIC_H__
 
 
-#define MAX_CINEMATICS				8
+#define MAX_CINEMATICS					16
 
 typedef enum {
 	CIN_SYSTEM				= BIT(0),	// A cinematic handled by the client system
@@ -38,20 +38,22 @@ typedef enum {
 	CIN_SILENT				= BIT(2)	// Don't play audio
 } cinFlags_t;
 
-typedef int cinHandle_t;
+typedef struct {
+	const byte *			image;
+	bool					dirty;
 
-// Will run a frame of the cinematic but will not draw it. Will return
-// false if the end of the cinematic has been reached.
-bool			CIN_UpdateCinematic ();
+	int						width;
+	int						height;
+} cinData_t;
 
-// Draws the current frame
-void			CIN_DrawCinematic ();
+// Plays a cinematic
+int				CIN_PlayCinematic (const char *name, int flags);
 
-// Returns a handle to the cinematic
-bool			CIN_PlayCinematic (const char *name, int flags);
+// Runs a cinematic frame
+cinData_t		CIN_UpdateCinematic (int handle, int time);
 
-// Stops playing the cinematic
-void			CIN_StopCinematic ();
+// Stops a cinematic
+void			CIN_StopCinematic (int handle);
 
 // Initializes the cinematic module
 void			CIN_Init ();

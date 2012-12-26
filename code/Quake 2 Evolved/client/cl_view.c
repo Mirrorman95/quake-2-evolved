@@ -25,10 +25,6 @@
 // cl_view.c - View rendering
 //
 
-// TODO:
-// - model testing and 3rd person view
-// - view blends
-
 
 #include "client.h"
 
@@ -72,8 +68,8 @@ static void CL_CalcFov (){
 	}
 
 	// Calculate Y field of view using a 640x480 virtual screen
-	f = SCREEN_WIDTH / tan(cl.renderView.fovX / 360.0f * M_PI);
-	cl.renderView.fovY = atan2(SCREEN_HEIGHT, f) * 360.0f / M_PI;
+	f = SCREEN_WIDTH / Tan(cl.renderView.fovX / 360.0f * M_PI);
+	cl.renderView.fovY = ATan(SCREEN_HEIGHT, f) * 360.0f / M_PI;
 
 	if (cl.zooming)
 		cl.zoomSensitivity = cl.renderView.fovY / 75.0f;
@@ -259,9 +255,9 @@ static void CL_CalcViewValues (){
 	// Never let it sit exactly on a node line, because a water plane
 	// can disappear when viewed with the eye exactly on it. The server
 	// protocol only specifies to 1/8 pixel, so add 1/16 in each axis.
-	cl.renderView.origin[0] += 1.0f/16;
-	cl.renderView.origin[1] += 1.0f/16;
-	cl.renderView.origin[2] += 1.0f/16;
+	cl.renderView.origin[0] += 1.0f/16.0f;
+	cl.renderView.origin[1] += 1.0f/16.0f;
+	cl.renderView.origin[2] += 1.0f/16.0f;
 
 	AnglesToMat3(cl.renderViewAngles, cl.renderView.axis);
 
@@ -303,38 +299,6 @@ static void CL_CalcViewValues (){
 
 /*
  ==================
- 
- ==================
-*/
-static void CL_DrawViewBlends (){
-
-	if (!cl_viewBlend->integerValue || cl_thirdPerson->integerValue)
-		return;
-
-	// This is just the old poly blend
-	if (cl_viewBlend->integerValue == 1){
-		if (!cl.playerState->blend[3])
-			return;
-
-		R_SetColor4(cl.playerState->blend[0], cl.playerState->blend[1], cl.playerState->blend[2], cl.playerState->blend[3]);
-		CL_FillRect(cl.renderView.x, cl.renderView.y, cl.renderView.width, cl.renderView.height, H_SCALE, 1.0f, V_SCALE, 1.0f);
-
-		return;
-	}
-
-	// Fire screen
-
-	// Underwater blur
-
-	// Double vision
-
-	// Underwater vision
-
-	// Draw IR Goggles
-}
-
-/*
- ==================
  CL_RenderView
  ==================
 */
@@ -359,7 +323,7 @@ void CL_RenderActiveFrame (){
 
 	if (!cl.frame.valid){
 		R_SetColor(colorBlack);
-		CL_FillRect(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, H_NONE, 1.0f, V_NONE, 1.0f);
+		CL_FillRect(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, H_SCALE, 1.0f, V_SCALE, 1.0f);
 		return;
 	}
 

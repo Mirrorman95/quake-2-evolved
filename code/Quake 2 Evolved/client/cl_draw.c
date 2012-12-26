@@ -261,7 +261,7 @@ void CL_DrawPicByName (float x, float y, float w, float h, const vec4_t color, c
 /*
  ==================
  
- FIXME: x and y coords are way off
+ TODO: use h/v flags?
  ==================
 */
 void CL_DrawPicFixed (float x, float y, material_t *material){
@@ -271,7 +271,7 @@ void CL_DrawPicFixed (float x, float y, material_t *material){
 	R_GetPicSize(material, &w, &h);
 
 	R_SetColor(colorWhite);
-	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_SCALE, 1.0f, V_SCALE, 1.0f, material);
+	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_NONE, 1.0f, V_NONE, 1.0f, material);
 }
 
 /*
@@ -298,11 +298,17 @@ void CL_DrawPicFixedByName (float x, float y, const char *pic){
 	R_GetPicSize(material, &w, &h);
 
 	R_SetColor(colorWhite);
-	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_SCALE, 1.0f, V_SCALE, 1.0f, material);
+	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_NONE, 1.0f, V_NONE, 1.0f, material);
 }
 
 
-// ============================================================================
+/*
+ ==============================================================================
+
+ LOADING SCREEN
+
+ ==============================================================================
+*/
 
 
 /*
@@ -449,7 +455,130 @@ void CL_DrawLoading (){
 }
 
 
-// ============================================================================
+/*
+ ==============================================================================
+
+ SCREEN BLENDS
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ CL_DrawFireScreenBlend
+ ==================
+*/
+static void CL_DrawFireScreenBlend (){
+
+	vec4_t	color;
+	float	alpha;
+	int		time;
+
+	if (cl.time < cl.fireScreenEndTime){
+		// Calculate alpha
+		time = cl.fireScreenEndTime - cl.time;
+
+		if (time < 750)
+			alpha = (float)time * (1.0f / 750);
+		else
+			alpha = 1.0f;
+
+		// Draw it
+		MakeRGBA(color, 1.0f, 1.0f, 1.0f, 0.5f * alpha);
+
+		R_SetColor(color);
+		R_DrawStretchPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.fireScreenMaterial);
+	}
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void CL_DrawWaterBlurBlend (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void CL_DrawDoubleVisionBlend (){
+
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void CL_DrawUnderwaterVisionBlend (){
+
+}
+
+/*
+ ==================
+ CL_DrawIRGogglesBlend
+ ==================
+*/
+static void CL_DrawIRGogglesBlend (){
+
+	if (cl.playerState->rdflags & RDF_IRGOGGLES){
+		R_SetColor1(1.0f);
+		R_DrawStretchPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.irGogglesMaterial);
+	}
+}
+
+/*
+ ==================
+ CL_DrawViewBlends
+ ==================
+*/
+void CL_DrawViewBlends (){
+
+	if (!cl_viewBlend->integerValue || cl_thirdPerson->integerValue)
+		return;
+
+	// This is just the old poly blend
+	if (cl_viewBlend->integerValue == 1){
+		if (!cl.playerState->blend[3])
+			return;
+
+		R_SetColor4(cl.playerState->blend[0], cl.playerState->blend[1], cl.playerState->blend[2], cl.playerState->blend[3]);
+		CL_FillRect(cl.renderView.x, cl.renderView.y, cl.renderView.width, cl.renderView.height, H_SCALE, 1.0f, V_SCALE, 1.0f);
+
+		return;
+	}
+
+	// Fire screen
+	CL_DrawFireScreenBlend();
+
+	// Underwater blur
+	CL_DrawWaterBlurBlend();
+
+	// Double vision
+	CL_DrawDoubleVisionBlend();
+
+	// Underwater vision
+	CL_DrawUnderwaterVisionBlend();
+
+	// Draw IR Goggles
+	CL_DrawIRGogglesBlend();
+}
+
+
+/*
+ ==============================================================================
+
+ 2D ELEMENTS
+
+ ==============================================================================
+*/
+
+#define	DISPLAY_ITEMS		17
 
 #define STAT_MINUS			10	// Num frame for '-' stats digit
 #define	CHAR_WIDTH			16
@@ -462,8 +591,48 @@ void CL_DrawLoading (){
 */
 static void CL_DrawInventory (){
 
+	int		number;
+	int		selectedItem, selectedNumber;
+	int		index[MAX_ITEMS];
+	int		top;
+	int		x, y;
+	int		i;
+
 	if (!cl_drawInventory->integerValue)
 		return;
+
+	if (!(cl.playerState->stats[STAT_LAYOUTS] & 2))
+		return;
+
+	// Get the selected item
+	selectedItem = cl.playerState->stats[STAT_SELECTED_ITEM];
+
+	number = 0;
+	selectedNumber = 0;
+
+	for (i = 0; i < MAX_ITEMS; i++){
+		if (i == selectedItem)
+			selectedNumber = number;
+
+		if (cl.inventory[i]){
+			index[number] = i;
+			number++;
+		}
+	}
+
+	// Determine the scroll point
+	top = selectedNumber - DISPLAY_ITEMS/2;
+	if (number - top < DISPLAY_ITEMS)
+		top = number - DISPLAY_ITEMS;
+	if (top < 0)
+		top = 0;
+
+	x = (cls.glConfig.videoWidth-256)/2;
+	y = (cls.glConfig.videoHeight-240)/2;
+
+	CL_DrawPicFixedByName(x, y, "inventory");
+
+	// TODO!!!
 }
 
 /*
@@ -514,22 +683,24 @@ static void CL_DrawLayoutFieldNumber (int x, int y, int color, int width, int va
  
  ==================
 */
-static void CL_DrawLayoutString (){
+static void CL_DrawLayoutString (const char *string, int x, int y, int centerWidth, int xor){
 
 }
 
 /*
  ==================
- 
+
  ==================
 */
 static void CL_ExecuteLayoutString (char *string){
 
-	script_t	*script;
-	token_t		token;
-	int			width;
-	int			index;
-	int			x, y;
+	script_t		*script;
+	token_t			token;
+	clientInfo_t	*clientInfo;
+	char			block[80];
+	int				index, value, color;
+	int				score, ping, time;
+	int				x, y, width, height;
 
 	if (!string[0])
 		return;
@@ -538,7 +709,7 @@ static void CL_ExecuteLayoutString (char *string){
 	if (!script)
 		return;
 
-	PS_SetScriptFlags(script, SF_NOWARNINGS | SF_NOERRORS | SF_ALLOWPATHNAMES);
+	PS_SetScriptFlags(script, SF_NOWARNINGS | SF_NOERRORS | SF_ALLOWPATHNAMES | SF_PARSEPRIMITIVES);
 
 	x = 0;
 	y = 0;
@@ -598,6 +769,30 @@ static void CL_ExecuteLayoutString (char *string){
 		// Draw a deathmatch client block
 		if (!Str_ICompare(token.string, "client")){
 			PS_ReadToken(script, &token);
+			x = cls.glConfig.videoWidth/2 - 160 + Str_ToInteger(token.string);
+			PS_ReadToken(script, &token);
+			y = cls.glConfig.videoHeight/2 - 120 + Str_ToInteger(token.string);
+
+			PS_ReadToken(script, &token);
+
+			index = Str_ToInteger(token.string);
+			if (index < 0 || index >= MAX_CLIENTS)
+				Com_Error(ERR_DROP, "CL_ExecuteLayoutString: bad 'client' (index %i)", index);
+
+			clientInfo = &cl.clientInfo[index];
+			if (!clientInfo->valid)
+				clientInfo = &cl.baseClientInfo;
+
+			PS_ReadToken(script, &token);
+			score = Str_ToInteger(token.string);
+			PS_ReadToken(script, &token);
+			ping = Str_ToInteger(token.string);
+			PS_ReadToken(script, &token);
+			time = Str_ToInteger(token.string);
+
+			CL_DrawPicFixed(x, y, clientInfo->icon);
+
+			// TODO: CL_DrawStringFixed
 
 			continue;
 		}
@@ -605,6 +800,31 @@ static void CL_ExecuteLayoutString (char *string){
 		// Draw a CTF client block
 		if (!Str_ICompare(token.string, "ctf")){
 			PS_ReadToken(script, &token);
+			x = cls.glConfig.videoWidth/2 - 160 + Str_ToInteger(token.string);
+			PS_ReadToken(script, &token);
+			y = cls.glConfig.videoHeight/2 - 120 + Str_ToInteger(token.string);
+
+			PS_ReadToken(script, &token);
+
+			index = Str_ToInteger(token.string);
+			if (index < 0 || index >= MAX_CLIENTS)
+				Com_Error(ERR_DROP, "CL_ExecuteLayoutString: bad 'ctf' (index %i)", index);
+
+			clientInfo = &cl.clientInfo[index];
+			if (!clientInfo->valid)
+				clientInfo = &cl.baseClientInfo;
+
+			PS_ReadToken(script, &token);
+			score = Str_ToInteger(token.string);
+			PS_ReadToken(script, &token);
+			ping = Str_ToInteger(token.string);
+
+			if (ping > 999)
+				ping = 999;
+
+			Str_SPrintf(block, sizeof(block), "%3d %3d %-12.12s", score, ping, clientInfo->name);
+
+			// TODO: CL_DrawStringFixed
 
 			continue;
 		}
@@ -615,7 +835,7 @@ static void CL_ExecuteLayoutString (char *string){
 
 			index = Str_ToInteger(token.string);
 			if (index < 0 || index >= MAX_IMAGES)
-				Com_Error(ERR_DROP, "CL_ExecuteLayoutString: bad pic index %i", index);
+				Com_Error(ERR_DROP, "CL_ExecuteLayoutString: bad 'pic' (index %i)", index);
 
 			if (!cl.media.gameMaterials[index])
 				continue;
@@ -639,63 +859,135 @@ static void CL_ExecuteLayoutString (char *string){
 		// Draw a number
 		if (!Str_ICompare(token.string, "num")){
 			PS_ReadToken(script, &token);
+			width = Str_ToInteger(token.string);
+			PS_ReadToken(script, &token);
+			height = Str_ToInteger(token.string);
+
+			index = Str_ToInteger(token.string);
+			if (index < 0 || index >= MAX_STATS)
+				Com_Error(ERR_DROP, "CL_ExecuteLayoutString: bad 'num' (index %i)", index);
+
+			CL_DrawLayoutFieldNumber(x, y, 0, width, cl.playerState->stats[index]);
 
 			continue;
 		}
 
 		// Health number
 		if (!Str_ICompare(token.string, "hnum")){
-			PS_ReadToken(script, &token);
+			value = cl.playerState->stats[STAT_HEALTH];
+			if (value > 25)
+				color = 0;
+			else if (value > 0)
+				color = (cl.frame.serverFrame >> 2) & 1;
+			else
+				color = 1;
+
+			if (cl.playerState->stats[STAT_FLASHES] & 1)
+				CL_DrawPicFixedByName(x, y, "field_3");
+
+			CL_DrawLayoutFieldNumber(x, y, color, 3, value);
 
 			continue;
 		}
 
 		// Armor number
 		if (!Str_ICompare(token.string, "rnum")){
-			PS_ReadToken(script, &token);
+			value = cl.playerState->stats[STAT_ARMOR];
+			if (value < 1)
+				continue;
+
+			if (cl.playerState->stats[STAT_FLASHES] & 2)
+				CL_DrawPicFixedByName(x, y, "field_3");
+
+			CL_DrawLayoutFieldNumber(x, y, 0, 3, value);
 
 			continue;
 		}
 
 		// Ammo number
 		if (!Str_ICompare(token.string, "anum")){
-			PS_ReadToken(script, &token);
+			value = cl.playerState->stats[STAT_AMMO];
+			if (value > 5)
+				color = 0;
+			else if (value >= 0)
+				color = (cl.frame.serverFrame >> 2) & 1;
+			else
+				continue;
+
+			if (cl.playerState->stats[STAT_FLASHES] & 4)
+				CL_DrawPicFixedByName(x, y, "field_3");
+
+			CL_DrawLayoutFieldNumber(x, y, color, 3, value);
 
 			continue;
 		}
 
+		// Status string
 		if (!Str_ICompare(token.string, "stat_string")){
 			PS_ReadToken(script, &token);
 
+			index = Str_ToInteger(token.string);
+			if (index < 0 || index >= MAX_STATS)
+				Com_Error(ERR_DROP, "CL_ExecuteLayoutString: bad 'stat_string' (index %i)", index);
+
+			index = cl.playerState->stats[index];
+			if (index < 0 || index >= MAX_CONFIGSTRINGS)
+				Com_Error(ERR_DROP, "CL_ExecuteLayoutString: bad 'stat_string' (index %i)", index);
+
+			// TODO: CL_DrawStringFixed
+
 			continue;
 		}
 
+		// String
 		if (!Str_ICompare(token.string, "string")){
 			PS_ReadToken(script, &token);
 
+			// TODO: CL_DrawStringFixed
+
 			continue;
 		}
 
+		// String 2
 		if (!Str_ICompare(token.string, "string2")){
 			PS_ReadToken(script, &token);
 
+			// TODO: CL_DrawStringFixed
+
 			continue;
 		}
 
+		// Center string
 		if (!Str_ICompare(token.string, "cstring")){
 			PS_ReadToken(script, &token);
 
+			CL_DrawLayoutString(token.string, x, y, 320, 0);
+
 			continue;
 		}
 
+		// Center string 2
 		if (!Str_ICompare(token.string, "cstring2")){
 			PS_ReadToken(script, &token);
 
+			CL_DrawLayoutString(token.string, x, y, 320, 0x80);
+
 			continue;
 		}
 
+		// If and endif
 		if (!Str_ICompare(token.string, "if")){
 			PS_ReadToken(script, &token);
+
+			index = Str_ToInteger(token.string);
+			if (index < 0 || index >= MAX_STATS)
+				Com_Error(ERR_DROP, "CL_ExecuteLayoutString: bad 'if' index (index %i)", index);
+
+			if (!cl.playerState->stats[index]){
+				// Skip to endif
+				while (string && Str_ICompare(token.string, "endif"))
+					PS_ReadToken(script, &token);
+			}
 
 			continue;
 		}
@@ -988,7 +1280,7 @@ static void CL_DrawFPS (){
 
 /*
  ==================
- 
+ CL_DrawPause
  ==================
 */
 static void CL_DrawPause (){
@@ -996,14 +1288,19 @@ static void CL_DrawPause (){
 	if (!cl_drawPause->integerValue)
 		return;
 
+	if (!com_paused->integerValue || UI_IsVisible())
+		return;
+
 	// Draw it
 	R_SetColor(colorWhite);
-	R_DrawStretchPic(0.0f, SCREEN_HEIGHT - 260.0f, 0.0f, 40.0f, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_CENTER, 1.0f, cl.media.pauseMaterial);
+	R_DrawStretchPic(0.0f, SCREEN_HEIGHT - 260.0f, SCREEN_WIDTH, 40.0f, 0.0f, 0.0f, 1.0f, 1.0f, H_STRETCH_WIDTH, 1.0f, V_ALIGN_CENTER, 1.0f, cl.media.pauseMaterial);
 }
 
 /*
  ==================
  CL_DrawMaterial
+
+ TODO: would be nice if we could trace for monsters, objects materials
  ==================
 */
 static void CL_DrawMaterial (){

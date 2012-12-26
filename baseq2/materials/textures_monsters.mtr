@@ -1,0 +1,588 @@
+
+//
+// Soldier
+//
+
+models/monsters/soldier/skin_lt
+{
+	bumpMap			models/monsters/soldier/skin_lt_local.tga
+	diffuseMap		models/monsters/soldier/skin_lt_d.tga
+	{
+		specularmap	models/monsters/soldier/skin_lt_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/soldier/pain_ltp
+{
+	bumpMap			models/monsters/soldier/skin_ltp_local.tga
+	diffuseMap		models/monsters/soldier/skin_ltp_d.tga
+	{
+		specularmap	models/monsters/soldier/skin_ltp_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/soldier/skin
+{
+	bumpMap			models/monsters/soldier/skin_local.tga
+	diffuseMap		models/monsters/soldier/skin_d.tga
+	{
+		specularmap	models/monsters/soldier/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/soldier/pain
+{
+	bumpMap			models/monsters/soldier/pain_local.tga
+	diffuseMap		models/monsters/soldier/pain_d.tga
+	{
+		specularmap	models/monsters/soldier/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/soldier/skin_ss
+{
+	bumpMap			models/monsters/soldier/skin_ss_local.tga
+	diffuseMap		models/monsters/soldier/skin_ss_d.tga
+	{
+		specularmap	models/monsters/soldier/skin_ss_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/soldier/skin_ssp
+{
+	bumpMap			models/monsters/soldier/skin_ssp_local.tga
+	diffuseMap		models/monsters/soldier/skin_ssp_d.tga
+	{
+		specularmap	models/monsters/soldier/skin_ssp_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Infantry
+//
+
+models/monsters/infantry/skin
+{
+	bumpMap			models/monsters/infantry/skin_local.tga
+	diffuseMap		models/monsters/infantry/skin_d.tga
+	{
+		specularmap	models/monsters/infantry/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/infantry/pain
+{
+	bumpMap			models/monsters/infantry/pain_local.tga
+	diffuseMap		models/monsters/infantry/pain_d.tga
+	{
+		specularmap	models/monsters/infantry/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Parasite
+//
+
+models/monsters/parasite/skin
+{
+	bumpMap			models/monsters/parasite/skin_local.tga
+	diffuseMap		models/monsters/parasite/skin_d.tga
+	{
+		specularmap	models/monsters/parasite/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/parasite/pain
+{
+	bumpMap			models/monsters/parasite/pain_local.tga
+	diffuseMap		models/monsters/parasite/pain_d.tga
+	{
+		specularmap	models/monsters/parasite/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/parasite/segment/skin
+{
+	bumpMap			models/monsters/parasite/segment/skin_local.tga
+	diffuseMap		models/monsters/parasite/segment/skin_d.tga
+	{
+		specularmap	models/monsters/parasite/segment/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Flyer
+//
+
+models/monsters/flyer/skin
+{
+	bumpMap			models/monsters/flyer/skin_local.tga
+	diffuseMap		models/monsters/flyer/skin_d.tga
+	{
+		specularmap	models/monsters/flyer/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/flyer/pain
+{
+	bumpMap			models/monsters/flyer/pain_local.tga
+	diffuseMap		models/monsters/flyer/pain_d.tga
+	{
+		specularmap	models/monsters/flyer/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Floater
+//
+
+models/monsters/float/skin
+{
+	bumpMap			models/monsters/float/skin_local.tga
+	diffuseMap		models/monsters/float/skin_d.tga
+	{
+		specularmap	models/monsters/float/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/float/pain
+{
+	bumpMap			models/monsters/float/pain_local.tga
+	diffuseMap		models/monsters/float/pain_d.tga
+	{
+		specularmap	models/monsters/float/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Icarus
+//
+
+models/monsters/hover/skin
+{
+	bumpMap			models/monsters/hover/skin_local.tga
+	diffuseMap		models/monsters/hover/skin_d.tga
+	{
+		specularmap	models/monsters/hover/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/hover/pain
+{
+	bumpMap			models/monsters/hover/pain_local.tga
+	diffuseMap		models/monsters/hover/pain_d.tga
+	{
+		specularmap	models/monsters/hover/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Barracuda
+//
+
+models/monsters/flipper/skin
+{
+	bumpMap			models/monsters/flipper/skin_local.tga
+	diffuseMap		models/monsters/flipper/skin_d.tga
+	{
+		specularmap	models/monsters/flipper/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/flipper/pain
+{
+	bumpMap			models/monsters/flipper/pain_local.tga
+	diffuseMap		models/monsters/flipper/pain_d.tga
+	{
+		specularmap	models/monsters/flipper/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Berserk
+//
+
+models/monsters/berserk/skin
+{
+	bumpMap			models/monsters/berserk/skin_local.tga
+	diffuseMap		models/monsters/berserk/skin_d.tga
+	{
+		specularmap	models/monsters/berserk/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/berserk/pain
+{
+	bumpMap			models/monsters/berserk/pain_local.tga
+	diffuseMap		models/monsters/berserk/pain_d.tga
+	{
+		specularmap	models/monsters/berserk/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Gunner
+//
+
+models/monsters/gunner/skin
+{
+	bumpMap			models/monsters/gunner/skin_local.tga
+	diffuseMap		models/monsters/gunner/skin_d.tga
+	{
+		specularmap	models/monsters/gunner/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/gunner/pain
+{
+	bumpMap			models/monsters/gunner/pain_local.tga
+	diffuseMap		models/monsters/gunner/pain_d.tga
+	{
+		specularmap	models/monsters/gunner/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Medic
+//
+
+models/monsters/medic/skin
+{
+	bumpMap			models/monsters/medic/skin_local.tga
+	diffuseMap		models/monsters/medic/skin_d.tga
+	{
+		specularmap	models/monsters/medic/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/medic/pain
+{
+	bumpMap			models/monsters/medic/pain_local.tga
+	diffuseMap		models/monsters/medic/pain_d.tga
+	{
+		specularmap	models/monsters/medic/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Gladiator
+//
+
+models/monsters/gladiatr/skin
+{
+	bumpMap			models/monsters/gladiator/skin_local.tga
+	diffuseMap		models/monsters/gladiator/skin_d.tga
+	{
+		specularmap	models/monsters/gladiator/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/gladiatr/pain
+{
+	bumpMap			models/monsters/gladiator/pain_local.tga
+	diffuseMap		models/monsters/gladiator/pain_d.tga
+	{
+		specularmap	models/monsters/gladiator/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Tank
+//
+
+models/monsters/tank/skin
+{
+	bumpMap			models/monsters/tank/skin_local.tga
+	diffuseMap		models/monsters/tank/skin_d.tga
+	{
+		specularmap	models/monsters/tank/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/tank/pain
+{
+	bumpMap			models/monsters/tank/pain_local.tga
+	diffuseMap		models/monsters/tank/pain_d.tga
+	{
+		specularmap	models/monsters/tank/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Tank Commander
+//
+
+models/monsters/tank/../ctank/skin
+{
+	bumpMap			models/monsters/tank/ctank/skin_local.tga
+	diffuseMap		models/monsters/tank/ctank/skin_d.tga
+	{
+		specularmap	models/monsters/tank/ctank/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/tank/../ctank/pain
+{
+	bumpMap			models/monsters/tank/ctank/pain_local.tga
+	diffuseMap		models/monsters/tank/ctank/pain_d.tga
+	{
+		specularmap	models/monsters/tank/ctank/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Tank Commander Body
+//
+
+models/monsters/commandr/skin
+{
+	bumpMap			models/monsters/commandr/skin_local.tga
+	diffuseMap		models/monsters/commandr/skin_d.tga
+	{
+		specularmap	models/monsters/commandr/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/commandr/head/skin
+{
+	bumpMap			models/monsters/commandr/head/skin_local.tga
+	diffuseMap		models/monsters/commandr/head/skin_d.tga
+	{
+		specularmap	models/monsters/commandr/head/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Iron Maiden
+//
+
+models/monsters/bitch/skin
+{
+	bumpMap			models/monsters/bitch/skin_local.tga
+	diffuseMap		models/monsters/bitch/skin_d.tga
+	{
+		specularmap	models/monsters/bitch/skin_s.tga
+		specularParms	2.0, 1.0
+	}
+}
+
+models/monsters/bitch/pain
+{
+	bumpMap			models/monsters/bitch/pain_local.tga
+	diffuseMap		models/monsters/bitch/pain_d.tga
+	{
+		specularmap	models/monsters/bitch/pain_s.tga
+		specularParms	2.0, 1.0
+	}
+}
+
+//
+// Mutant
+//
+
+models/monsters/mutant/skin
+{
+	bumpMap			models/monsters/mutant/skin_local.tga
+	diffuseMap		models/monsters/mutant/skin_d.tga
+	{
+		specularmap	models/monsters/mutant/skin_s.tga
+		specularParms	2.0, 1.0
+	}
+}
+
+models/monsters/mutant/pain
+{
+	bumpMap			models/monsters/mutant/pain_local.tga
+	diffuseMap		models/monsters/mutant/pain_d.tga
+	{
+		specularmap	models/monsters/mutant/pain_s.tga
+		specularParms	2.0, 1.0
+	}
+}
+
+//
+// Brain
+//
+
+models/monsters/brain/skin
+{
+	bumpMap			models/monsters/brain/skin_local.tga
+	diffuseMap		models/monsters/brain/skin_d.tga
+	{
+		specularmap	models/monsters/brain/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/brain/pain
+{
+	bumpMap			models/monsters/brain/pain_local.tga
+	diffuseMap		models/monsters/brain/pain_d.tga
+	{
+		specularmap	models/monsters/brain/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Super Tank
+//
+
+models/monsters/boss1/skin
+{
+	bumpMap			models/monsters/boss1/skin_local.tga
+	diffuseMap		models/monsters/boss1/skin_d.tga
+	{
+		specularmap	models/monsters/boss1/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/boss1/pain
+{
+	bumpMap			models/monsters/boss1/pain_local.tga
+	diffuseMap		models/monsters/boss1/pain_d.tga
+	{
+		specularmap	models/monsters/boss1/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Hornet
+//
+
+models/monsters/boss2/skin
+{
+	bumpMap			models/monsters/boss2/skin_local.tga
+	diffuseMap		models/monsters/boss2/skin_d.tga
+	{
+		specularmap	models/monsters/boss2/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/boss2/pain
+{
+	bumpMap			models/monsters/boss2/pain_local.tga
+	diffuseMap		models/monsters/boss2/pain_d.tga
+	{
+		specularmap	models/monsters/boss2/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Jorg
+//
+
+models/monsters/boss3/jorg/skin
+{
+	bumpMap			models/monsters/boss3/jorg/skin_local.tga
+	diffuseMap		models/monsters/boss3/jorg/skin_d.tga
+	{
+		specularmap	models/monsters/boss3/jorg/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/boss3/jorg/pain
+{
+	bumpMap			models/monsters/boss3/jorg/pain_local.tga
+	diffuseMap		models/monsters/boss3/jorg/pain_d.tga
+	{
+		specularmap	models/monsters/boss3/jorg/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Makron
+//
+
+models/monsters/boss3/rider/skin
+{
+	bumpMap			models/monsters/boss3/rider/skin_local.tga
+	diffuseMap		models/monsters/boss3/rider/skin_d.tga
+	{
+		specularmap	models/monsters/boss3/rider/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/boss3/rider/pain
+{
+	bumpMap			models/monsters/boss3/rider/pain_local.tga
+	diffuseMap		models/monsters/boss3/rider/pain_d.tga
+	{
+		specularmap	models/monsters/boss3/rider/pain_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Insane Marine
+//
+
+models/monsters/insane/i_skin
+{
+	bumpMap			models/monsters/insane/i_skin_local.tga
+	diffuseMap		models/monsters/insane/i_skin_d.tga
+	{
+		specularmap	models/monsters/insane/i_skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/insane/i_skin02
+{
+	bumpMap			models/monsters/insane/i_skin02_local.tga
+	diffuseMap		models/monsters/insane/i_skin02_d.tga
+	{
+		specularmap	models/monsters/insane/i_skin02_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+models/monsters/insane/i_skin03
+{
+	bumpMap			models/monsters/insane/i_skin03_local.tga
+	diffuseMap		models/monsters/insane/i_skin03_d.tga
+	{
+		specularmap	models/monsters/insane/i_skin03_s.tga
+		specularParms	4.0, 2.0
+	}
+}
