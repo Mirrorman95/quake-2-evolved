@@ -201,6 +201,9 @@
     <ClInclude Include="shared\math\rect.h">
       <Filter>Header Files\shared\math</Filter>
     </ClInclude>
+    <ClInclude Include="common\protocol.h">
+      <Filter>Header Files\common</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="client\cl_cinematic.c">
@@ -243,9 +246,6 @@
       <Filter>Source Files\client</Filter>
     </ClCompile>
     <ClCompile Include="client\cl_screen.c">
-      <Filter>Source Files\client</Filter>
-    </ClCompile>
-    <ClCompile Include="client\cl_server.c">
       <Filter>Source Files\client</Filter>
     </ClCompile>
     <ClCompile Include="client\cl_tempEntity.c">
@@ -595,6 +595,7 @@
     <None Include="windows\q2.ico">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="..\TODO.txt" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="windows\q2.rc">

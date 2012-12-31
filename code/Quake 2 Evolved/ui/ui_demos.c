@@ -45,7 +45,7 @@ typedef enum {
 } uiDemosId_t;
 
 typedef struct {
-	char					demos[MAX_DEMOS][MAX_QPATH];
+	char					demos[MAX_DEMOS][MAX_PATH_LENGTH];
 	char					*demosPtr[MAX_DEMOS];
 
 	menuFramework_t			menu;

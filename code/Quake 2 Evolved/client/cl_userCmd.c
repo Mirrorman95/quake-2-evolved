@@ -35,8 +35,6 @@
 uint						cl_frameMsec;
 static uint					cl_oldFrameTime;
 
-extern uint					sys_frameTime;
-
 
 /*
  ==================
@@ -194,13 +192,13 @@ static void CL_CreateCmd (){
 	index = cls.netChan.outgoingSequence & CMD_MASK;
 	userCmd = &cl.cmds[index];
 
-	cl_frameMsec = sys_frameTime - cl_oldFrameTime;
+	cl_frameMsec = com_frameTime - cl_oldFrameTime;
 	if (cl_frameMsec < 1)
 		cl_frameMsec = 1;
 	else if (cl_frameMsec > 200)
 		cl_frameMsec = 200;
 
-	cl_oldFrameTime = sys_frameTime;
+	cl_oldFrameTime = com_frameTime;
 
 	Mem_Fill(userCmd, 0, sizeof(usercmd_t));
 

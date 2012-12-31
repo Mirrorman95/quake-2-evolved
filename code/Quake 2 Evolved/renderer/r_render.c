@@ -215,13 +215,35 @@ void RB_DrawState (material_t *material, stage_t *stage){
 
 /*
  ==================
- 
+ RB_BindTexture
  ==================
 */
 void RB_BindTexture (material_t *material, texture_t *texture, int cinematicHandle){
 
+	cinData_t	data;
+
 	// If a cinematic
 	if (cinematicHandle){
+		if (r_skipVideos->integerValue){
+			GL_BindTexture(rg.blackTexture);
+			return;
+		}
+
+		// Decode a video frame
+		data = CIN_UpdateCinematic(cinematicHandle, backEnd.time);
+
+		// Bind the texture
+		if (!data.image)
+			GL_BindTexture(rg.blackTexture);
+		else {
+			GL_BindTexture(texture);
+
+			// Update the texture if needed
+			if (!data.dirty)
+				return;
+
+			R_UploadTextureImage(texture, 0, data.image, data.width, data.height);
+		}
 
 		return;
 	}
@@ -246,13 +268,35 @@ void RB_BindTexture (material_t *material, texture_t *texture, int cinematicHand
 
 /*
  ==================
- 
+ RB_BindMultitexture
  ==================
 */
 void RB_BindMultitexture (material_t *material, texture_t *texture, int cinematicHandle, int unit){
 
+	cinData_t	data;
+
 	// If a cinematic
 	if (cinematicHandle){
+		if (r_skipVideos->integerValue){
+			GL_BindMultitexture(rg.blackTexture, unit);
+			return;
+		}
+
+		// Decode a video frame
+		data = CIN_UpdateCinematic(cinematicHandle, backEnd.time);
+
+		// Bind the texture
+		if (!data.image)
+			GL_BindMultitexture(rg.blackTexture, unit);
+		else {
+			GL_BindMultitexture(texture, unit);
+
+			// Update the texture if needed
+			if (!data.dirty)
+				return;
+
+			R_UploadTextureImage(texture, unit, data.image, data.width, data.height);
+		}
 
 		return;
 	}
@@ -969,7 +1013,10 @@ void RB_BindIndexBuffer (){
 	GL_BindIndexBuffer(backEnd.indexBuffer);
 
 	// Upload the indices
-	R_UpdateIndexBuffer(backEnd.indexBuffer, backEnd.dynamicIndexOffset, backEnd.numIndices, backEnd.indices, discard, false);
+	if (backEnd.stencilShadow)
+		R_UpdateIndexBuffer(backEnd.indexBuffer, backEnd.dynamicIndexOffset, backEnd.numIndices, backEnd.shadowIndices, discard, false);
+	else
+		R_UpdateIndexBuffer(backEnd.indexBuffer, backEnd.dynamicIndexOffset, backEnd.numIndices, backEnd.indices, discard, false);
 
 	backEnd.dynamicIndexOffset += backEnd.numIndices;
 }
@@ -1015,13 +1062,20 @@ void RB_BindVertexBuffer (){
 	}
 
 	backEnd.vertexBuffer = backEnd.dynamicVertexBuffers[backEnd.dynamicVertexNumber];
-	backEnd.vertexPointer = VERTEX_OFFSET(NULL, backEnd.dynamicVertexOffset);
+
+	if (backEnd.stencilShadow)
+		backEnd.vertexPointer = VERTEX_OFFSET2(NULL, backEnd.dynamicVertexOffset);
+	else
+		backEnd.vertexPointer = VERTEX_OFFSET(NULL, backEnd.dynamicVertexOffset);
 
 	// Bind the vertex buffer
 	GL_BindVertexBuffer(backEnd.vertexBuffer);
 
 	// Upload the vertices
-	R_UpdateVertexBuffer(backEnd.vertexBuffer, backEnd.dynamicVertexOffset, backEnd.numVertices, backEnd.vertices, discard, false);
+	if (backEnd.stencilShadow)
+		R_UpdateVertexBuffer(backEnd.vertexBuffer, backEnd.dynamicVertexOffset, backEnd.numVertices, backEnd.shadowVertices, discard, false);
+	else
+		R_UpdateVertexBuffer(backEnd.vertexBuffer, backEnd.dynamicVertexOffset, backEnd.numVertices, backEnd.vertices, discard, false);
 
 	backEnd.dynamicVertexOffset += backEnd.numVertices;
 }

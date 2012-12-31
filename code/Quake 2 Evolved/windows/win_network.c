@@ -473,7 +473,7 @@ static void NET_OpenUDP (){
 		Com_Printf(S_COLOR_RED "Could not open server UDP socket\n");
 
 	// Dedicated servers don't need client ports
-	if (dedicated->integerValue)
+	if (com_dedicated->integerValue)
 		return;
 
 	if (NET_UDPSocket(NS_CLIENT, net_ip->value, net_clientPort->integerValue))

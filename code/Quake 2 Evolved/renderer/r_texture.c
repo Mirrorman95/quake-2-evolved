@@ -1790,9 +1790,6 @@ static void R_CreateInternalTextures (){
 	for (i = 0; i < MAX_CINEMATICS; i++)
 		rg.cinematicTextures[i] = R_LoadTexture(Str_VarArgs("_cinematic%i", i+1), emptyImage, 4, 4, TF_INTERNAL | TF_NOPICMIP | TF_UNCOMPRESSED, TF_RGB, TF_LINEAR, TW_CLAMP_TO_ZERO, true);
 
-	// Sky texture
-	rg.skyTexture = R_LoadTexture("_sky", emptyImage, 4, 4, TF_INTERNAL | TF_ALLOWCAPTURE | TF_NOPICMIP | TF_UNCOMPRESSED, TF_RGB, TF_LINEAR, TW_CLAMP, true);
-
 	// Mirror texture
 	rg.mirrorTexture = R_LoadTexture("_mirror", emptyImage, 4, 4, TF_INTERNAL | TF_ALLOWCAPTURE | TF_NOPICMIP | TF_UNCOMPRESSED, TF_RGB, TF_LINEAR, TW_CLAMP, true);
 

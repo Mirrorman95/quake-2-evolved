@@ -52,7 +52,7 @@ static void RB_ShowDepth (){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Read the depth buffer
 	buffer = (float *)Mem_Alloc(RectSize(backEnd.viewport) * sizeof(float), TAG_TEMPORARY);
@@ -68,6 +68,141 @@ static void RB_ShowDepth (){
 	// Check for errors
 	if (!r_ignoreGLErrors->integerValue)
 		GL_CheckForErrors();
+}
+
+/*
+ ==================
+ RB_ShowOverdraw
+ ==================
+*/
+static void RB_ShowOverdraw (int numMeshes, mesh_t *meshes, bool singlePass, bool ambient){
+
+	mesh_t	*mesh;
+	stage_t	*stage, *bumpStage, *diffuseStage, *specularStage;
+	int		passes;
+	int		i, j;
+
+	if (!numMeshes)
+		return;
+
+	// Set the GL state
+	GL_DisableTexture();
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+
+	GL_Disable(GL_BLEND);
+
+	GL_Disable(GL_ALPHA_TEST);
+
+	GL_Enable(GL_DEPTH_TEST);
+	GL_DepthFunc(GL_LEQUAL);
+
+	GL_Enable(GL_STENCIL_TEST);
+	GL_StencilFunc(GL_ALWAYS, 0, 255);
+	GL_StencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+
+	GL_ColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(255);
+
+	// Run through the surfaces
+	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
+		// Evaluate registers
+		RB_EvaluateRegisters(mesh->material, backEnd.floatTime, mesh->entity->materialParms);
+
+		// Skip if condition evaluated to false
+		if (!mesh->material->expressionRegisters[mesh->material->conditionRegister])
+			continue;
+
+		// Set the entity state
+		RB_EntityState(mesh->entity);
+
+		// Set the batch state
+		backEnd.entity = mesh->entity;
+		backEnd.material = mesh->material;
+
+		// Batch the surface geometry
+		RB_BatchGeometry(mesh->type, mesh->data);
+
+		// Count number of passes
+		if (singlePass)
+			passes = 1;
+		else {
+			passes = 0;
+
+			if (ambient){
+				for (j = 0, stage = mesh->material->stages; j < mesh->material->numStages; j++, stage++){
+					if (stage->lighting != SL_AMBIENT)
+						continue;
+
+					if (!mesh->material->expressionRegisters[stage->conditionRegister])
+						continue;
+
+					passes++;
+				}
+			}
+			else {
+				bumpStage = diffuseStage = specularStage = NULL;
+
+				for (j = 0, stage = mesh->material->stages; j < mesh->material->numStages; j++, stage++){
+					if (stage->lighting == SL_AMBIENT)
+						continue;
+
+					if (!mesh->material->expressionRegisters[stage->conditionRegister])
+						continue;
+
+					switch (stage->lighting){
+					case SL_BUMP:
+						if (bumpStage)
+							passes++;
+
+						bumpStage = stage;
+						diffuseStage = NULL;
+						specularStage = NULL;
+
+						break;
+					case SL_DIFFUSE:
+						if (bumpStage && diffuseStage)
+							passes++;
+
+						diffuseStage = stage;
+
+						break;
+					case SL_SPECULAR:
+						if (bumpStage && specularStage)
+							passes++;
+
+						specularStage = stage;
+
+						break;
+					}
+				}
+
+				if (bumpStage || diffuseStage || specularStage)
+					passes++;
+			}
+		}
+
+		// Add to overdraw
+		RB_Deform(backEnd.material);
+
+		qglVertexPointer(3, GL_FLOAT, sizeof(glVertex_t), backEnd.vertices);
+
+		RB_PolygonOffset(backEnd.material);
+
+		for (j = 0; j < passes; j++)
+			qglDrawElements(GL_TRIANGLES, backEnd.numIndices, GL_INDEX_TYPE, backEnd.indices);
+
+		// Check for errors
+		if (!r_ignoreGLErrors->integerValue)
+			GL_CheckForErrors();
+
+		// Clear the arrays
+		backEnd.numIndices = 0;
+		backEnd.numVertices = 0;
+	}
 }
 
 /*
@@ -125,6 +260,9 @@ static void RB_ShowLightCount (int numMeshes, mesh_t *meshes){
 		backEnd.entity = mesh->entity;
 		backEnd.material = mesh->material;
 
+		backEnd.stencilShadow = false;
+		backEnd.shadowCaps = false;
+
 		// Batch the surface geometry
 		RB_BatchGeometry(mesh->type, mesh->data);
 
@@ -171,7 +309,7 @@ static void RB_ShowLightVolume (){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	if (r_showLightVolumes->integerValue != 2){
 		// Set the GL state
@@ -265,15 +403,15 @@ static void RB_ShowLightVolume (){
  RB_ShowLightScissor
  ==================
 */
-static void RB_ShowLightScissor (light_t *light){
+static void RB_ShowLightScissor (rect_t scissor){
 
 	float	x, y, width, height;
 
 	// Transform scissor into normalized device coordinates
-	x = (light->scissor.x * backEnd.coordScale[0] + backEnd.coordBias[0]) * 2.0f - 1.0f;
-	y = (light->scissor.y * backEnd.coordScale[1] + backEnd.coordBias[1]) * 2.0f - 1.0f;
-	width = (light->scissor.width * backEnd.coordScale[0] + backEnd.coordBias[0]) * 2.0f - 1.0f;
-	height = (light->scissor.height * backEnd.coordScale[1] + backEnd.coordBias[1]) * 2.0f - 1.0f;
+	x = (scissor.x * backEnd.coordScale[0] + backEnd.coordBias[0]) * 2.0f - 1.0f;
+	y = (scissor.y * backEnd.coordScale[1] + backEnd.coordBias[1]) * 2.0f - 1.0f;
+	width = (scissor.width * backEnd.coordScale[0] + backEnd.coordBias[0]) * 2.0f - 1.0f;
+	height = (scissor.height * backEnd.coordScale[1] + backEnd.coordBias[1]) * 2.0f - 1.0f;
 
 	// Set the GL state
 	GL_LoadIdentity(GL_PROJECTION);
@@ -294,7 +432,7 @@ static void RB_ShowLightScissor (light_t *light){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Disable the clip plane if needed
 	if (backEnd.viewParms.viewType == VIEW_MIRROR)
@@ -542,7 +680,7 @@ static void RB_ShowVertexColors (int numMeshes, mesh_t *meshes){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Run through the meshes
 	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
@@ -559,6 +697,9 @@ static void RB_ShowVertexColors (int numMeshes, mesh_t *meshes){
 		// Set the batch state
 		backEnd.entity = mesh->entity;
 		backEnd.material = mesh->material;
+
+		backEnd.stencilShadow = false;
+		backEnd.shadowCaps = false;
 
 		// Batch the mesh geometry
 		RB_BatchGeometry(mesh->type, mesh->data);
@@ -631,7 +772,7 @@ static void RB_ShowTextureCoords (int numMeshes, mesh_t *meshes){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Run through the meshes
 	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
@@ -648,6 +789,9 @@ static void RB_ShowTextureCoords (int numMeshes, mesh_t *meshes){
 		// Set the batch state
 		backEnd.entity = mesh->entity;
 		backEnd.material = mesh->material;
+
+		backEnd.stencilShadow = false;
+		backEnd.shadowCaps = false;
 
 		// Batch the mesh geometry
 		RB_BatchGeometry(mesh->type, mesh->data);
@@ -721,7 +865,7 @@ static void RB_ShowTangentSpace (int numMeshes, mesh_t *meshes){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Run through the meshes
 	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
@@ -746,6 +890,9 @@ static void RB_ShowTangentSpace (int numMeshes, mesh_t *meshes){
 		// Set the batch state
 		backEnd.entity = mesh->entity;
 		backEnd.material = mesh->material;
+
+		backEnd.stencilShadow = false;
+		backEnd.shadowCaps = false;
 
 		// Batch the mesh geometry
 		RB_BatchGeometry(mesh->type, mesh->data);
@@ -847,7 +994,7 @@ static void RB_ShowTris (int numMeshes, mesh_t *meshes){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Set the color
 	qglColor3f(1.0f, 1.0f, 1.0f);
@@ -867,6 +1014,9 @@ static void RB_ShowTris (int numMeshes, mesh_t *meshes){
 		// Set the batch state
 		backEnd.entity = mesh->entity;
 		backEnd.material = mesh->material;
+
+		backEnd.stencilShadow = false;
+		backEnd.shadowCaps = false;
 
 		// Batch the mesh geometry
 		RB_BatchGeometry(mesh->type, mesh->data);
@@ -917,7 +1067,7 @@ static void RB_ShowNormals (int numMeshes, mesh_t *meshes){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Run through the meshes
 	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
@@ -942,6 +1092,9 @@ static void RB_ShowNormals (int numMeshes, mesh_t *meshes){
 		// Set the batch state
 		backEnd.entity = mesh->entity;
 		backEnd.material = mesh->material;
+
+		backEnd.stencilShadow = false;
+		backEnd.shadowCaps = false;
 
 		// Batch the mesh geometry
 		RB_BatchGeometry(mesh->type, mesh->data);
@@ -1025,7 +1178,7 @@ static void RB_ShowTextureVectors (int numMeshes, mesh_t *meshes){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Run through the meshes
 	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
@@ -1050,6 +1203,9 @@ static void RB_ShowTextureVectors (int numMeshes, mesh_t *meshes){
 		// Set the batch state
 		backEnd.entity = mesh->entity;
 		backEnd.material = mesh->material;
+
+		backEnd.stencilShadow = false;
+		backEnd.shadowCaps = false;
 
 		// Batch the mesh geometry
 		RB_BatchGeometry(mesh->type, mesh->data);
@@ -1183,11 +1339,14 @@ static void RB_ShowBatchSize (int numMeshes, mesh_t *meshes){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Clear the batch state
 	backEnd.entity = NULL;
 	backEnd.material = NULL;
+
+	backEnd.stencilShadow = false;
+	backEnd.shadowCaps = false;
 
 	sort = 0;
 
@@ -1261,7 +1420,7 @@ static void RB_ShowModelBounds (int numMeshes, mesh_t *meshes){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Run through the meshes
 	for (i = 0, mesh = meshes; i < numMeshes; i++, mesh++){
@@ -1286,6 +1445,9 @@ static void RB_ShowModelBounds (int numMeshes, mesh_t *meshes){
 		// Set the batch state
 		backEnd.entity = mesh->entity;
 		backEnd.material = mesh->material;
+
+		backEnd.stencilShadow = false;
+		backEnd.shadowCaps = false;
 
 		// Draw the model bounds
 		model = backEnd.entity->model;
@@ -1401,7 +1563,7 @@ static float RB_ShowStencil (){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Draw fullscreen quads
 	for (i = 0; i <= COLOR_WHITE; i++){
@@ -1538,7 +1700,7 @@ static void RB_DrawDebugPolygons (){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Draw all the debug polygons
 	for (i = 0, debugPolygon = backEnd.debugPolygons; i < backEnd.numDebugPolygons; i++, debugPolygon++){
@@ -1671,7 +1833,7 @@ static void RB_DrawDebugLines (){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Draw all the debug lines
 	for (i = 0, debugLine = backEnd.debugLines; i < backEnd.numDebugLines; i++, debugLine++){
@@ -1776,7 +1938,11 @@ static void RB_DrawDebugText (){
 void RB_RenderDebugTools (){
 
 	light_t	*light;
-	int		i, j;
+	stage_t	*stage;
+	int		i, j, k;
+
+	if (rg.envShotRendering)
+		return;
 
 	QGL_LogPrintf("---------- RB_RenderDebugTools ----------\n");
 
@@ -1792,6 +1958,63 @@ void RB_RenderDebugTools (){
 	// Render debug tools
 	if (r_showDepth->integerValue)
 		RB_ShowDepth();
+
+	if (r_showOverdraw->integerValue){
+		// Clear the stencil buffer
+		GL_StencilMask(255);
+
+		qglClearStencil(0);
+		qglClear(GL_STENCIL_BUFFER_BIT);
+
+		if (r_showOverdraw->integerValue != 2){
+			RB_ShowOverdraw(backEnd.viewParms.numMeshes[0], backEnd.viewParms.meshes[0], false, true);
+			RB_ShowOverdraw(backEnd.viewParms.numMeshes[1], backEnd.viewParms.meshes[1], false, true);
+			RB_ShowOverdraw(backEnd.viewParms.numMeshes[2], backEnd.viewParms.meshes[2], false, true);
+			RB_ShowOverdraw(backEnd.viewParms.numMeshes[3], backEnd.viewParms.meshes[3], false, true);
+		}
+
+		if (r_showOverdraw->integerValue != 1){
+			for (i = 0; i < 4; i++){
+				// Run through the lights
+				for (j = 0, light = backEnd.viewParms.lights[i]; j < backEnd.viewParms.numLights[i]; j++, light++){
+					if (!light->numInteractionMeshes)
+						continue;
+
+					// Set the light
+					backEnd.light = light;
+					backEnd.lightMaterial = light->material;
+
+					// Evaluate registers
+					RB_EvaluateRegisters(light->material, backEnd.floatTime, light->materialParms);
+
+					// Skip if condition evaluated to false
+					if (!light->material->expressionRegisters[light->material->conditionRegister])
+						continue;
+
+					// Set up the scissor
+					GL_Scissor(light->scissor);
+
+					// Run through the light stages
+					for (k = 0, stage = backEnd.lightMaterial->stages; k < backEnd.lightMaterial->numStages; k++, stage++){
+						if (!backEnd.lightMaterial->expressionRegisters[stage->conditionRegister])
+							continue;
+
+						// Run through the surfaces
+						if (backEnd.lightMaterial->lightType == LT_BLEND || backEnd.lightMaterial->lightType == LT_FOG)
+							RB_ShowOverdraw(light->numInteractionMeshes, light->interactionMeshes, true, false);
+						else
+							RB_ShowOverdraw(light->numInteractionMeshes, light->interactionMeshes, false, false);
+					}
+				}
+			}
+
+			// Restore the scissor
+			GL_Scissor(backEnd.scissor);
+		}
+
+		// Draw the stencil buffer contents
+		rg.pc.overdraw += RB_ShowStencil();
+	}
 
 	if (r_showLightCount->integerValue){
 		// Clear the stencil buffer
@@ -1818,7 +2041,7 @@ void RB_RenderDebugTools (){
 					continue;
 
 				// Set up the scissor
-				GL_Scissor(light->scissor.x, light->scissor.y, light->scissor.width, light->scissor.height);
+				GL_Scissor(light->scissor);
 
 				// Run through the surfaces
 				RB_ShowLightCount(light->numInteractionMeshes, light->interactionMeshes);
@@ -1826,7 +2049,7 @@ void RB_RenderDebugTools (){
 		}
 
 		// Restore the scissor
-		GL_Scissor(backEnd.scissor.x, backEnd.scissor.y, backEnd.scissor.width, backEnd.scissor.height);
+		GL_Scissor(backEnd.scissor);
 
 		// Draw the stencil buffer contents
 		rg.pc.overdrawLights += RB_ShowStencil();
@@ -1869,7 +2092,7 @@ void RB_RenderDebugTools (){
 					continue;
 
 				// Draw the light scissor
-				RB_ShowLightScissor(light);
+				RB_ShowLightScissor(light->scissor);
 			}
 		}
 	}

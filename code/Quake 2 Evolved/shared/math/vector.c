@@ -387,6 +387,16 @@ vec_t VectorLength (const vec3_t v){
 
 /*
  ==================
+ VectorLengthFast
+ ==================
+*/
+vec_t VectorLengthFast (const vec3_t v){
+
+	return SqrtFast(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+}
+
+/*
+ ==================
  VectorLengthSquared
  ==================
 */

@@ -22,7 +22,7 @@
 
 
 //
-// cl_draw.c - Drawing 2D elements
+// cl_draw.c - Drawing functions
 //
 
 
@@ -158,16 +158,6 @@ void CL_DrawText (){
 
 /*
  ==================
- CL_DrawString
- ==================
-*/
-void CL_DrawString (float x, float y, float w, float h, const char *string, const vec4_t color, bool forceColor, float xShadow, float yShadow, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent, material_t *material){
-
-	R_DrawString(x, y, w, h, string, color, forceColor, xShadow, yShadow, horzAdjust, horzPercent, vertAdjust, vertPercent, material);
-}
-
-/*
- ==================
  
  ==================
 */
@@ -198,10 +188,10 @@ void CL_DrawStringShearedFixed (float x, float y, float w, float h, float shearX
  CL_DrawPic
  ==================
 */
-void CL_DrawPic (float x, float y, float w, float h, const vec4_t color, material_t *material){
+void CL_DrawPic (float x, float y, float w, float h, const vec4_t color, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent, material_t *material){
 
 	R_SetColor(color);
-	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_NONE, 1.0f, V_NONE, 1.0f, material);
+	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, horzAdjust, horzPercent, vertAdjust, vertPercent, material);
 }
 
 /*
@@ -236,14 +226,12 @@ void CL_DrawPicShearedST (float x, float y, float w, float h, float s1, float t1
 /*
  ==================
  CL_DrawPicByName
-
- TODO: why does this not scale to screen dimensions?
  ==================
 */
-void CL_DrawPicByName (float x, float y, float w, float h, const vec4_t color, const char *pic){
+void CL_DrawPicByName (float x, float y, float w, float h, const vec4_t color, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent, const char *pic){
 
 	material_t	*material;
-	char		name[MAX_OSPATH];
+	char		name[MAX_PATH_LENGTH];
 
 	if (!Str_FindChar(pic, '/'))
 		Str_SPrintf(name, sizeof(name), "pics/%s", pic);
@@ -255,7 +243,7 @@ void CL_DrawPicByName (float x, float y, float w, float h, const vec4_t color, c
 	material = R_RegisterMaterialNoMip(name);
 
 	R_SetColor(color);
-	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, H_SCALE, 1.0f, V_SCALE, 1.0f, material);
+	R_DrawStretchPic(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, horzAdjust, horzPercent, vertAdjust, vertPercent, material);
 }
 
 /*
@@ -283,7 +271,7 @@ void CL_DrawPicFixed (float x, float y, material_t *material){
 void CL_DrawPicFixedByName (float x, float y, const char *pic){
 
 	material_t	*material;
-	char		name[MAX_OSPATH];
+	char		name[MAX_PATH_LENGTH];
 	float		w, h;
 
 	if (!Str_FindChar(pic, '/'))
@@ -313,143 +301,262 @@ void CL_DrawPicFixedByName (float x, float y, const char *pic){
 
 /*
  ==================
- 
- TODO: some strings uses \n and \r which messes up the string
- TODO: fix position
+ CL_DrawConnecting
+ ==================
+*/
+static void CL_DrawConnecting (){
+
+	char	string[512];
+	float	ofs;
+	int		length;
+
+	// Awaiting connection
+	CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, "ui/assets/title_screen/title_backg");
+	CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, "ui/assets/title_screen/q2e_logo");
+
+	if (NET_IsLocalAddress(cls.serverAddress)){
+		ofs = SCREEN_HEIGHT - 56.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Starting up...");
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+	}
+	else {
+		if (cls.serverMessage[0]){
+			ofs = SCREEN_HEIGHT - 128.0f;
+
+			length = Str_SPrintf(string, sizeof(string), "%s", cls.serverMessage);
+			R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		}
+
+		ofs = SCREEN_HEIGHT - 72.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Connecting to %s", cls.serverName);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Awaiting challenge... %i", cls.connectCount);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+	}
+}
+
+/*
+ ==================
+ CL_DrawChallenging
+ ==================
+*/
+static void CL_DrawChallenging (){
+
+	char	string[512];
+	float	ofs;
+	int		length;
+
+	// Awaiting challenge
+	CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, "ui/assets/title_screen/title_backg");
+	CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, "ui/assets/title_screen/q2e_logo");
+
+	if (NET_IsLocalAddress(cls.serverAddress)){
+		ofs = SCREEN_HEIGHT - 56.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Starting up...");
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+	}
+	else {
+		if (cls.serverMessage[0]){
+			ofs = SCREEN_HEIGHT - 128.0f;
+
+			length = Str_SPrintf(string, sizeof(string), "%s", cls.serverMessage);
+			R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		}
+
+		ofs = SCREEN_HEIGHT - 72.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Connecting to %s", cls.serverName);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Awaiting challenge... %i", cls.connectCount);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+	}
+}
+
+/*
+ ==================
+ CL_DrawConnected
+ ==================
+*/
+static void CL_DrawConnected (){
+
+	char	string[512];
+	float	speed, ofs;
+	int		length;
+	int		percent;
+
+	// Downloading file from server
+	if (cls.downloadFile){
+		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, "ui/assets/title_screen/title_backg");
+		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, "ui/assets/title_screen/q2e_logo");
+
+		if (cls.downloadStart != cls.realTime)
+			speed = (float)(cls.downloadBytes / 1024) / ((cls.realTime - cls.downloadStart) / 1000);
+		else
+			speed = 0;
+
+		if (Com_ServerState()){
+			ofs = SCREEN_HEIGHT - 56.0f;
+
+			length = Str_SPrintf(string, sizeof(string), "Downloading %s... (%i%% @ %.2f KB/sec)", cls.downloadName, cls.downloadPercent, speed);
+			R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+			ofs += 16.0f;
+		}
+		else {
+			ofs = SCREEN_HEIGHT - 72.0f;
+
+			length = Str_SPrintf(string, sizeof(string), "Connecting to %s", cls.serverName);
+			R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+			ofs += 16.0f;
+
+			length = Str_SPrintf(string, sizeof(string), "Downloading %s... (%i%% @ %.2f KB/sec)", cls.downloadName, cls.downloadPercent, speed);
+			R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+			ofs += 16.0f;
+		}
+
+		percent = ClampInt(cls.downloadPercent - (cls.downloadPercent % 5), 5, 100);
+		if (percent){
+			CL_DrawPicByName(SCREEN_WIDTH - 400.0f, SCREEN_HEIGHT - 320.0f, 160.0f, 160.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, "ui/assets/loading/load_main2");
+			CL_DrawPicByName(SCREEN_WIDTH - 400.0f, SCREEN_HEIGHT - 320.0f, 160.0f, 160.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, Str_VarArgs("ui/assets/loading/percent/load_%i", percent));
+			CL_DrawPicByName(SCREEN_WIDTH - 400.0f, SCREEN_HEIGHT - 320.0f, 160.0f, 160.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, "ui/assets/loading/load_main");
+		}
+
+		return;
+	}
+
+	// Awaiting game state
+	CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, "ui/assets/title_screen/title_backg");
+	CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, "ui/assets/title_screen/q2e_logo");
+
+	if (NET_IsLocalAddress(cls.serverAddress)){
+		ofs = SCREEN_HEIGHT - 56.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Starting up...");
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+	}
+	else {
+		ofs = SCREEN_HEIGHT - 72.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Connecting to %s", cls.serverName);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Awaiting game state...");
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+	}
+}
+
+/*
+ ==================
+ CL_DrawLoadingData
+ ==================
+*/
+static void CL_DrawLoadingData (){
+
+	char	string[512];
+	float	ofs;
+	int		length;
+	int		percent;
+
+	// Loading level data
+	CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.levelshot);
+	CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.levelshotDetail);
+	CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.loadingLogo);
+
+	ofs = SCREEN_HEIGHT - 120.0f;
+
+	if (NET_IsLocalAddress(cls.serverAddress)){
+		length = Str_SPrintf(string, sizeof(string), "Loading %s", cls.loadingInfo.map);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "%s", cls.loadingInfo.name);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Loading... %s", cls.loadingInfo.string);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+	}
+	else {
+		length = Str_SPrintf(string, sizeof(string), "Loading %s", cls.loadingInfo.map);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "%s", cls.loadingInfo.name);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Connecting to %s", cls.serverName);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+
+		length = Str_SPrintf(string, sizeof(string), "Loading... %s", cls.loadingInfo.string);
+		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+		ofs += 16.0f;
+	}
+
+	percent = ClampInt((cls.loadingInfo.percent / 5) - 1, 0, 19);
+	if (percent){
+		CL_DrawPic(SCREEN_WIDTH - 400.0f, SCREEN_HEIGHT - 320.0f, 160.0f, 160.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.loadingDetail[0]);
+		CL_DrawPic(SCREEN_WIDTH - 400.0f, SCREEN_HEIGHT - 320.0f, 160.0f, 160.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.loadingPercent[percent]);
+		CL_DrawPic(SCREEN_WIDTH - 400.0f, SCREEN_HEIGHT - 320.0f, 160.0f, 160.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.loadingDetail[1]);
+	}
+}
+
+/*
+ ==================
+ CL_DrawPrimed
+ ==================
+*/
+static void CL_DrawPrimed (){
+
+	char	string[512];
+	float	ofs;
+	int		length;
+
+	// Awaiting frame
+	ofs = SCREEN_HEIGHT - 56.0f;
+
+	CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.levelshot);
+	CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.levelshotDetail);
+	CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.media.loadingLogo);
+
+	length = Str_SPrintf(string, sizeof(string), "Awaiting frame...");
+	R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
+}
+
+/*
+ ==================
+ CL_DrawLoading
  ==================
 */
 void CL_DrawLoading (){
 
-	char	string[MAX_STRING_LENGTH];
-	float	speed;
-	int		percent;
-	int		length;
-
-	if (!cls.loading)
-		return;
-
 	switch (cls.state){
-	case CA_DISCONNECTED:
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, "ui/assets/title_screen/title_backg");
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
-
-		break;
 	case CA_CONNECTING:
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, "ui/assets/title_screen/title_backg");
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
-
-		if (NET_IsLocalAddress(cls.serverAddress)){
-			length = Str_SPrintf(string, sizeof(string), "Starting up...");
-			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 56.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-		}
-		else {
-			if (cls.serverMessage[0]){
-				length = Str_SPrintf(string, sizeof(string), "%s", cls.serverMessage[0]);
-				CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 120.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-			}
-
-			length = Str_SPrintf(string, sizeof(string), "Connecting to %s\nAwaiting connection... %i", cls.serverName, cls.connectCount);
-			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 72.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-		}
-
+		CL_DrawConnecting();
 		break;
 	case CA_CHALLENGING:
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, "ui/assets/title_screen/title_backg");
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
-
-		if (NET_IsLocalAddress(cls.serverAddress)){
-			length = Str_SPrintf(string, sizeof(string), "Starting up...");
-			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 56.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-		}
-		else {
-			if (cls.serverMessage[0]){
-				length = Str_SPrintf(string, sizeof(string), "%s", cls.serverMessage[0]);
-				CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 120.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-			}
-
-			length = Str_SPrintf(string, sizeof(string), "Connecting to %s\nAwaiting challenge... %i", cls.serverName, cls.connectCount);
-			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 72.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-		}
-
+		CL_DrawChallenging();
 		break;
 	case CA_CONNECTED:
-		if (cls.downloadFile){
-			CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, "ui/assets/title_screen/title_backg");
-			CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
-
-			if (cls.downloadStart != cls.realTime)
-				speed = (float)(cls.downloadBytes / 1024) / ((cls.realTime - cls.downloadStart) / 1000);
-			else
-				speed = 0;
-
-			if (Com_ServerState()){
-				length = Str_SPrintf(string, sizeof(string), "Downloading %s... (%i%% @ %.2f KB/sec)", cls.downloadName, cls.downloadPercent, speed);
-				CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 56.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-			}
-			else {
-				length = Str_SPrintf(string, sizeof(string), "Connecting to %s\nDownloading %s... (%i%% @ %.2f KB/sec)", cls.serverName, cls.downloadName, cls.downloadPercent, speed);
-				CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 72.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-			}
-
-			percent = ClampInt(cls.downloadPercent - (cls.downloadPercent % 5), 5, 100);
-			if (percent){
-				CL_DrawPicByName(240.0f, 160.0f, 160.0f, 160.0f, colorWhite, "ui/assets/loading/load_main2");
-				CL_DrawPicByName(240.0f, 160.0f, 160.0f, 160.0f, colorWhite, Str_VarArgs("ui/assets/loading/percent/load_%i", percent));
-				CL_DrawPicByName(240.0f, 160.0f, 160.0f, 160.0f, colorWhite, "ui/assets/loading/load_main");
-			}
-
-			break;
-		}
-
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, "ui/assets/title_screen/title_backg");
-		CL_DrawPicByName(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, "ui/assets/title_screen/q2e_logo");
-
-		if (NET_IsLocalAddress(cls.serverAddress)){
-			length = Str_SPrintf(string, sizeof(string), "Starting up...");
-			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 56.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-		}
-		else {
-			length = Str_SPrintf(string, sizeof(string), "Connecting to %s\nAwaiting game state...", cls.serverName);
-			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 72.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-		}
-
+		CL_DrawConnected();
 		break;
 	case CA_LOADING:
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshot);
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshotDetail);
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, cl.media.loadingLogo);
-
-		if (NET_IsLocalAddress(cls.serverAddress)){
-			length = Str_SPrintf(string, sizeof(string), "Loading %s\n\"%s\"\n\n\nLoading... %s\n", cls.loadingInfo.map, cls.loadingInfo.name, cls.loadingInfo.string);
-			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 180.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-		}
-		else {
-			length = Str_SPrintf(string, sizeof(string), "Loading %s\n\"%s\"\n\nConnecting to %s\nLoading... %s\n", cls.loadingInfo.map, cls.loadingInfo.name, cls.serverName, cls.loadingInfo.string);
-			CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 180.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-		}
-
-		percent = ClampInt((cls.loadingInfo.percent / 5) - 1, 0, 19);
-		if (percent){
-			CL_DrawPic(240.0f, 160.0f, 160.0f, 160.0f, colorWhite, cl.media.loadingDetail[0]);
-			CL_DrawPic(240.0f, 160.0f, 160.0f, 160.0f, colorWhite, cl.media.loadingPercent[percent]);
-			CL_DrawPic(240.0f, 160.0f, 160.0f, 160.0f, colorWhite, cl.media.loadingDetail[1]);
-		}
-
+		CL_DrawLoadingData();
 		break;
 	case CA_PRIMED:
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshot);
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshotDetail);
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, cl.media.loadingLogo);
-
-		break;
-	case CA_ACTIVE:
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshot);
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, colorWhite, cl.media.levelshotDetail);
-		CL_DrawPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT - 320.0f, colorWhite, cl.media.loadingLogo);
-
-		length = Str_SPrintf(string, sizeof(string), "Awaiting frame...");
-		CL_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, SCREEN_HEIGHT - 56.0f, 16.0f, 16.0f, string, colorWhite, false, 1.0f, 2.0f, H_NONE, 1.0f, V_NONE, 1.0f, cls.media.charsetMaterial);
-
+		CL_DrawPrimed();
 		break;
 	}
 }
@@ -961,7 +1068,7 @@ static void CL_ExecuteLayoutString (char *string){
 		if (!Str_ICompare(token.string, "cstring")){
 			PS_ReadToken(script, &token);
 
-			CL_DrawLayoutString(token.string, x, y, 320, 0);
+			CL_DrawLayoutString(token.string, x, y, SCREEN_WIDTH/2, 0);
 
 			continue;
 		}
@@ -970,7 +1077,7 @@ static void CL_ExecuteLayoutString (char *string){
 		if (!Str_ICompare(token.string, "cstring2")){
 			PS_ReadToken(script, &token);
 
-			CL_DrawLayoutString(token.string, x, y, 320, 0x80);
+			CL_DrawLayoutString(token.string, x, y, SCREEN_WIDTH/2, 0x80);
 
 			continue;
 		}

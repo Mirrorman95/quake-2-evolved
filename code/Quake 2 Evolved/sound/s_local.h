@@ -62,7 +62,7 @@ typedef struct {
 } wavInfo_t;
 
 typedef struct sound_s {
-	char					name[MAX_QPATH];
+	char					name[MAX_PATH_LENGTH];
 
 	int						flags;
 	int						rate;

@@ -114,7 +114,7 @@ static uiSaveGame_t			uiSaveGame;
 */
 static void UI_SaveGame_GetGameList (){
 
-	char	name[MAX_QPATH];
+	char	name[MAX_PATH_LENGTH];
 	char	*buffer;
 	int		i;
 
@@ -283,7 +283,7 @@ static void UI_SaveGame_Ownerdraw (void *self){
 			UI_ScaleCoords(&x, &y, &w, &h);
 
 			if (uiSaveGame.games[uiSaveGame.currentGame].map[0]){
-				char	pathTGA[MAX_QPATH];
+				char	pathTGA[MAX_PATH_LENGTH];
 
 				if (uiStatic.realTime - uiSaveGame.fadeTime >= 3000){
 					uiSaveGame.fadeTime = uiStatic.realTime;

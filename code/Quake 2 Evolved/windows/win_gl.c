@@ -565,6 +565,16 @@ static void GLW_InitExtensions (void){
 	else
 		Com_Printf("...WGL_EXT_swap_control_tear not found\n");
 
+	if (GLW_IsExtensionPresent(glConfig.extensionsString, "GL_EXT_depth_bounds_test")){
+		glConfig.depthBoundsTestAvailable = true;
+
+		qglDepthBoundsEXT = (GLDEPTHBOUNDSEXT)GLW_GetProcAddress("glDepthBoundsEXT");
+
+		Com_Printf("...using GL_EXT_depth_bounds_test\n");
+	}
+	else
+		Com_Printf("...GL_EXT_depth_bounds_test not found\n");
+
 	if (GLW_IsExtensionPresent(glConfig.extensionsString, "GL_EXT_stencil_wrap")){
 		glConfig.stencilWrapAvailable = true;
 
@@ -576,7 +586,7 @@ static void GLW_InitExtensions (void){
 	if (GLW_IsExtensionPresent(glConfig.extensionsString, "GL_EXT_stencil_two_side")){
 		glConfig.stencilTwoSideAvailable = true;
 
-		qglActiveStencilFaceEXT					= GLW_GetProcAddress("glActiveStencilFaceEXT");
+		qglActiveStencilFaceEXT					= (GLACTIVESTENCILFACEEXT)GLW_GetProcAddress("glActiveStencilFaceEXT");
 
 		Com_Printf("...using GL_EXT_stencil_two_side\n");
 	}
@@ -586,8 +596,8 @@ static void GLW_InitExtensions (void){
 	if (GLW_IsExtensionPresent(glConfig.extensionsString, "GL_ATI_separate_stencil")){
 		glConfig.atiSeparateStencilAvailable = true;
 
-		qglStencilOpSeparateATI					= GLW_GetProcAddress("glStencilOpSeparateATI");
-		qglStencilFuncSeparateATI				= GLW_GetProcAddress("glStencilFuncSeparateATI");
+		qglStencilOpSeparateATI					= (GLSTENCILOPSEPARATEATI)GLW_GetProcAddress("glStencilOpSeparateATI");
+		qglStencilFuncSeparateATI				= (GLSTENCILFUNCSEPARATEATI)GLW_GetProcAddress("glStencilFuncSeparateATI");
 
 		Com_Printf("...using GL_ATI_separate_stencil\n");
 	}

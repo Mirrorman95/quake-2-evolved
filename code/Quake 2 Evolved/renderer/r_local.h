@@ -375,9 +375,7 @@ typedef enum {
 
 typedef enum {
 	ST_NONE,
-	ST_SKY,
 	ST_MIRROR,
-	ST_PORTAL,
 	ST_REMOTE
 } subviewType_t;
 
@@ -660,11 +658,13 @@ void			R_ShutdownFonts ();
 
 #define MAX_ARRAY_BUFFERS			2048
 
-#define INDEX_OFFSET(ptr, offset)		((const byte *)(ptr) + ((offset) * sizeof(glIndex_t)))
+#define INDEX_OFFSET(ptr, offset)	((const byte *)(ptr) + ((offset) * sizeof(glIndex_t)))
 #define VERTEX_OFFSET(ptr, offset)	((const byte *)(ptr) + ((offset) * sizeof(glVertex_t)))
 
+#define VERTEX_OFFSET2(ptr, offset)	((const byte *)(ptr) + ((offset) * sizeof(glShadowVertex_t)))
+
 typedef struct arrayBuffer_s {
-	char					name[MAX_QPATH];
+	char					name[MAX_PATH_LENGTH];
 
 	bool					dynamic;
 	int						count;
@@ -687,10 +687,10 @@ bool			R_UpdateIndexBuffer (arrayBuffer_t *indexBuffer, int indexOffset, int ind
 glIndex_t *		R_MapIndexBuffer (arrayBuffer_t *indexBuffer, int indexOffset, int indexCount, bool discard, bool synchronize);
 bool			R_UnmapIndexBuffer (arrayBuffer_t *indexBuffer);
 
-arrayBuffer_t *	R_AllocVertexBuffer (const char *name, bool dynamic, int vertexCount, const glVertex_t *vertexData);
-void			R_ReallocVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexCount, const glVertex_t *vertexData);
+arrayBuffer_t *	R_AllocVertexBuffer (const char *name, bool dynamic, int vertexCount, const void *vertexData);
+void			R_ReallocVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexCount, const void *vertexData);
 void			R_FreeVertexBuffer (arrayBuffer_t *vertexBuffer);
-bool			R_UpdateVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexOffset, int vertexCount, const glVertex_t *vertexData, bool discard, bool synchronize);
+bool			R_UpdateVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexOffset, int vertexCount, const void *vertexData, bool discard, bool synchronize);
 glVertex_t *	R_MapVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexOffset, int vertexCount, bool discard, bool synchronize);
 bool			R_UnmapVertexBuffer (arrayBuffer_t *vertexBuffer);
 
@@ -877,7 +877,7 @@ typedef struct {
 } mdlFrame_t;
 
 typedef struct {
-	char					name[MAX_QPATH];
+	char					name[MAX_PATH_LENGTH];
 	vec3_t					origin;
 	vec3_t					axis[3];
 } mdlTag_t;
@@ -923,7 +923,7 @@ typedef enum {
 } modelType_t;
 
 typedef struct model_s {
-	char					name[MAX_QPATH];
+	char					name[MAX_PATH_LENGTH];
 	bool					defaulted;
 
 	modelType_t				type;
@@ -1095,6 +1095,8 @@ typedef struct {
 	struct mesh_s *			interactions;
 } lightMeshes_t;
 
+int				R_LightCullBounds (lightData_t *lightData, const vec3_t mins, const vec3_t maxs, int planeBits);
+
 void			R_AllocLightMeshes ();
 void			R_GenerateLightMeshes (struct light_s *light);
 void			R_ClearLightMeshes ();
@@ -1141,6 +1143,9 @@ typedef struct {
 	int						scissorY;
 	int						scissorWidth;
 	int						scissorHeight;
+
+	float					depthBoundsMin;
+	float					depthBoundsMax;
 
 	int						texUnit;
 	uint					texTarget[MAX_TEXTURE_UNITS];
@@ -1198,9 +1203,11 @@ void			GL_BindProgram (program_t *program);
 void			GL_BindIndexBuffer (arrayBuffer_t *indexBuffer);
 void			GL_BindVertexBuffer (arrayBuffer_t *vertexBuffer);
 
-void			GL_Viewport (int x, int y, int width, int height);
+void			GL_Viewport (rect_t rect);
 
-void			GL_Scissor (int x, int y, int width, int height);
+void			GL_Scissor (rect_t rect);
+
+void			GL_DepthBounds (float min, float max);
 
 void			GL_Enable (uint cap);
 void			GL_Disable (uint cap);
@@ -1294,6 +1301,11 @@ typedef struct light_s {
 	float					materialParms[MAX_MATERIAL_PARMS];
 
 	rect_t					scissor;
+
+	float					depthMin;
+	float					depthMax;
+
+	bool					castShadows;
 
 	nearClipVolume_t		ncv;
 
@@ -1398,6 +1410,20 @@ typedef struct {
 } viewParms_t;
 
 typedef struct {
+	int						viewType;
+
+	renderEntity_t *		entity;
+	material_t *			material;
+
+	vec3_t					origin;
+	vec3_t					axis[3];
+
+	float					fovX;
+	float					fovY;
+	float					fovScale;
+} subviewParms_t;
+
+typedef struct {
 	int						width;
 	int						height;
 
@@ -1463,6 +1489,13 @@ typedef struct {
 	int						staticLights;
 	int						dynamicLights;
 
+	int						dynamicIndices;
+	int						dynamicVertices;
+	int						dynamicSprite;
+	int						dynamicBeam;
+	int						dynamicParticle;
+	int						dynamicDecal;
+
 	int						deformIndices;
 	int						deformVertices;
 	int						deformExpand;
@@ -1492,6 +1525,7 @@ typedef struct {
 	int						updateTextures;
 	int						updateTexturePixels;
 
+	float					overdraw;
 	float					overdrawLights;
 } performanceCounters_t;
 
@@ -1515,8 +1549,9 @@ typedef struct {
 	// Current render view
 	renderView_t			renderView;
 
-	// Current view parms
+	// Current view/subview parms
 	viewParms_t				viewParms;
+	subviewParms_t			subviewParms;
 
 	// Light meshes
 	lightMeshes_t			lightMeshes;
@@ -1618,6 +1653,8 @@ extern cvar_t *				r_zNear;
 extern cvar_t *				r_zFar;
 extern cvar_t *				r_offsetFactor;
 extern cvar_t *				r_offsetUnits;
+extern cvar_t *				r_shadowOffsetFactor;
+extern cvar_t *				r_shadowOffsetUnits;
 extern cvar_t *				r_forceImagePrograms;
 extern cvar_t *				r_writeImagePrograms;
 extern cvar_t *				r_colorMipLevels;
@@ -1632,10 +1669,15 @@ extern cvar_t *				r_showFarClip;
 extern cvar_t *				r_showCull;
 extern cvar_t *				r_showScene;
 extern cvar_t *				r_showSurfaces;
+extern cvar_t *				r_showLights;
+extern cvar_t *				r_showDynamic;
 extern cvar_t *				r_showDeforms;
+extern cvar_t *				r_showIndexBuffers;
+extern cvar_t *				r_showVertexBuffers;
 extern cvar_t *				r_showTextureUsage;
 extern cvar_t *				r_showTextures;
 extern cvar_t *				r_showDepth;
+extern cvar_t *				r_showOverdraw;
 extern cvar_t *				r_showLightCount;
 extern cvar_t *				r_showLightVolumes;
 extern cvar_t *				r_showShadowTris;
@@ -1659,6 +1701,7 @@ extern cvar_t *				r_skipEntityCulling;
 extern cvar_t *				r_skipLightCulling;
 extern cvar_t *				r_skipScissors;
 extern cvar_t *				r_skipLightScissors;
+extern cvar_t *				r_skipLightDepthBounds;
 extern cvar_t *				r_skipSorting;
 extern cvar_t *				r_skipEntities;
 extern cvar_t *				r_skipLights;
@@ -1680,6 +1723,8 @@ extern cvar_t *				r_skipFogLights;
 extern cvar_t *				r_skipTranslucent;
 extern cvar_t *				r_skipPostProcess;
 extern cvar_t *				r_skipShaders;
+extern cvar_t *				r_skipSubviews;
+extern cvar_t *				r_skipVideos;
 extern cvar_t *				r_skipCopyToTextures;
 extern cvar_t *				r_skipDynamicTextures;
 extern cvar_t *				r_skipDrawElements;
@@ -1753,6 +1798,8 @@ void			R_AdjustVertCoordsInt (vertAdjust_t adjust, float percent, int yIn, int h
 void			R_SetGamma ();
 
 bool			R_GetVideoModeInfo (int mode, int *width, int *height);
+
+bool			R_AddSubviewSurface (meshType_t type,  meshData_t *data, renderEntity_t *entity, material_t *material);
 
 bool			R_RenderSubview ();
 
@@ -2131,11 +2178,10 @@ typedef struct {
 	// Index and vertex arrays
 	int						numIndices;
 	glIndex_t *				indices;
+	glIndex_t *				shadowIndices;
 
 	int						numVertices;
 	glVertex_t *			vertices;
-
-	glIndex_t *				shadowIndices;
 	glShadowVertex_t *		shadowVertices;
 
 	// Dynamic index and vertex buffers

@@ -283,7 +283,7 @@ typedef struct {
 	int						height;
 	int						originX;			// Raster coordinates inside pic
 	int						originY;			// Raster coordinates inside pic
-	char					name[MAX_QPATH];	// Name of PCX file
+	char					name[64];			// Name of PCX file
 } sp2Frame_t;
 
 typedef struct {
@@ -382,7 +382,7 @@ typedef struct {
 } md3Frame_t;
 
 typedef struct {
-	char					name[MAX_QPATH];
+	char					name[64];
 	vec3_t					origin;
 	vec3_t					axis[3];
 } md3Tag_t;
@@ -390,7 +390,7 @@ typedef struct {
 typedef struct {
 	int						id;
 
-	char					name[MAX_QPATH];
+	char					name[64];
 	int						flags;
 
 	int						numFrames;			// All surfaces in a model should have the same
@@ -406,7 +406,7 @@ typedef struct {
 } md3Surface_t;
 
 typedef struct {
-	char					name[MAX_QPATH];
+	char					name[64];
 	int						materialIndex;		// For in-game use
 } md3Material_t;
 
@@ -427,7 +427,7 @@ typedef struct {
 	int						id;
 	int						version;
 
-	char					name[MAX_QPATH];	// Model name
+	char					name[64];			// Model name
 	int						flags;
 
 	int						numFrames;

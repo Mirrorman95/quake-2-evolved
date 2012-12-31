@@ -38,12 +38,12 @@
 
 #define MAX_LIST_CVARS				2048
 
-static cvar_t *			cvar_variablesHashTable[CVARS_HASH_SIZE];
-cvar_t *				cvar_variables;
+static cvar_t *				cvar_variablesHashTable[CVARS_HASH_SIZE];
+cvar_t *					cvar_variables;
 
-static bool				cvar_allowCheats;
+static bool					cvar_allowCheats;
 
-static int				cvar_modifiedFlags;
+static int					cvar_modifiedFlags;
 
 
 /*

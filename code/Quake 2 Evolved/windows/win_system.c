@@ -25,9 +25,6 @@
 // win_system.c - User system-specific code
 //
 
-// TODO:
-// - Splash Screen, and main program loop
-
 
 #include "../common/common.h"
 #include "win_local.h"
@@ -42,8 +39,6 @@ static cvar_t *				sys_soundCard;
 static cvar_t *				sys_userName;
 
 sysWin_t					sys;
-
-unsigned					sys_frameTime;
 
 
 /*
@@ -726,11 +721,9 @@ void Sys_Sleep (int msec){
 /*
  ==================
  Sys_ProcessEvents
-
- Pump window messages
  ==================
 */
-void Sys_ProcessEvents (){
+int Sys_ProcessEvents (){
 
     MSG		msg;
 
@@ -752,8 +745,8 @@ void Sys_ProcessEvents (){
       	DispatchMessage(&msg);
 	}
 
-	// Grab frame time 
-	sys_frameTime = timeGetTime();	// FIXME: should this be at start?
+	// Return the current time
+	return timeGetTime();
 }
 
 /*
@@ -1292,13 +1285,9 @@ void Sys_Quit (){
 /*
  ==================
  WinMain
-
- TODO: main program loop
  ==================
 */
 int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow){
-
-	int		time, oldTime, newTime;
 
 	// Previous instances do not exist in Win32
 	if (hPrevInstance)
@@ -1319,28 +1308,14 @@ int WINAPI WinMain (HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLin
 	// Initialize all the subsystems
 	Com_Init(lpCmdLine);
 
-	// Main message loop
-	oldTime = Sys_Milliseconds();
-
 	// Main program loop
 	while (1){
 		// Don't run at full speed unless needed
-		if (!sys.isMinimized || dedicated->integerValue)
+		if (!sys.isMinimized || com_dedicated->integerValue)
 			Sleep(10);
 
-		Sys_ProcessEvents();
-
-		do {
-			newTime = Sys_Milliseconds();
-			time = newTime - oldTime;
-		} while (time < 1);
-
-		_controlfp(_PC_24, _MCW_PC);
-
 		// Run a frame
-		Com_Frame(time);
-
-		oldTime = newTime;
+		Com_Frame();
 	}
 
 	// Never gets here

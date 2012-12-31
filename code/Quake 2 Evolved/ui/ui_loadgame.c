@@ -116,7 +116,7 @@ static uiLoadGame_t			uiLoadGame;
 */
 static void UI_LoadGame_GetGameList (){
 
-	char	name[MAX_QPATH];
+	char	name[MAX_PATH_LENGTH];
 	char	*buffer;
 	int		i;
 
@@ -281,7 +281,7 @@ static void UI_LoadGame_Ownerdraw (void *self){
 			UI_ScaleCoords(&x, &y, &w, &h);
 
 			if (uiLoadGame.games[uiLoadGame.currentGame].map[0]){
-				char	pathTGA[MAX_QPATH];
+				char	pathTGA[MAX_PATH_LENGTH];
 
 				if (uiStatic.realTime - uiLoadGame.fadeTime >= 3000){
 					uiLoadGame.fadeTime = uiStatic.realTime;

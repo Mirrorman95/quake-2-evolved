@@ -32,6 +32,8 @@
 /*
  ==================
  RB_CheckMeshOverflow
+
+ TODO: modify for shadows?
  ==================
 */
 void RB_CheckMeshOverflow (int numIndices, int numVertices){
@@ -63,11 +65,20 @@ void RB_SetupBatch (renderEntity_t *entity, material_t *material, bool stencilSh
 	backEnd.stencilShadow = stencilShadow;
 	backEnd.shadowCaps = shadowCaps;
 
-	backEnd.indexBuffer = NULL;
-	backEnd.indexPointer = backEnd.indices;
+	if (backEnd.stencilShadow){
+		backEnd.indexBuffer = NULL;
+		backEnd.indexPointer = backEnd.shadowIndices;
 
-	backEnd.vertexBuffer = NULL;
-	backEnd.vertexPointer = backEnd.vertices;
+		backEnd.vertexBuffer = NULL;
+		backEnd.vertexPointer = backEnd.shadowVertices;
+	}
+	else {
+		backEnd.indexBuffer = NULL;
+		backEnd.indexPointer = backEnd.indices;
+
+		backEnd.vertexBuffer = NULL;
+		backEnd.vertexPointer = backEnd.vertices;
+	}
 
 	// Set the draw function
 	backEnd.drawBatch = drawBatch;
@@ -93,7 +104,10 @@ void RB_RenderBatch (){
 	RB_BindVertexBuffer();
 
 	// Set up the vertex array
-	qglVertexPointer(3, GL_FLOAT, sizeof(glVertex_t), GL_VERTEX_XYZ(backEnd.vertexPointer));
+	if (backEnd.stencilShadow)
+		qglVertexPointer(4, GL_FLOAT, sizeof(glShadowVertex_t), GL_VERTEX_XYZW(backEnd.vertexPointer));
+	else
+		qglVertexPointer(3, GL_FLOAT, sizeof(glVertex_t), GL_VERTEX_XYZ(backEnd.vertexPointer));
 
 	// Draw the batch
 	backEnd.drawBatch();
@@ -280,36 +294,60 @@ static void R_BatchAliasModel (meshData_t *data){
 /*
  ==================
  RB_BatchSprite
-
- TODO: utilize spriteOriented and rewrite the axis vector
  ==================
 */
 static void RB_BatchSprite (){
 
 	glIndex_t	*indices;
 	glVertex_t	*vertices;
-	vec3_t		axis[3];
+	vec3_t		lVector, uVector;
+	float		rad, s, c;
 	int			i;
 
-	if (backEnd.entity->spriteRotation){
-		// Rotate it around its normal
-		RotatePointAroundVector(axis[1], rg.renderView.axis[0], rg.renderView.axis[1], backEnd.entity->spriteRotation);
-		CrossProduct(rg.renderView.axis[0], axis[1], axis[2]);
+	rg.pc.dynamicSprite++;
+	rg.pc.dynamicIndices += 6;
+	rg.pc.dynamicVertices += 4;
 
-		// The normal should point at the viewer
-		VectorNegate(rg.renderView.axis[0], axis[0]);
+	// Compute left and up vectors
+	if (backEnd.entity->spriteOriented){
+		if (backEnd.entity->spriteRotation){
+			rad = DEG2RAD(backEnd.entity->spriteRotation);
+			s = sin(rad);
+			c = cos(rad);
 
-		// Scale the axes by radius
-		VectorScale(axis[1], backEnd.entity->spriteRadius, axis[1]);
-		VectorScale(axis[2], backEnd.entity->spriteRadius, axis[2]);
+			s *= backEnd.entity->spriteRadius;
+			c *= backEnd.entity->spriteRadius;
+
+			VectorScale(backEnd.entity->axis[1], c, lVector);
+			VectorMA(lVector, -s, backEnd.entity->axis[2], lVector);
+
+			VectorScale(backEnd.entity->axis[2], c, uVector);
+			VectorMA(uVector, s, backEnd.entity->axis[1], uVector);
+		}
+		else {
+			VectorScale(backEnd.entity->axis[1], backEnd.entity->spriteRadius, lVector);
+			VectorScale(backEnd.entity->axis[2], backEnd.entity->spriteRadius, uVector);
+		}
 	}
 	else {
-		// The normal should point at the viewer
-		VectorNegate(rg.renderView.axis[0], axis[0]);
+		if (backEnd.entity->spriteRotation){
+			rad = DEG2RAD(backEnd.entity->spriteRotation);
+			s = sin(rad);
+			c = cos(rad);
 
-		// Scale the axes by radius
-		VectorScale(rg.renderView.axis[1], backEnd.entity->spriteRadius, axis[1]);
-		VectorScale(rg.renderView.axis[2], backEnd.entity->spriteRadius, axis[2]);
+			s *= backEnd.entity->spriteRadius;
+			c *= backEnd.entity->spriteRadius;
+
+			VectorScale(backEnd.viewParms.axis[1], c, lVector);
+			VectorMA(lVector, -s, backEnd.viewParms.axis[2], lVector);
+
+			VectorScale(backEnd.viewParms.axis[2], c, uVector);
+			VectorMA(uVector, s, backEnd.viewParms.axis[1], uVector);
+		}
+		else {
+			VectorScale(backEnd.viewParms.axis[1], backEnd.entity->spriteRadius, lVector);
+			VectorScale(backEnd.viewParms.axis[2], backEnd.entity->spriteRadius, uVector);
+		}
 	}
 
 	// Check for overflow
@@ -330,18 +368,18 @@ static void RB_BatchSprite (){
 	// Batch vertices
 	vertices = backEnd.vertices + backEnd.numVertices;
 
-	vertices[0].xyz[0] = backEnd.entity->origin[0] + axis[1][0] + axis[2][0];
-	vertices[0].xyz[1] = backEnd.entity->origin[1] + axis[1][1] + axis[2][1];
-	vertices[0].xyz[2] = backEnd.entity->origin[2] + axis[1][2] + axis[2][2];
-	vertices[1].xyz[0] = backEnd.entity->origin[0] - axis[1][0] + axis[2][0];
-	vertices[1].xyz[1] = backEnd.entity->origin[1] - axis[1][1] + axis[2][1];
-	vertices[1].xyz[2] = backEnd.entity->origin[2] - axis[1][2] + axis[2][2];
-	vertices[2].xyz[0] = backEnd.entity->origin[0] - axis[1][0] - axis[2][0];
-	vertices[2].xyz[1] = backEnd.entity->origin[1] - axis[1][1] - axis[2][1];
-	vertices[2].xyz[2] = backEnd.entity->origin[2] - axis[1][2] - axis[2][2];
-	vertices[3].xyz[0] = backEnd.entity->origin[0] + axis[1][0] - axis[2][0];
-	vertices[3].xyz[1] = backEnd.entity->origin[1] + axis[1][1] - axis[2][1];
-	vertices[3].xyz[2] = backEnd.entity->origin[2] + axis[1][2] - axis[2][2];
+	vertices[0].xyz[0] = backEnd.entity->origin[0] + lVector[0] + uVector[0];
+	vertices[0].xyz[1] = backEnd.entity->origin[1] + lVector[1] + uVector[1];
+	vertices[0].xyz[2] = backEnd.entity->origin[2] + lVector[2] + uVector[2];
+	vertices[1].xyz[0] = backEnd.entity->origin[0] - lVector[0] + uVector[0];
+	vertices[1].xyz[1] = backEnd.entity->origin[1] - lVector[1] + uVector[1];
+	vertices[1].xyz[2] = backEnd.entity->origin[2] - lVector[2] + uVector[2];
+	vertices[2].xyz[0] = backEnd.entity->origin[0] - lVector[0] - uVector[0];
+	vertices[2].xyz[1] = backEnd.entity->origin[1] - lVector[1] - uVector[1];
+	vertices[2].xyz[2] = backEnd.entity->origin[2] - lVector[2] - uVector[2];
+	vertices[3].xyz[0] = backEnd.entity->origin[0] + lVector[0] - uVector[0];
+	vertices[3].xyz[1] = backEnd.entity->origin[1] + lVector[1] - uVector[1];
+	vertices[3].xyz[2] = backEnd.entity->origin[2] + lVector[2] - uVector[2];
 
 	vertices[0].st[0] = 0.0f;
 	vertices[0].st[1] = 0.0f;
@@ -353,9 +391,6 @@ static void RB_BatchSprite (){
 	vertices[3].st[1] = 1.0f;
 
 	for (i = 0; i < 4; i++){
-		vertices->normal[0] = axis[0][0];
-		vertices->normal[1] = axis[0][1];
-		vertices->normal[2] = axis[0][2];
 		vertices->color[0] = 255;
 		vertices->color[1] = 255;
 		vertices->color[2] = 255;
@@ -370,37 +405,38 @@ static void RB_BatchSprite (){
 /*
  ==================
  RB_BatchBeam
-
- TODO: view, side, dir vectors instaid of axis[3]
  ==================
 */
 static void RB_BatchBeam (){
 
 	glIndex_t	*indices;
 	glVertex_t	*vertices;
-	vec3_t		axis[3];
-	float		length;
+	vec3_t		view, side, dir;
+	float		scale, length;
 	int			i;
 
-	// Compute view and side vectors
-	VectorSubtract(rg.renderView.origin, backEnd.entity->origin, axis[0]);
-	VectorSubtract(backEnd.entity->beamEnd, backEnd.entity->origin, axis[1]);
+	rg.pc.dynamicBeam++;
+	rg.pc.dynamicIndices += 6;
+	rg.pc.dynamicVertices += 4;
 
-	CrossProduct(axis[0], axis[1], axis[2]);
-	VectorNormalizeFast(axis[2]);
+	// Compute view and side vectors
+	VectorSubtract(rg.renderView.origin, backEnd.entity->origin, view);
+	VectorSubtract(backEnd.entity->beamEnd, backEnd.entity->origin, side);
 
 	// Compute direction
-	CrossProduct(axis[1], axis[2], axis[0]);
-	VectorNormalizeFast(axis[0]);
+	CrossProduct(view, side, dir);
+	VectorNormalizeFast(dir);
 
 	// Scale by half the width
-	VectorScale(axis[2], backEnd.entity->beamWidth * 0.5f, axis[2]);
+	scale = backEnd.entity->beamWidth * 0.5f;
+
+	VectorScale(dir, scale, dir);
 
 	// Compute segment length
 	if (!backEnd.entity->beamLength)
-		length = VectorLength(axis[1]) / 100.0f;
+		length = VectorLengthFast(side) / 100.0f;
 	else
-		length = VectorLength(axis[1]) / backEnd.entity->beamLength;
+		length = VectorLengthFast(side) / backEnd.entity->beamLength;
 
 	// Check for overflow
 	RB_CheckMeshOverflow(6, 4);
@@ -420,18 +456,18 @@ static void RB_BatchBeam (){
 	// Batch vertices
 	vertices = backEnd.vertices + backEnd.numVertices;
 
-	vertices[0].xyz[0] = backEnd.entity->origin[0] + axis[2][0];
-	vertices[0].xyz[1] = backEnd.entity->origin[1] + axis[2][1];
-	vertices[0].xyz[2] = backEnd.entity->origin[2] + axis[2][2];
-	vertices[1].xyz[0] = backEnd.entity->beamEnd[0] + axis[2][0];
-	vertices[1].xyz[1] = backEnd.entity->beamEnd[1] + axis[2][1];
-	vertices[1].xyz[2] = backEnd.entity->beamEnd[2] + axis[2][2];
-	vertices[2].xyz[0] = backEnd.entity->beamEnd[0] - axis[2][0];
-	vertices[2].xyz[1] = backEnd.entity->beamEnd[1] - axis[2][1];
-	vertices[2].xyz[2] = backEnd.entity->beamEnd[2] - axis[2][2];
-	vertices[3].xyz[0] = backEnd.entity->origin[0] - axis[2][0];
-	vertices[3].xyz[1] = backEnd.entity->origin[1] - axis[2][1];
-	vertices[3].xyz[2] = backEnd.entity->origin[2] - axis[2][2];
+	vertices[0].xyz[0] = backEnd.entity->origin[0] + dir[0];
+	vertices[0].xyz[1] = backEnd.entity->origin[1] + dir[1];
+	vertices[0].xyz[2] = backEnd.entity->origin[2] + dir[2];
+	vertices[1].xyz[0] = backEnd.entity->beamEnd[0] + dir[0];
+	vertices[1].xyz[1] = backEnd.entity->beamEnd[1] + dir[1];
+	vertices[1].xyz[2] = backEnd.entity->beamEnd[2] + dir[2];
+	vertices[2].xyz[0] = backEnd.entity->beamEnd[0] - dir[0];
+	vertices[2].xyz[1] = backEnd.entity->beamEnd[1] - dir[1];
+	vertices[2].xyz[2] = backEnd.entity->beamEnd[2] - dir[2];
+	vertices[3].xyz[0] = backEnd.entity->origin[0] - dir[0];
+	vertices[3].xyz[1] = backEnd.entity->origin[1] - dir[1];
+	vertices[3].xyz[2] = backEnd.entity->origin[2] - dir[2];
 
 	vertices[0].st[0] = 0.0f;
 	vertices[0].st[1] = 0.0f;
@@ -443,9 +479,6 @@ static void RB_BatchBeam (){
 	vertices[3].st[1] = 1.0f;
 
 	for (i = 0; i < 4; i++){
-		vertices->normal[0] = axis[0][0];
-		vertices->normal[1] = axis[0][1];
-		vertices->normal[2] = axis[0][2];
 		vertices->color[0] = 255;
 		vertices->color[1] = 255;
 		vertices->color[2] = 255;
@@ -459,7 +492,7 @@ static void RB_BatchBeam (){
 
 /*
  ==================
- RB_BatchParticle
+ 
  ==================
 */
 static void RB_BatchParticle (meshData_t *data){
@@ -470,19 +503,22 @@ static void RB_BatchParticle (meshData_t *data){
 	vec3_t				axis[3];
 	int					i;
 
+	rg.pc.dynamicParticle++;
+	rg.pc.dynamicIndices += 6;
+	rg.pc.dynamicVertices += 4;
+
 	// Check for overflow
 	RB_CheckMeshOverflow(6, 4);
 	
 	// Batch indices
 	indices = backEnd.indices + backEnd.numIndices;
 
-	for (i = 2; i < 4; i++){
-		indices[0] = backEnd.numVertices + 0;
-		indices[1] = backEnd.numVertices + i-1;
-		indices[2] = backEnd.numVertices + i;
-
-		indices += 3;
-	}
+	indices[0] = backEnd.numVertices;
+	indices[1] = backEnd.numVertices + 1;
+	indices[2] = backEnd.numVertices + 3;
+	indices[3] = backEnd.numVertices + 3;
+	indices[4] = backEnd.numVertices + 1;
+	indices[5] = backEnd.numVertices + 2;
 
 	backEnd.numIndices += 6;
 
@@ -564,9 +600,6 @@ static void RB_BatchParticle (meshData_t *data){
 	vertices[3].st[1] = 1.0f;
 
 	for (i = 0; i < 4; i++){
-		vertices->normal[0] = axis[0][0];
-		vertices->normal[1] = axis[0][1];
-		vertices->normal[2] = axis[0][2];
 		vertices->color[0] = particle->modulate[0];
 		vertices->color[1] = particle->modulate[1];
 		vertices->color[2] = particle->modulate[2];

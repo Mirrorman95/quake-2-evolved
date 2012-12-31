@@ -46,9 +46,9 @@ typedef enum {
 } uiModsId_t;
 
 typedef struct {
-	char					modsDir[MAX_MODS][MAX_QPATH];
+	char					modsDir[MAX_MODS][MAX_PATH_LENGTH];
 	char					modsDescription[MAX_MODS][MAX_MODDESC];
-	char					*modsDescriptionPtr[MAX_MODS];
+	char *					modsDescriptionPtr[MAX_MODS];
 
 	menuFramework_t			menu;
 

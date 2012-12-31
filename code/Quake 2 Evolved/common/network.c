@@ -40,17 +40,17 @@
 #define	MAX_LOOPBACK				4
 
 typedef struct {
-	byte				data[MAX_MSGLEN];
-	int					dataLen;
+	byte					data[MAX_MSGLEN];
+	int						dataLength;
 } loopMsg_t;
 
 typedef struct {
-	loopMsg_t			msgs[MAX_LOOPBACK];
-	int					get;
-	int					send;
+	loopMsg_t				msgs[MAX_LOOPBACK];
+	int						get;
+	int						send;
 } loopback_t;
 
-static loopback_t		net_loopbacks[2];
+static loopback_t			net_loopbacks[2];
 
 
 /*
@@ -74,8 +74,8 @@ bool NET_GetLoopPacket (netSrc_t sock, netAdr_t *from, msg_t *msg){
 	i = loop->get & (MAX_LOOPBACK - 1);
 	loop->get++;
 
-	Mem_Copy(msg->data, loop->msgs[i].data, loop->msgs[i].dataLen);
-	msg->curSize = loop->msgs[i].dataLen;
+	Mem_Copy(msg->data, loop->msgs[i].data, loop->msgs[i].dataLength);
+	msg->curSize = loop->msgs[i].dataLength;
 
 	Mem_Fill(from, 0, sizeof(netAdr_t));
 	from->type = NA_LOOPBACK;
@@ -102,7 +102,7 @@ bool NET_SendLoopPacket (netSrc_t sock, const netAdr_t to, const void *data, int
 	loop->send++;
 
 	Mem_Copy(loop->msgs[i].data, data, length);
-	loop->msgs[i].dataLen = length;
+	loop->msgs[i].dataLength = length;
 
 	return true;
 }

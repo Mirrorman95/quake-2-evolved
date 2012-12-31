@@ -45,7 +45,7 @@
 */
 void CL_PlayCinematic (const char *name){
 
-	char	path[MAX_QPATH];
+	char	path[MAX_PATH_LENGTH];
 
 	// Stop the cinematic
 	CL_StopCinematic();

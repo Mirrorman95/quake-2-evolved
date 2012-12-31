@@ -34,8 +34,6 @@
 
 extern uint				cl_frameMsec;
 
-extern uint				sys_frameTime;
-
 
 /*
  ==============================================================================
@@ -113,7 +111,7 @@ static void IN_KeyButtonDown (keyButton_t *kb){
 	// Save timestamp
 	kb->downTime = Str_ToInteger(Cmd_Argv(2));
 	if (!kb->downTime)
-		kb->downTime = sys_frameTime - 100;
+		kb->downTime = com_frameTime - 100;
 
 	kb->state |= 1 + 2;	// Down + impulse down
 }
@@ -182,8 +180,8 @@ float IN_KeyButtonState (keyButton_t *kb){
 
 	if (kb->state){
 		// Still down
-		msec += sys_frameTime - kb->downTime;
-		kb->downTime = sys_frameTime;
+		msec += com_frameTime - kb->downTime;
+		kb->downTime = com_frameTime;
 	}
 
 	frac = (float)msec / cl_frameMsec;

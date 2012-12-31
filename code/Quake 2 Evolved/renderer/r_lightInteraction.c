@@ -136,7 +136,7 @@ static bool R_SphereInNearClipVolume (light_t *light, const vec3_t center, float
 /*
  ==================
 
- TODO: make sure SURF_PLANEBACK is valid
+ FIXME: make sure SURF_PLANEBACK is valid
  TODO: culling
  ==================
 */
@@ -173,6 +173,15 @@ static void R_AddLightSurface (light_t *light, surface_t *surface, material_t *m
 	}
 
 	// Cull bounds
+	if (cullBits != CULL_IN){
+		if (entity == rg.worldEntity){
+			if (R_LightCullBounds(&light->data, surface->mins, surface->maxs, cullBits) == CULL_OUT)
+				return;
+		}
+		else {
+
+		}
+	}
 
 	// Add the draw surface
 	if (addShadow)
@@ -476,10 +485,10 @@ static void R_AddAliasModelLightInteractions (light_t *light, renderEntity_t *en
 
 		// Add the surface
 		if (addShadow)
-			R_AddShadowMesh(light, MESH_ALIASMODEL, surface, entity, material, 63);
+			R_AddShadowMesh(light, MESH_ALIASMODEL, surface, entity, material, caps);
 
 		if (addInteraction)
-			R_AddInteractionMesh(light, MESH_ALIASMODEL, surface, entity, material, 63);
+			R_AddInteractionMesh(light, MESH_ALIASMODEL, surface, entity, material, caps);
 	}
 }
 
@@ -595,6 +604,8 @@ void R_GenerateLightMeshes (light_t *light){
 		castShadows = false;
 	else
 		castShadows = true;
+
+	light->castShadows = castShadows;
 
 	// Determine the interaction skip flag
 	if (light->material->lightType == LT_AMBIENT)

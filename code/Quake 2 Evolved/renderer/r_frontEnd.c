@@ -571,12 +571,6 @@ static void R_SetupViewportAndScissor (){
 	}
 	else {
 		// Transform into screen space
-		if (rg.viewParms.viewType == VIEW_SKY){
-
-		}
-		else {
-
-		}
 
 		// Set up the scissor
 

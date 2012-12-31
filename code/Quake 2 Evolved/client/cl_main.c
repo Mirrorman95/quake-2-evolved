@@ -285,7 +285,7 @@ static void CL_FixCheatVariables (){
 */
 void CL_PlayBackgroundTrack (){
 
-	char	name[MAX_QPATH];
+	char	name[MAX_PATH_LENGTH];
 	int		track;
 
 	track = Str_ToInteger(cl.configStrings[CS_CDTRACK]);
@@ -898,19 +898,19 @@ void CL_ReadPackets (){
  ==============================================================================
 */
 
-#define PLAYER_MULT						5
+#define PLAYER_MULT					5
 
-#define ENV_CNT							(CS_PLAYERSKINS + MAX_CLIENTS * PLAYER_MULT)
-#define TEX_CNT							(ENV_CNT + 6)
+#define ENV_CNT						(CS_PLAYERSKINS + MAX_CLIENTS * PLAYER_MULT)
+#define TEX_CNT						(ENV_CNT + 6)
 
-static const char *		cl_skySuffix[6] = {"rt", "lf", "bk", "ft", "up", "dn"};
+static const char *			cl_skySuffix[6] = {"rt", "lf", "bk", "ft", "up", "dn"};
 
-static int				cl_precacheCheck;
-static int				cl_precacheSpawnCount;
-static byte *			cl_precacheModel;
-static int				cl_precacheModelSkin;
-static byte *			cl_precacheMap;
-static int				cl_precacheTexture;
+static int					cl_precacheCheck;
+static int					cl_precacheSpawnCount;
+static byte *				cl_precacheModel;
+static int					cl_precacheModelSkin;
+static byte *				cl_precacheMap;
+static int					cl_precacheTexture;
 
 
 /*
@@ -973,13 +973,13 @@ static bool CL_CheckOrDownloadFile (const char *name){
 */
 void CL_RequestNextDownload (){
 
-	char		name[MAX_QPATH], *p;
-	char		model[MAX_QPATH], skin[MAX_QPATH];
-	md2Header_t	*md2;
-	bspHeader_t	*header;
+	char			name[MAX_PATH_LENGTH], *p;
+	char			model[MAX_PATH_LENGTH], skin[MAX_PATH_LENGTH];
+	md2Header_t		*md2;
+	bspHeader_t		*header;
 	bspTexInfo_t	*texInfo;
-	int			numTexInfo;
-	int			i, n;
+	int				numTexInfo;
+	int				i, n;
 
 	if (cls.state != CA_CONNECTED)
 		return;
@@ -1039,7 +1039,7 @@ void CL_RequestNextDownload (){
 			md2 = (md2Header_t *)cl_precacheModel;
 
 			while (cl_precacheModelSkin < LittleLong(md2->numSkins)){
-				Str_Copy(name, (char *)cl_precacheModel + LittleLong(md2->ofsSkins) + cl_precacheModelSkin * MAX_QPATH, sizeof(name));
+				Str_Copy(name, (char *)cl_precacheModel + LittleLong(md2->ofsSkins) + cl_precacheModelSkin * MAX_PATH_LENGTH, sizeof(name));
 				if (!CL_CheckOrDownloadFile(name)){
 					cl_precacheModelSkin++;
 					return;		// Started a download
@@ -1751,30 +1751,30 @@ static void CL_Register (){
 	cls.realTime = Sys_Milliseconds();
 
 	// Register variables
-	CVar_Register("server1", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server2", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server3", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server4", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server5", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server6", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server7", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server8", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server9", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server10", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server11", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server12", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server13", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server14", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server15", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("server16", "", CVAR_STRING, CVAR_ARCHIVE, NULL, 0, 0);
-	CVar_Register("name", "Player", CVAR_STRING, CVAR_USERINFO | CVAR_ARCHIVE, NULL, 0, 0);
+	CVar_Register("server1", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server2", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server3", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server4", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server5", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server6", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server7", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server8", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server9", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server10", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server11", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server12", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server13", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server14", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server15", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("server16", "", CVAR_STRING, CVAR_ARCHIVE, "Favorite server address", 0, 0);
+	CVar_Register("name", "Player", CVAR_STRING, CVAR_USERINFO | CVAR_ARCHIVE, "Player name", 0, 0);
 	CVar_Register("skin", "male/grunt", CVAR_STRING, CVAR_USERINFO | CVAR_ARCHIVE, NULL, 0, 0);
 	CVar_Register("gender", "male", CVAR_STRING, CVAR_USERINFO | CVAR_ARCHIVE, NULL, 0, 0);
 	CVar_Register("msg", "1", CVAR_INTEGER, CVAR_USERINFO | CVAR_ARCHIVE, NULL, 0, 10);
 	CVar_Register("password", "", CVAR_STRING, CVAR_USERINFO, NULL, 0, 0);
 	CVar_Register("spectator", "0", CVAR_BOOL, CVAR_USERINFO, NULL, 0, 0);
 	CVar_Register("rate", "25000", CVAR_INTEGER, CVAR_USERINFO | CVAR_ARCHIVE, NULL, 0, 50000);
-	CVar_Register("fov", "90", CVAR_FLOAT, CVAR_USERINFO | CVAR_ARCHIVE, NULL, 0.0f, 200.0f);
+	CVar_Register("fov", "90.0f", CVAR_FLOAT, CVAR_USERINFO | CVAR_ARCHIVE, NULL, 0.0f, 200.0f);
 	cl_skipRendering = CVar_Register("cl_skipRendering", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_GAME, "Skip all game rendering", 0, 0);
 	
 	cl_hand = CVar_Register("hand", "0", CVAR_INTEGER, CVAR_USERINFO | CVAR_ARCHIVE, "Hand position", 0, 3);
@@ -2113,12 +2113,6 @@ void CL_Frame (int msec){
 	// Advance local effects for next frame
 	CL_RunLightStyles();
 
-	// AVI demo frame dumping
-	if (com_aviDemo->integerValue > 0){
-		if ((cls.state == CA_ACTIVE && cl.demoPlayback) || com_forceAviDemo->integerValue)
-			Cmd_AppendText("screenshot silent\n");
-	}
-
 	if (com_speeds->integerValue)
 		com_timeClient += (Sys_Milliseconds() - timeClient);
 }
@@ -2140,7 +2134,7 @@ void CL_Frame (int msec){
 */
 void CL_Init (){
 
-	if (dedicated->integerValue)
+	if (com_dedicated->integerValue)
 		return;		// Nothing running on the client
 
 	if (cls.state != CA_UNINITIALIZED)
@@ -2175,6 +2169,9 @@ void CL_Init (){
 
 	// Make the main menu active
 	UI_SetActiveMenu(UI_MAINMENU);
+
+	// Set the com_clientRunning variable
+	CVar_SetBool(com_clientRunning, true);
 
 	Com_Printf("---------------------------------------\n");
 }
@@ -2218,6 +2215,9 @@ void CL_Shutdown (){
 
 	// Wipe the entire clientStatic_t structure
 	Mem_Fill(&cls, 0, sizeof(clientStatic_t));
+
+	// Reset the com_clientRunning variable
+	CVar_SetBool(com_clientRunning, false);
 
 	Com_Printf("---------------------------------\n");
 }

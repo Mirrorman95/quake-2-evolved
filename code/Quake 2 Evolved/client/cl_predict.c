@@ -65,7 +65,9 @@ trace_t CL_Trace (const vec3_t start, const vec3_t mins, const vec3_t maxs, cons
 	entity_state_t		*entity;
 	clipInlineModel_t	*model;
 	vec3_t				bmins, bmaxs;
-	int					i, xy, zd, zu, headNode;
+	int					xy, zd, zu;
+	int					headNode;
+	int					i;
 
 	// Check against the world
 	trace = CM_BoxTrace(start, end, mins, maxs, 0, brushMask);
@@ -143,7 +145,8 @@ int	CL_PointContents (const vec3_t point, int skipNumber){
 
 	entity_state_t		*entity;
 	clipInlineModel_t	*model;
-	int					i, contents;
+	int					contents;
+	int					i;
 
 	contents = CM_PointContents(point, 0);
 
@@ -237,9 +240,9 @@ void CL_CheckPredictionError (){
 */
 void CL_PredictMovement (){
 
+	pmove_t	pm;
 	int		ack, current;
 	int		frame, step;
-	pmove_t	pm;
 
 	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || com_paused->integerValue)
 		return;
@@ -265,7 +268,7 @@ void CL_PredictMovement (){
 	}
 
 	// Copy current state to pmove
-	Mem_Fill(&pm, 0, sizeof(pm));
+	Mem_Fill(&pm, 0, sizeof(pmove_t));
 
 	pm.trace = CL_PMTrace;
 	pm.pointcontents = CL_PMPointContents;

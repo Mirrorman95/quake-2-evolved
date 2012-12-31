@@ -96,6 +96,7 @@
     <ClInclude Include="common\netChan.h" />
     <ClInclude Include="common\network.h" />
     <ClInclude Include="common\parser.h" />
+    <ClInclude Include="common\protocol.h" />
     <ClInclude Include="common\system.h" />
     <ClInclude Include="common\table.h" />
     <ClInclude Include="renderer\palette.h" />
@@ -139,7 +140,6 @@
     <ClCompile Include="client\cl_particles.c" />
     <ClCompile Include="client\cl_predict.c" />
     <ClCompile Include="client\cl_screen.c" />
-    <ClCompile Include="client\cl_server.c" />
     <ClCompile Include="client\cl_tempEntity.c" />
     <ClCompile Include="client\cl_userCmd.c" />
     <ClCompile Include="client\cl_view.c" />
@@ -255,6 +255,7 @@
     <ClCompile Include="windows\win_wndProc.c" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\TODO.txt" />
     <None Include="windows\q2.ico" />
   </ItemGroup>
   <ItemGroup>

@@ -47,8 +47,8 @@ typedef enum {
 } uiCinematicsId_t;
 
 typedef struct {
-	char					cinematics[MAX_MENU_CINEMATICS][MAX_QPATH];
-	char					cinematicFiles[MAX_MENU_CINEMATICS][MAX_QPATH];
+	char					cinematics[MAX_MENU_CINEMATICS][MAX_PATH_LENGTH];
+	char					cinematicFiles[MAX_MENU_CINEMATICS][MAX_PATH_LENGTH];
 	char *					cinematicsPtr[MAX_MENU_CINEMATICS];
 
 	menuFramework_t			menu;

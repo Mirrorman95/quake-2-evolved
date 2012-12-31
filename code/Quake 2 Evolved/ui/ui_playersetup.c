@@ -66,12 +66,12 @@ typedef enum {
 } uiPlayerSetupId_t;
 
 typedef struct {
-	char					playerModels[MAX_PLAYER_MODELS][MAX_QPATH];
+	char					playerModels[MAX_PLAYER_MODELS][MAX_PATH_LENGTH];
 	int						numPlayerModels;
-	char					playerSkins[MAX_PLAYER_SKINS][MAX_QPATH];
+	char					playerSkins[MAX_PLAYER_SKINS][MAX_PATH_LENGTH];
 	int						numPlayerSkins;
-	char					currentModel[MAX_QPATH];
-	char					currentSkin[MAX_QPATH];
+	char					currentModel[MAX_PATH_LENGTH];
+	char					currentSkin[MAX_PATH_LENGTH];
 	
 	menuFramework_t			menu;
 
@@ -133,8 +133,8 @@ static void UI_PlayerSetup_FindModels (){
 
 	const char	**fileList;
 	int			numFiles;
-	char		pathMD2[MAX_OSPATH], pathMD3[MAX_OSPATH];
-	char		list[MAX_PLAYER_MODELS][MAX_OSPATH];
+	char		pathMD2[MAX_PATH_LENGTH], pathMD3[MAX_PATH_LENGTH];
+	char		list[MAX_PLAYER_MODELS][MAX_PATH_LENGTH];
 	int			count = 0;
 	int			i;
 
@@ -179,8 +179,8 @@ static void UI_PlayerSetup_FindSkins (const char *model){
 
 	const char	**fileList;
 	int			numFiles;
-	char		pathPCX[MAX_OSPATH], pathTGA[MAX_OSPATH];
-	char		list[MAX_PLAYER_SKINS][MAX_OSPATH];
+	char		pathPCX[MAX_PATH_LENGTH], pathTGA[MAX_PATH_LENGTH];
+	char		list[MAX_PLAYER_SKINS][MAX_PATH_LENGTH];
 	int			count = 0;
 	int			i;
 
@@ -230,7 +230,7 @@ static void UI_PlayerSetup_FindSkins (const char *model){
 */
 static void UI_PlayerSetup_GetConfig (){
 
-	char	model[MAX_QPATH], skin[MAX_QPATH];
+	char	model[MAX_PATH_LENGTH], skin[MAX_PATH_LENGTH];
 	char	*ch;
 	int		i;
 
@@ -384,7 +384,7 @@ static void UI_PlayerSetup_Ownerdraw (void *self){
 	renderEntity_t	renderEntity;
 	renderLight_t	renderLight;
 	renderView_t	renderView;
-	char			path[MAX_OSPATH];
+	char			path[MAX_PATH_LENGTH];
 	vec4_t			iconTrans = {1.00f, 1.00f, 1.00f, 0.50f};
 	vec3_t			angles;
 	int				x = 630, y = 226, w = 316, h = 316;

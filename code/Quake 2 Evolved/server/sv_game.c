@@ -398,7 +398,7 @@ static void *SG_ClearedAlloc (int size, int tag){
 	if (tag == 765 || tag == 766)
 		tag = TAG_SERVER;
 
-	Mem_ClearedAlloc(size, (memoryTag_t)tag);
+	return Mem_ClearedAlloc(size, (memoryTag_t)tag);
 }
 
 /*
@@ -502,7 +502,7 @@ static void SG_SetupFramework (){
 */
 void SG_Init (){
 
-	char	path[MAX_QPATH];
+	char	path[MAX_PATH_LENGTH];
 	void	*(*GetSGameAPI) (void *);
 
 	// Set up the framework

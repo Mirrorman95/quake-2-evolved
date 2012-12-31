@@ -91,7 +91,7 @@ typedef struct {
 typedef struct {
 	bool					loaded;
 
-	char					name[MAX_QPATH];
+	char					name[MAX_PATH_LENGTH];
 	int						size;
 
 	uint					checkCount;		// For multi-check avoidance

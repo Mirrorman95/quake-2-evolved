@@ -142,7 +142,9 @@ void RB_FillDepthBuffer (int numMeshes, mesh_t *meshes){
 	GL_Enable(GL_DEPTH_TEST);
 	GL_DepthFunc(GL_LEQUAL);
 
-	GL_Disable(GL_STENCIL_TEST);
+	GL_Enable(GL_STENCIL_TEST);
+	GL_StencilFunc(GL_ALWAYS, 128, 255);
+	GL_StencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 	if (backEnd.viewParms.primaryView)
 		GL_ColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
@@ -150,7 +152,7 @@ void RB_FillDepthBuffer (int numMeshes, mesh_t *meshes){
 		GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
 	GL_DepthMask(GL_TRUE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	qglColor3f(0.0f, 0.0f, 0.0f);
 
@@ -303,14 +305,16 @@ void RB_RenderMaterialPasses (int numMeshes, mesh_t *meshes, ambientPass_t pass)
 
 	GL_Enable(GL_DEPTH_TEST);
 
-	GL_Disable(GL_STENCIL_TEST);
+	GL_Enable(GL_STENCIL_TEST);
+	GL_StencilFunc(GL_ALWAYS, 128, 255);
+	GL_StencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 	if (pass == AP_POST_PROCESS)
 		GL_DepthMask(GL_TRUE);
 	else
 		GL_DepthMask(GL_FALSE);
 
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Enable seamless cube maps if desired
 	if (r_seamlessCubeMaps->integerValue)
@@ -409,8 +413,6 @@ void RB_RenderMaterialPasses (int numMeshes, mesh_t *meshes, ambientPass_t pass)
 */
 static void RB_DrawShadow (){
 
-	// TODO: enable GL_VERTEX_ARRAY shadow vertex array here?
-
 	if (backEnd.shadowCaps){
 		if (glConfig.stencilTwoSideAvailable){
 			qglActiveStencilFaceEXT(GL_BACK);
@@ -502,6 +504,9 @@ static void RB_RenderStencilShadows (int numMeshes, mesh_t *meshes){
 
 	QGL_LogPrintf("---------- RB_RenderStencilShadows ----------\n");
 
+	// Set depth filling mode
+	backEnd.depthFilling = true;
+
 	// Set the GL state
 	GL_DisableTexture();
 
@@ -511,7 +516,7 @@ static void RB_RenderStencilShadows (int numMeshes, mesh_t *meshes){
 		GL_Enable(GL_CULL_FACE);
 
 	GL_Enable(GL_POLYGON_OFFSET_FILL);
-	GL_PolygonOffset(0.0f, 1.0f);
+	GL_PolygonOffset(r_shadowOffsetFactor->floatValue, r_shadowOffsetUnits->floatValue);
 
 	GL_Disable(GL_BLEND);
 
@@ -577,19 +582,22 @@ static void RB_RenderStencilShadows (int numMeshes, mesh_t *meshes){
 	// Draw the last batch
 	RB_RenderBatch();
 
+	// Clear depth filling mode
+	backEnd.depthFilling = false;
+
 	QGL_LogPrintf("--------------------\n");
 }
 
 /*
  ==================
- 
+ RB_DrawInteractions
  ==================
 */
 static void RB_DrawInteractions (){
 
 	interaction_t	in;
 	stage_t			*stage, *lightStage;
-//	cinData_t		data;
+	cinData_t		data;
 	int				i, j;
 
 	QGL_LogPrintf("----- RB_DrawInteractions ( %s on %s ) -----\n", backEnd.lightMaterial->name, backEnd.material->name);
@@ -628,7 +636,18 @@ static void RB_DrawInteractions (){
 
 		// If we have a cinematic
 		if (lightStage->textureStage.cinematicHandle){
+			if (r_skipVideos->integerValue)
+				in.lightProjectionTexture = rg.blackTexture;
+			else {
+				// Decode a video frame
+				data = CIN_UpdateCinematic(lightStage->textureStage.cinematicHandle, backEnd.time);
 
+				// Update the texture if needed
+				if (!data.image)
+					in.lightProjectionTexture = rg.blackTexture;
+				else if (data.dirty)
+					R_UploadTextureImage(in.lightProjectionTexture, TMU_LIGHTPROJECTION, data.image, data.width, data.height);
+			}
 		}
 
 		// Run through the surface stages
@@ -726,12 +745,15 @@ static void RB_InteractionPass (int numMeshes, mesh_t *meshes){
 	GL_Disable(GL_ALPHA_TEST);
 
 	GL_Enable(GL_DEPTH_TEST);
+	GL_DepthFunc(GL_EQUAL);
 
-	GL_Disable(GL_STENCIL_TEST);
+	GL_Enable(GL_STENCIL_TEST);
+	GL_StencilFunc(GL_GEQUAL, 128, 255);
+	GL_StencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Enable the arrays
 	qglEnableVertexAttribArray(GL_ATTRIB_NORMAL);
@@ -860,20 +882,34 @@ void RB_RenderLights (int numLights, light_t *lights){
 		if (!light->material->expressionRegisters[light->material->conditionRegister])
 			continue;
 
-		// TODO: clear the stencil buffer if needed?
+		// Set up the scissor
+		GL_Scissor(light->scissor);
+
+		// Set up the depth bounds
+		if (glConfig.depthBoundsTestAvailable)
+			GL_DepthBounds(light->depthMin, light->depthMax);
+
+		// Clear the stencil buffer if needed
+		if (light->castShadows){
+			GL_StencilMask(255);
+
+			qglClearStencil(128);
+			qglClear(GL_STENCIL_BUFFER_BIT);
+		}
 
 		// Render the stencil shadow volume if needed
-//		RB_RenderStencilShadows(light->numShadowMeshes, light->shadowMeshes);
-
-		// Set up the scissor
-		GL_Scissor(light->scissor.x, light->scissor.y, light->scissor.width, light->scissor.height);
+		RB_RenderStencilShadows(light->numShadowMeshes, light->shadowMeshes);
 
 		// Draw the surfaces
 		RB_InteractionPass(light->numInteractionMeshes, light->interactionMeshes);
 	}
 
 	// Restore the scissor
-	GL_Scissor(backEnd.scissor.x, backEnd.scissor.y, backEnd.scissor.width, backEnd.scissor.height);
+	GL_Scissor(backEnd.scissor);
+
+	// Restore the depth bounds
+	if (glConfig.depthBoundsTestAvailable)
+		GL_DepthBounds(0.0f, 1.0f);
 
 	QGL_LogPrintf("--------------------\n");
 }
@@ -967,7 +1003,7 @@ static void RB_BlendLightPass (int numMeshes, mesh_t *meshes){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Bind the program
 	GL_BindProgram(rg.blendLightProgram);
@@ -1066,14 +1102,22 @@ void RB_RenderBlendLights (int numLights, light_t *lights){
 			continue;
 
 		// Set up the scissor
-		GL_Scissor(light->scissor.x, light->scissor.y, light->scissor.width, light->scissor.height);
+		GL_Scissor(light->scissor);
+
+		// Set up the depth bounds
+		if (glConfig.depthBoundsTestAvailable)
+			GL_DepthBounds(light->depthMin, light->depthMax);
 
 		// Draw the surfaces
 		RB_BlendLightPass(light->numInteractionMeshes, light->interactionMeshes);
 	}
 
 	// Restore the scissor
-	GL_Scissor(backEnd.scissor.x, backEnd.scissor.y, backEnd.scissor.width, backEnd.scissor.height);
+	GL_Scissor(backEnd.scissor);
+
+	// Restore the depth bounds
+	if (glConfig.depthBoundsTestAvailable)
+		GL_DepthBounds(0.0f, 1.0f);
 
 	QGL_LogPrintf("--------------------\n");
 }
@@ -1168,7 +1212,7 @@ static void RB_DrawFogLightPlane (){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Set the entity state
 	RB_EntityState(rg.worldEntity);
@@ -1315,7 +1359,7 @@ static void RB_FogLightPass (int numMeshes, mesh_t *meshes){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Bind the program
 	GL_BindProgram(rg.fogLightProgram);
@@ -1416,7 +1460,11 @@ void RB_RenderFogLights (int numLights, light_t *lights){
 			continue;
 
 		// Set up the scissor
-		GL_Scissor(light->scissor.x, light->scissor.y, light->scissor.width, light->scissor.height);
+		GL_Scissor(light->scissor);
+
+		// Set up the depth bounds
+		if (glConfig.depthBoundsTestAvailable)
+			GL_DepthBounds(light->depthMin, light->depthMax);
 
 		// Draw the fog volume to the stencil buffer
 		RB_DrawFogLightVolume();
@@ -1432,7 +1480,11 @@ void RB_RenderFogLights (int numLights, light_t *lights){
 	}
 
 	// Restore the scissor
-	GL_Scissor(backEnd.scissor.x, backEnd.scissor.y, backEnd.scissor.width, backEnd.scissor.height);
+	GL_Scissor(backEnd.scissor);
+
+	// Restore the depth bounds
+	if (glConfig.depthBoundsTestAvailable)
+		GL_DepthBounds(0.0f, 1.0f);
 
 	QGL_LogPrintf("--------------------\n");
 }

@@ -925,7 +925,7 @@ static void UI_StartServer_GetMapList (){
 	int		size;
 	char	*buffer, *buf, *tok;
 
-	f = fopen(Str_VarArgs("%s/%s/maps.lst", CVar_GetVariableString("fs_homePath"), CVar_GetVariableString("fs_game")), "rb");
+	f = fopen(Str_VarArgs("%s/%s/maps.lst", CVar_GetVariableString("fs_savePath"), CVar_GetVariableString("fs_game")), "rb");
 	if (!f){
 		if (FS_ReadFile("maps.lst", (void **)&buffer) == -1)
 			Com_Error(ERR_FATAL, "Couldn't find maps.lst");

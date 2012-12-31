@@ -670,7 +670,7 @@ static void SV_InitMaster (){
 	char	idMaster[32];
 	int		i;
 
-	if (!dedicated->integerValue)
+	if (!com_dedicated->integerValue)
 		return;		// Only dedicated servers send heartbeats
 
 	if (!sv_publicServer->integerValue)
@@ -722,7 +722,7 @@ static void SV_MasterHeartbeat (){
 	char	*string;
 	int		i;
 
-	if (!dedicated->integerValue)
+	if (!com_dedicated->integerValue)
 		return;		// Only dedicated servers send heartbeats
 
 	if (!sv_publicServer->integerValue)
@@ -760,7 +760,7 @@ static void SV_ShutdownMaster (){
 
 	int		i;
 
-	if (!dedicated->integerValue)
+	if (!com_dedicated->integerValue)
 		return;		// Only dedicated servers send heartbeats
 
 	if (!sv_publicServer->integerValue)
@@ -858,13 +858,7 @@ static void SV_RunGameFrame (){
 	sv.frameNum++;
 	sv.time = sv.frameNum * 100;
 
-	if (com_speeds->integerValue)
-		com_timeBeforeGame = Sys_Milliseconds();
-
 	ge->RunFrame();
-
-	if (com_speeds->integerValue)
-		com_timeAfterGame = Sys_Milliseconds();
 
 	// Never get more than one tic behind
 	if (sv.time < svs.realTime)
@@ -948,11 +942,14 @@ static void SV_FinalMessage (const char *message, bool reconnect){
 */
 void SV_Frame (int msec){
 
-	com_timeBeforeGame = com_timeAfterGame = 0;
+	int		timeServer;
 
 	// If server is not active, do nothing
 	if (!svs.initialized)
 		return;
+
+	if (com_speeds->integerValue)
+		timeServer = Sys_Milliseconds();
 
     svs.realTime += msec;
 
@@ -994,12 +991,15 @@ void SV_Frame (int msec){
 	SV_ClearGameEvents();
 
 	// Send a heartbeat to the master server if needed
-	if (dedicated->integerValue){
+	if (com_dedicated->integerValue){
 		if (sv_master1->modified || sv_master2->modified || sv_master3->modified || sv_master4->modified || sv_master5->modified)
 			SV_InitMaster();
 
 		SV_MasterHeartbeat();
 	}
+
+	if (com_speeds->integerValue)
+		com_timeServer += (Sys_Milliseconds() - timeServer);
 }
 
 
@@ -1067,7 +1067,7 @@ void SV_Init (){
 	Cmd_AddCommand("killserver", SV_KillServer_f, "Kills the server", NULL);
 	Cmd_AddCommand("sv", SV_ServerCommand_f, NULL, NULL);
 
-	if (dedicated->integerValue)
+	if (com_dedicated->integerValue)
 		Cmd_AddCommand("say", SV_ConSay_f, NULL, NULL);
 }
 
@@ -1130,6 +1130,9 @@ void SV_Shutdown (const char *message, bool reconnect){
 
 	// Set server state
 	Com_SetServerState(sv.state);
+
+	// Reset the com_serverRunning variable
+	CVar_SetBool(com_serverRunning, false);
 
 	Com_Printf("---------------------------------\n");
 }
