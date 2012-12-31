@@ -601,11 +601,14 @@ static void S_PerformanceCounters (){
 /*
  ==================
  S_Update
-
- TODO: com_speeds
  ==================
 */
 void S_Update (int time){
+
+	int		timeSound;
+
+	if (com_speeds->integerValue)
+		timeSound = Sys_Milliseconds();
 
 	// Log file
 	if (s_logFile->modified){
@@ -629,6 +632,9 @@ void S_Update (int time){
 	// Log file
 	if (s_logFile->integerValue > 0)
 		CVar_SetInteger(s_logFile, s_logFile->integerValue - 1);
+
+	if (com_speeds->integerValue)
+		com_timeSound += (Sys_Milliseconds() - timeSound);
 }
 
 

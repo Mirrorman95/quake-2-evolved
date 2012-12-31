@@ -25,9 +25,6 @@
 // cl_parse.c - Server message parsing
 //
 
-// TODO:
-// - Replace Com_StripExtension
-
 
 #include "client.h"
 
@@ -156,14 +153,15 @@ static void CL_ParsePrint (){
 */
 static void CL_ParseCenterPrint (){
 
-	const char	*s;
+	const char	*string;
 	char		line[64];
-	int			i, j, l;
+	int			length;
+	int			i, j;
 
 	// Parse the message
-	s = MSG_ReadString(&net_message);
+	string = MSG_ReadString(&net_message);
 
-	Str_Copy(cl.centerPrint, s, sizeof(cl.centerPrint));
+	Str_Copy(cl.centerPrint, string, sizeof(cl.centerPrint));
 	cl.centerPrintTime = cl.time;
 
 	// Echo it to the console
@@ -171,29 +169,29 @@ static void CL_ParseCenterPrint (){
 
 	do {
 		// Scan the width of the line
-		for (l = 0; l < 40; l++){
-			if (s[l] == '\n' || !s[l])
+		for (length = 0; length < 40; length++){
+			if (string[length] == '\n' || !string[length])
 				break;
 		}
 
-		for (i = 0; i < (40 - l) / 2; i++)
+		for (i = 0; i < (40 - length) / 2; i++)
 			line[i] = ' ';
 
-		for (j = 0; j < l; j++)
-			line[i++] = s[j];
+		for (j = 0; j < length; j++)
+			line[i++] = string[j];
 		
 		line[i] = '\n';
 		line[i + 1] = 0;
 
 		Com_Printf("%s", line);
 
-		while (*s && *s != '\n')
-			s++;
+		while (*string && *string != '\n')
+			string++;
 
-		if (!*s)
+		if (!*string)
 			break;
 
-		s++;	// Skip the \n
+		string++;	// Skip the \n
 	} while (1);
 
 	Com_Printf("\n\35\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\36\37\n\n");
@@ -344,7 +342,7 @@ static void CL_ParseConfigString (){
 
 	int			index;
 	const char	*string;
-	char		name[MAX_QPATH];
+	char		name[MAX_PATH_LENGTH];
 
 	// Parse the string
 	index = MSG_ReadShort(&net_message);

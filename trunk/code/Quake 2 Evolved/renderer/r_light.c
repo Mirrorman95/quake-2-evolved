@@ -320,8 +320,28 @@ void R_LoadLights (const char *name){
  
  ==================
 */
-void R_LightCullBounds (){
+int R_LightCullBounds (lightData_t *lightData, const vec3_t mins, const vec3_t maxs, int planeBits){
 
+	cplane_t	*plane;
+	int			side, cullBits;
+	int			i;
+
+	cullBits = CULL_IN;
+
+	// Check against frustum planes
+	for (i = 0, plane = lightData->frustum; i < 6; i++, plane++){
+		if (!(planeBits & BIT(i)))
+			continue;
+
+		// TODO: check the bounds
+	}
+
+	if (cullBits != CULL_IN)
+		rg.pc.cullBoundsClip++;
+	else
+		rg.pc.cullBoundsIn++;
+
+	return cullBits;
 }
 
 /*
@@ -958,51 +978,138 @@ static bool R_ViewInLightVolume (){
 	return true;
 }
 
-rect_t FromBounds (const vec3_t mins, const vec3_t maxs){
 
-	rect_t rect;
 
-	rect.x = FloatToShort(mins[0]);
-	rect.y = FloatToShort(mins[1]);
-	rect.width = FloatToShort(maxs[0]);
-	rect.height = FloatToShort(maxs[1]);
 
-	return rect;
+#define MAX_LIGHT_PLANE_VERTICES 64
+
+void Matrix4_Transform (const mat4_t m, const vec4_t in, vec4_t out){
+
+	out[0] = in[0] * m[ 0] + in[1] * m[ 4] + in[2] * m[ 8] + in[3] * m[12];
+	out[1] = in[0] * m[ 1] + in[1] * m[ 5] + in[2] * m[ 9] + in[3] * m[13];
+	out[2] = in[0] * m[ 2] + in[1] * m[ 6] + in[2] * m[10] + in[3] * m[14];
+	out[3] = in[0] * m[ 3] + in[1] * m[ 7] + in[2] * m[11] + in[3] * m[15];
 }
 
-void ExpandSelf (rect_t rect, const short size){
+static void R_ClipLightPlane (int stage, int numVertices, vec3_t vertices, const mat4_t mvpMatrix, vec2_t mins, vec2_t maxs){
 
-	rect.x -= size;
-	rect.y -= size;
-	rect.width += size;
-	rect.height += size;
-}
+	int			i;
+	float		*v;
+	bool	frontSide;
+	vec3_t		front[MAX_LIGHT_PLANE_VERTICES];
+	int			f;
+	float		dist;
+	float		dists[MAX_LIGHT_PLANE_VERTICES];
+	int			sides[MAX_LIGHT_PLANE_VERTICES];
+	cplane_t	*plane;
+	vec4_t		in, out;
+	float		x, y;
 
-void Clip (rect_t rect, rect_t rect2){
+	if (numVertices > MAX_LIGHT_PLANE_VERTICES-2)
+		Com_Error(ERR_DROP, "R_ClipLightPlane: MAX_LIGHT_PLANE_VERTICES hit");
 
-	rect.x = Max(rect.x, rect2.x);
-	rect.y = Max(rect.y, rect2.y);
-	rect.width = Min(rect.width, rect2.width);
-	rect.height = Min(rect.height, rect2.height);
+	if (stage == 5){
+		// Fully clipped, so add screen space points
+		for (i = 0, v = vertices; i < numVertices; i++, v += 3){
+			in[0] = v[0];
+			in[1] = v[1];
+			in[2] = v[2];
+			in[3] = 1.0;
+
+			Matrix4_Transform(mvpMatrix, in, out);
+
+			if (out[3] == 0.0)
+				continue;
+
+			out[0] /= out[3];
+			out[1] /= out[3];
+
+			x = rg.renderView.x + (0.5 + 0.5 * out[0]) * rg.renderView.width;
+			y = rg.renderView.y + (0.5 + 0.5 * out[1]) * rg.renderView.height;
+
+			mins[0] = min(mins[0], x);
+			mins[1] = min(mins[1], y);
+			maxs[0] = max(maxs[0], x);
+			maxs[1] = max(maxs[1], y);
+		}
+
+		return;
+	}
+
+	frontSide = false;
+
+	plane = &rg.viewParms.frustum[stage];
+	for (i = 0, v = vertices; i < numVertices; i++, v += 3){
+		if (plane->type < PLANE_NON_AXIAL)
+			dists[i] = dist = v[plane->type] - plane->dist;
+		else
+			dists[i] = dist = DotProduct(v, plane->normal) - plane->dist;
+
+		if (dist > ON_EPSILON){
+			frontSide = true;
+			sides[i] = PLANESIDE_FRONT;
+		}
+		else if (dist < -ON_EPSILON)
+			sides[i] = PLANESIDE_BACK;
+		else
+			sides[i] = PLANESIDE_ON;
+	}
+
+	if (!frontSide)
+		return;		// Not clipped
+
+	// Clip it
+	dists[i] = dists[0];
+	sides[i] = sides[0];
+	VectorCopy(vertices, (vertices + (i*3)));
+
+	f = 0;
+
+	for (i = 0, v = vertices; i < numVertices; i++, v += 3){
+		switch (sides[i]){
+		case PLANESIDE_FRONT:
+			VectorCopy(v, front[f]);
+			f++;
+
+			break;
+		case PLANESIDE_BACK:
+
+			break;
+		case PLANESIDE_ON:
+			VectorCopy(v, front[f]);
+			f++;
+
+			break;
+		}
+
+		if (sides[i] == PLANESIDE_ON || sides[i+1] == PLANESIDE_ON || sides[i+1] == sides[i])
+			continue;
+
+		dist = dists[i] / (dists[i] - dists[i+1]);
+
+		front[f][0] = v[0] + (v[3] - v[0]) * dist;
+		front[f][1] = v[1] + (v[4] - v[1]) * dist;
+		front[f][2] = v[2] + (v[5] - v[2]) * dist;
+
+		f++;
+	}
+
+	// Continue
+	R_ClipLightPlane(stage+1, f, front[0], mvpMatrix, mins, maxs);
 }
 
 /*
  ==================
-
- TODO: this has a problem with GL_Scissor i think...
+ 
  ==================
 */
 static void R_SetupScissor (light_t *light){
 
-	static int	cornerIndices[6][4] = {{3, 2, 6, 7}, {0, 1, 5, 4}, {2, 3, 1, 0}, {4, 5, 7, 6}, {1, 3, 7, 5}, {2, 0, 4, 6}};
-	vec3_t		points[2][MAX_POLYGON_POINTS];
-	int			numPoints;
-	vec3_t		mins, maxs;
-	vec3_t		ndc;
-	int			pingPong = 0;
-	int			i, j;
-
-	r_skipLightScissors->integerValue = 1;
+	int			cornerIndices[6][4] = {{3, 2, 6, 7}, {0, 1, 5, 4}, {2, 3, 1, 0}, {4, 5, 7, 6}, {1, 3, 7, 5}, {2, 0, 4, 6}};
+	vec3_t		vertices[5];
+	vec2_t		mins = {999999, 999999}, maxs = {-999999, -999999};
+	int			xMin, yMin, xMax, yMax;
+	int			i;
 
 	// If scissor testing is disabled
 	if (r_skipLightScissors->integerValue){
@@ -1010,66 +1117,35 @@ static void R_SetupScissor (light_t *light){
 		return;
 	}
 
-	// Clip the light volume to the view frustum
-	ClearBounds(mins, maxs);
-
+	// Copy the corner points of each plane and clip to the frustum
 	for (i = 0; i < 6; i++){
-		numPoints = 4;
+		VectorCopy(light->data.corners[cornerIndices[i][0]], vertices[0]);
+		VectorCopy(light->data.corners[cornerIndices[i][1]], vertices[1]);
+		VectorCopy(light->data.corners[cornerIndices[i][2]], vertices[2]);
+		VectorCopy(light->data.corners[cornerIndices[i][3]], vertices[3]);
 
-		VectorCopy(light->data.corners[cornerIndices[i][0]], points[pingPong][0]);
-		VectorCopy(light->data.corners[cornerIndices[i][1]], points[pingPong][1]);
-		VectorCopy(light->data.corners[cornerIndices[i][2]], points[pingPong][2]);
-		VectorCopy(light->data.corners[cornerIndices[i][3]], points[pingPong][3]);
-
-		for (j = 0; j < NUM_FRUSTUM_PLANES; j++){
-			if (!(rg.viewParms.planeBits & BIT(j)))
-				continue;
-
-			if (!R_ClipPolygon(numPoints, points[pingPong], rg.viewParms.frustum[j], ON_EPSILON, &numPoints, points[!pingPong]))
-				break;
-
-			pingPong ^= 1;
-		}
-
-		if (j != NUM_FRUSTUM_PLANES)
-			continue;
-
-		// Add the clipped points
-		for (j = 0; j < numPoints; j++){
-			// Transform into normalized device coordinates
-			R_TransformWorldToDevice(points[pingPong][j], ndc, rg.viewParms.modelviewProjectionMatrix);
-
-			// Add it
-			AddPointToBounds(ndc, mins, maxs);
-		}
+		R_ClipLightPlane(0, 4, vertices[0], rg.viewParms.modelviewProjectionMatrix, mins, maxs);
 	}
 
-	if (BoundsIsCleared(mins, maxs)){
-		light->scissor.x = 0;
-		light->scissor.y = 0;
-		light->scissor.width = 0;
-		light->scissor.height = 0;
+	// Set the scissor rectangle
+	xMin = max(floor(mins[0]), rg.renderView.x);
+	yMin = max(floor(mins[1]), rg.renderView.y);
+	xMax = min(ceil(maxs[0]), rg.renderView.x + rg.renderView.width);
+	yMax = min(ceil(maxs[1]), rg.renderView.y + rg.renderView.height);
+
+	if (xMax <= xMin || yMax <= yMin){
+		light->scissor.x = rg.renderView.x;
+		light->scissor.y = rg.renderView.y;
+		light->scissor.width = rg.renderView.width;
+		light->scissor.height = rg.renderView.height;
 
 		return;
 	}
 
-	// Transform into screen space
-	R_TransformDeviceToScreen(mins, mins, rg.viewParms.viewport);
-	R_TransformDeviceToScreen(maxs, maxs, rg.viewParms.viewport);
-
-	// Set up the scissor
-	light->scissor = FromBounds(mins, maxs);
-	ExpandSelf(light->scissor, 1);
-	Clip(light->scissor, rg.viewParms.scissor);
-
-	if (RectIsCleared(light->scissor)){
-		light->scissor.x = 0;
-		light->scissor.y = 0;
-		light->scissor.width = 0;
-		light->scissor.height = 0;
-
-		return;
-	}
+	light->scissor.x = xMin;
+	light->scissor.y = yMin;
+	light->scissor.width = xMax - xMin;
+	light->scissor.height = yMax - yMin;
 }
 
 /*
@@ -1079,6 +1155,15 @@ static void R_SetupScissor (light_t *light){
 */
 static void R_SetupDepthBounds (light_t *light){
 
+	r_skipLightDepthBounds->integerValue = 1;
+
+	// If depth bound testing is disabled
+	if (r_skipLightDepthBounds->integerValue || !glConfig.depthBoundsTestAvailable){
+		light->depthMin = 0.0f;
+		light->depthMax = 1.0f;
+
+		return;
+	}
 }
 
 /*
@@ -1193,8 +1278,8 @@ static void R_AddLight (lightData_t *lightData, material_t *material, bool viewI
 	// Set up the scissor
 	R_SetupScissor(light);
 
-	if (!RectSize(light->scissor))
-		return;
+//	if (!RectSize(light->scissor))
+//		return;
 
 	// Set up the depth bounds
 	R_SetupDepthBounds(light);
@@ -1228,8 +1313,7 @@ static void R_AddLight (lightData_t *lightData, material_t *material, bool viewI
 
 /*
  ==================
- 
- TODO: culling
+ R_AddLights
  ==================
 */
 static void R_AddLights (){
@@ -1318,7 +1402,15 @@ static void R_AddLights (){
 
 		// Cull
 		if (!r_skipLightCulling->integerValue){
+			cullBits = R_CullLightBounds(lightData, rg.viewParms.planeBits);
 
+			if (cullBits == CULL_OUT)
+				continue;
+
+			if (cullBits != CULL_IN){
+				if (R_CullLightVolume(lightData, cullBits) == CULL_OUT)
+					continue;
+			}
 		}
 
 		// Determine if the view is inside the light volume

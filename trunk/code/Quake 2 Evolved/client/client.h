@@ -181,8 +181,8 @@ typedef struct {
 
 typedef struct {
 	bool					valid;
-	char					name[MAX_QPATH];
-	char					info[MAX_QPATH];
+	char					name[MAX_PATH_LENGTH];
+	char					info[MAX_PATH_LENGTH];
 	model_t *				model;
 	material_t *			skin;
 	material_t *			icon;
@@ -206,7 +206,7 @@ typedef struct {
 
 	bool					isGun;
 
-	char					name[MAX_QPATH];
+	char					name[MAX_PATH_LENGTH];
 
 	int						time;
 	int						frames;
@@ -271,7 +271,7 @@ typedef struct {
 	clientInfo_t			clientInfo[MAX_CLIENTS];
 	clientInfo_t			baseClientInfo;
 
-	char					weaponModels[MAX_CLIENTWEAPONMODELS][MAX_QPATH];
+	char					weaponModels[MAX_CLIENTWEAPONMODELS][MAX_PATH_LENGTH];
 	int						numWeaponModels;
 
 	// Development tools
@@ -308,11 +308,11 @@ typedef struct {
 	int						serverCount;		// Server identification for prespawns
 	bool					demoPlayback;		// Running a demo, any key will disconnect
 	bool					gameMod;
-	char					gameDir[MAX_QPATH];
+	char					gameDir[MAX_PATH_LENGTH];
 	int						clientNum;
 	bool					multiPlayer;
 
-	char					configStrings[MAX_CONFIGSTRINGS][MAX_QPATH];
+	char					configStrings[MAX_CONFIGSTRINGS][MAX_PATH_LENGTH];
 } clientState_t;
 
 typedef enum {
@@ -334,8 +334,8 @@ typedef struct {
 } media_t;
 
 typedef struct {
-	char					map[MAX_QPATH];
-	char					name[MAX_QPATH];
+	char					map[MAX_PATH_LENGTH];
+	char					name[MAX_PATH_LENGTH];
 
 	char					string[128];
 	int						percent;
@@ -381,13 +381,13 @@ typedef struct {
 	int						downloadStart;
 	int						downloadBytes;
 	int						downloadPercent;
-	char					downloadName[MAX_QPATH];
-	char					downloadTempName[MAX_QPATH];
+	char					downloadName[MAX_PATH_LENGTH];
+	char					downloadTempName[MAX_PATH_LENGTH];
 
 	// Demo recording information
 	fileHandle_t			demoFile;
 	bool					demoWaiting;
-	char					demoName[MAX_QPATH];
+	char					demoName[MAX_PATH_LENGTH];
 
 	// Active cinematic handle
 	int						cinematicHandle;
@@ -998,15 +998,14 @@ float *			CL_FadeColor (const vec4_t color, int startTime, int totalTime, int fa
 float *			CL_FadeAlpha (const vec4_t color, int startTime, int totalTime, int fadeTime);
 float *			CL_FadeColorAndAlpha (const vec4_t color, int startTime, int totalTime, int fadeTime);
 void			CL_FillRect (float x, float y, float w, float h, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent);
-void			CL_DrawString (float x, float y, float w, float h, const char *string, const vec4_t color, bool forceColor, float xShadow, float yShadow, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent, material_t *material);
 void			CL_DrawStringSheared (float x, float y, float w, float h, float shearX, float shearY, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
 void			CL_DrawStringFixed (float x, float y, float w, float h, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
 void			CL_DrawStringShearedFixed (float x, float y, float w, float h, float shearX, float shearY, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
-void			CL_DrawPic (float x, float y, float w, float h, const vec4_t color, material_t *material);
+void			CL_DrawPic (float x, float y, float w, float h, const vec4_t color, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent, material_t *material);
 void			CL_DrawPicST (float x, float y, float w, float h, float s1, float t1, float s2, float t2, const vec4_t color, material_t *material);
 void			CL_DrawPicSheared (float x, float y, float w, float h, float shearX, float shearY, const color_t color, material_t *material);
 void			CL_DrawPicShearedST (float x, float y, float w, float h, float s1, float t1, float s2, float t2, float shearX, float shearY, const color_t color, material_t *material);
-void			CL_DrawPicByName (float x, float y, float w, float h, const vec4_t color, const char *pic);
+void			CL_DrawPicByName (float x, float y, float w, float h, const vec4_t color, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent, const char *pic);
 void			CL_DrawPicFixed (float x, float y, material_t *material);
 void			CL_DrawPicFixedByName (float x, float y, const char *pic);
 

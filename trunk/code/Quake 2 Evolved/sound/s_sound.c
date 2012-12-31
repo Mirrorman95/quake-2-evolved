@@ -332,7 +332,7 @@ static sound_t *S_LoadSound (const char *name, short *wave, int rate, int sample
 sound_t *S_FindSound (const char *name, int flags){
 
 	sound_t	*sound;
-	char	loadName[MAX_QPATH];
+	char	loadName[MAX_PATH_LENGTH];
 	short	*wave;
 	int		rate, samples;
 	uint	hashKey;
@@ -391,7 +391,7 @@ sound_t *S_FindSexedSound (const char *name, entity_state_t *entity, int flags){
 
 	sound_t			*sound;
 	clientInfo_t	*clientInfo;
-	char			model[MAX_QPATH], sexedName[MAX_QPATH];
+	char			model[MAX_PATH_LENGTH], sexedName[MAX_PATH_LENGTH];
 	char			*ch;
 
 	// Determine what model the client is using

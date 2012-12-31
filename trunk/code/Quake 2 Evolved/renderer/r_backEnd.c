@@ -86,7 +86,7 @@ static void RB_TestTexture (){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Set up the texture
 	GL_EnableTexture(rg.testTexture->target);
@@ -292,7 +292,7 @@ static const void *RB_RenderView (const void *data){
 	GL_Setup3D(cmd->time);
 
 	// Set up the scissor
-	GL_Scissor(backEnd.scissor.x, backEnd.scissor.y, backEnd.scissor.width, backEnd.scissor.height);
+	GL_Scissor(backEnd.scissor);
 
 	// Z-Fill pass
 	RB_FillDepthBuffer(cmd->viewParms.numMeshes[0], cmd->viewParms.meshes[0]);
@@ -455,6 +455,9 @@ static const void *RB_DrawStretchPic (const void *data){
 		// Clear the batch state
 		backEnd.entity = NULL;
 		backEnd.material = NULL;
+
+		backEnd.stencilShadow = false;
+		backEnd.shadowCaps = false;
 	}
 
 	// Check if the state changed
@@ -547,6 +550,9 @@ static const void *RB_DrawCinematic (const void *data){
 		// Clear the batch state
 		backEnd.entity = NULL;
 		backEnd.material = NULL;
+
+		backEnd.stencilShadow = false;
+		backEnd.shadowCaps = false;
 	}
 
 	QGL_LogPrintf("---------- RB_DrawCinematic ----------\n");
@@ -571,7 +577,7 @@ static const void *RB_DrawCinematic (const void *data){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Draw vertical black bars if needed
 	if (cmd->vx1 != cmd->wx1 || cmd->vx2 != cmd->wx2){

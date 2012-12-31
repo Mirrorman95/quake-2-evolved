@@ -1801,58 +1801,6 @@ static bool R_ParseStageVideoMap (script_t *script, material_t *material, stage_
 
 /*
  ==================
- R_ParseStageSkyRenderMap
- ==================
-*/
-static bool R_ParseStageSkyRenderMap (script_t *script, material_t *material, stage_t *stage){
-
-	textureStage_t	*textureStage = &stage->textureStage;
-
-	if (material->type != MT_GENERIC){
-		Com_Printf(S_COLOR_YELLOW "WARNING: 'skyRenderMap' not allowed in material '%s'\n", material->name);
-		return false;
-	}
-
-	if (textureStage->texture){
-		Com_Printf(S_COLOR_YELLOW "WARNING: multiple textures for a stage in material '%s'\n", material->name);
-		return false;
-	}
-
-	if (material->subviewType != ST_NONE && material->subviewType != ST_SKY){
-		Com_Printf(S_COLOR_YELLOW "WARNING: multiple subview types in material '%s'\n", material->name);
-		return false;
-	}
-
-	material->subviewType = ST_SKY;
-	material->subviewTexture = rg.skyTexture;
-
-	if (!PS_ReadInteger(script, &material->subviewWidth)){
-		Com_Printf(S_COLOR_YELLOW "WARNING: missing parameters for 'skyRenderMap' in material '%s'\n", material->name);
-		return false;
-	}
-
-	if (material->subviewWidth < 1 || material->subviewWidth > SCREEN_WIDTH){
-		Com_Printf(S_COLOR_YELLOW "WARNING: invalid width value of %i for 'skyRenderMap' in material '%s'\n", material->subviewWidth, material->name);
-		return false;
-	}
-
-	if (!PS_ReadInteger(script, &material->subviewHeight)){
-		Com_Printf(S_COLOR_YELLOW "WARNING: missing parameters for 'skyRenderMap' in material '%s'\n", material->name);
-		return false;
-	}
-
-	if (material->subviewHeight < 1 || material->subviewHeight > SCREEN_HEIGHT){
-		Com_Printf(S_COLOR_YELLOW "WARNING: invalid height value of %i for 'skyRenderMap' in material '%s'\n", material->subviewHeight, material->name);
-		return false;
-	}
-
-	textureStage->texture = rg.skyTexture;
-
-	return true;
-}
-
-/*
- ==================
  R_ParseStageMirrorRenderMap
  ==================
 */
@@ -3162,7 +3110,6 @@ static materialStageKeyword_t	r_materialStageKeywords[] = {
 	{"cubeMap",						R_ParseStageCubeMap},
 	{"cameraCubeMap",				R_ParseStageCameraCubeMap},
 	{"videoMap",					R_ParseStageVideoMap},
-	{"skyRenderMap",				R_ParseStageSkyRenderMap},
 	{"mirrorRenderMap",				R_ParseStageMirrorRenderMap},
 	{"remoteRenderMap",				R_ParseStageRemoteRenderMap},
 	{"texGen",						R_ParseStageTexGen},
@@ -4480,7 +4427,7 @@ void R_ShutdownMaterials (){
 	Cmd_RemoveCommand("listMaterials");
 	Cmd_RemoveCommand("listMaterialDefs");
 	Cmd_RemoveCommand("printMaterialDef");
-#if 0
+
 	// Stop all the cinematics
 	for (i = 0; i < r_numMaterials; i++){
 		material = r_materials[i];
@@ -4499,7 +4446,7 @@ void R_ShutdownMaterials (){
 			}
 		}
 	}
-#endif
+
 	// Clear material definition and material lists
 	Mem_Fill(r_materialDefsHashTable, 0, sizeof(r_materialDefsHashTable));
 

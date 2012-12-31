@@ -52,7 +52,7 @@
 static void SV_NewCommand (){
 
 	edict_t		*entity;
-	char		name[MAX_QPATH];
+	char		name[MAX_PATH_LENGTH];
 	int			playerNum;
 
 	Com_DPrintf("SV_New_f() from %s\n", sv_client->name);

@@ -253,7 +253,7 @@ bool R_UnmapIndexBuffer (arrayBuffer_t *indexBuffer){
  R_AllocVertexBuffer
  ==================
 */
-arrayBuffer_t *R_AllocVertexBuffer (const char *name, bool dynamic, int vertexCount, const glVertex_t *vertexData){
+arrayBuffer_t *R_AllocVertexBuffer (const char *name, bool dynamic, int vertexCount, const void *vertexData){
 
 	arrayBuffer_t	*vertexBuffer;
 
@@ -280,7 +280,12 @@ arrayBuffer_t *R_AllocVertexBuffer (const char *name, bool dynamic, int vertexCo
 	Str_Copy(vertexBuffer->name, name, sizeof(vertexBuffer->name));
 	vertexBuffer->dynamic = dynamic;
 	vertexBuffer->count = vertexCount;
-	vertexBuffer->size = vertexCount * sizeof(glVertex_t);
+
+	if (backEnd.stencilShadow)
+		vertexBuffer->size = vertexCount * sizeof(glShadowVertex_t);
+	else
+		vertexBuffer->size = vertexCount * sizeof(glVertex_t);
+
 	vertexBuffer->mapped = false;
 	vertexBuffer->frameUsed = 0;
 
@@ -304,14 +309,19 @@ arrayBuffer_t *R_AllocVertexBuffer (const char *name, bool dynamic, int vertexCo
  R_ReallocVertexBuffer
  ==================
 */
-void R_ReallocVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexCount, const glVertex_t *vertexData){
+void R_ReallocVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexCount, const void *vertexData){
 
 	if (vertexBuffer->mapped)
 		Com_Error(ERR_DROP, "R_ReallocVertexBuffer: array buffer is currently mapped");
 
 	// Fill it in
 	vertexBuffer->count = vertexCount;
-	vertexBuffer->size = vertexCount * sizeof(glVertex_t);
+
+	if (backEnd.stencilShadow)
+		vertexBuffer->size = vertexCount * sizeof(glShadowVertex_t);
+	else
+		vertexBuffer->size = vertexCount * sizeof(glVertex_t);
+
 	vertexBuffer->frameUsed = 0;
 
 	// Bind the array buffer
@@ -352,9 +362,10 @@ void R_FreeVertexBuffer (arrayBuffer_t *vertexBuffer){
  R_UpdateVertexBuffer
  ==================
 */
-bool R_UpdateVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexOffset, int vertexCount, const glVertex_t *vertexData, bool discard, bool synchronize){
+bool R_UpdateVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexOffset, int vertexCount, const void *vertexData, bool discard, bool synchronize){
 
-	glVertex_t	*vertexPtr;
+	glVertex_t			*vertexPtr;
+	glShadowVertex_t	*vertexShadowPtr;
 
 	if (vertexBuffer->mapped)
 		Com_Error(ERR_DROP, "R_UpdateVertexBuffer: array buffer is currently mapped");
@@ -370,17 +381,33 @@ bool R_UpdateVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexOffset, int ve
 		qglBufferData(GL_ARRAY_BUFFER, vertexBuffer->size, NULL, vertexBuffer->usage);
 
 	// Update the specified range, synchronizing if desired
-	if (synchronize)
-		qglBufferSubData(GL_ARRAY_BUFFER, vertexOffset * sizeof(glVertex_t), vertexCount * sizeof(glVertex_t), vertexData);
+	if (backEnd.stencilShadow){
+		if (synchronize)
+			qglBufferSubData(GL_ARRAY_BUFFER, vertexOffset * sizeof(glShadowVertex_t), vertexCount * sizeof(glShadowVertex_t), vertexData);
+		else {
+			vertexShadowPtr = (glShadowVertex_t *)qglMapBufferRange(GL_ARRAY_BUFFER, vertexOffset * sizeof(glShadowVertex_t), vertexCount * sizeof(glShadowVertex_t), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
+			if (!vertexShadowPtr)
+				return false;
+
+			Mem_Copy(vertexShadowPtr, vertexData, vertexCount * sizeof(glShadowVertex_t));
+
+			if (!qglUnmapBuffer(GL_ARRAY_BUFFER))
+				return false;
+		}
+	}
 	else {
-		vertexPtr = (glVertex_t *)qglMapBufferRange(GL_ARRAY_BUFFER, vertexOffset * sizeof(glVertex_t), vertexCount * sizeof(glVertex_t), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
-		if (!vertexPtr)
-			return false;
+		if (synchronize)
+			qglBufferSubData(GL_ARRAY_BUFFER, vertexOffset * sizeof(glVertex_t), vertexCount * sizeof(glVertex_t), vertexData);
+		else {
+			vertexPtr = (glVertex_t *)qglMapBufferRange(GL_ARRAY_BUFFER, vertexOffset * sizeof(glVertex_t), vertexCount * sizeof(glVertex_t), GL_MAP_WRITE_BIT | GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_UNSYNCHRONIZED_BIT);
+			if (!vertexPtr)
+				return false;
 
-		Mem_Copy(vertexPtr, vertexData, vertexCount * sizeof(glVertex_t));
+			Mem_Copy(vertexPtr, vertexData, vertexCount * sizeof(glVertex_t));
 
-		if (!qglUnmapBuffer(GL_ARRAY_BUFFER))
-			return false;
+			if (!qglUnmapBuffer(GL_ARRAY_BUFFER))
+				return false;
+		}
 	}
 
 	return true;
@@ -389,6 +416,8 @@ bool R_UpdateVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexOffset, int ve
 /*
  ==================
  R_MapVertexBuffer
+
+ TODO: modify for glShadowVertex_t
  ==================
 */
 glVertex_t *R_MapVertexBuffer (arrayBuffer_t *vertexBuffer, int vertexOffset, int vertexCount, bool discard, bool synchronize){

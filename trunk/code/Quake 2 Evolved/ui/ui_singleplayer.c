@@ -57,10 +57,10 @@ typedef enum {
 } uiSinglePlayerId_t;
 
 typedef struct {
-	char					mission[MAX_QPATH];
+	char					mission[MAX_PATH_LENGTH];
 	char					name[80];
 	char					objectives[1024];
-	char					levelShots[MAX_LEVELSHOTS][MAX_QPATH];
+	char					levelShots[MAX_LEVELSHOTS][MAX_PATH_LENGTH];
 	int						numLevelShots;
 } missionInfo_t;
 
@@ -104,7 +104,7 @@ static void UI_SinglePlayer_GetMissionList (){
 
 	script_t	*script;
 	token_t		token;
-	char		name[MAX_OSPATH];
+	char		name[MAX_PATH_LENGTH];
 	char		*levelshot;
 	int			i;
 
@@ -152,7 +152,7 @@ static void UI_SinglePlayer_GetMissionList (){
 						break;
 
 					levelshot = uiSinglePlayer.missions[uiSinglePlayer.numMissions].levelShots[uiSinglePlayer.missions[uiSinglePlayer.numMissions].numLevelShots];
-					Str_Copy(levelshot, token.string, MAX_OSPATH);
+					Str_Copy(levelshot, token.string, MAX_PATH_LENGTH);
 					uiSinglePlayer.missions[uiSinglePlayer.numMissions].numLevelShots++;
 				}
 			}

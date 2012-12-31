@@ -56,13 +56,13 @@ typedef struct {
 	uint					time;				// Always sv.frameNum * 100 msec
 	int						frameNum;
 
-	char					name[MAX_QPATH];	// Map name, demo, or cinematic name
+	char					name[MAX_PATH_LENGTH];	// Map name, demo, or cinematic name
 	bool					attractLoop;		// Running cinematics and demos for the local system only
 	bool					loadGame;			// Client begins should reuse existing entity
 
 	struct cmodel_s *		models[MAX_MODELS];
 
-	char					configStrings[MAX_CONFIGSTRINGS][MAX_QPATH];
+	char					configStrings[MAX_CONFIGSTRINGS][MAX_PATH_LENGTH];
 	entity_state_t			baselines[MAX_EDICTS];
 
 	// The multicast buffer is used to send a message to a set of 

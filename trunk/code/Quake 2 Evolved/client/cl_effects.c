@@ -38,13 +38,13 @@
 */
 
 typedef struct {
-	int					length;
-	float				map[MAX_QPATH];
-	vec3_t				rgb;
+	int						length;
+	float					map[MAX_PATH_LENGTH];
+	vec3_t					rgb;
 } cLightStyle_t;
 
-static cLightStyle_t	cl_lightStyles[MAX_LIGHTSTYLES];
-static int				cl_lastOfs;
+static cLightStyle_t		cl_lightStyles[MAX_LIGHTSTYLES];
+static int					cl_lastOfs;
 
 
 /*
@@ -54,7 +54,7 @@ static int				cl_lastOfs;
 */
 void CL_ClearLightStyles (){
 
-	Mem_Fill(cl_lightStyles, 0, sizeof(cLightStyle_t));
+	Mem_Fill(cl_lightStyles, 0, sizeof(cl_lightStyles));
 	cl_lastOfs = -1;
 }
 
@@ -66,7 +66,8 @@ void CL_ClearLightStyles (){
 void CL_RunLightStyles (){
 
 	cLightStyle_t	*ls;
-	int				i, offset;
+	int				offset;
+	int				i;
 
 	offset = cl.time / 100;
 	if (offset == cl_lastOfs)
@@ -108,7 +109,8 @@ void CL_AddLightStyles (){
 void CL_SetLightStyle (int style){
 
 	char	*string;
-	int		i, length;
+	int		length;
+	int		i;
 
 	if (style < 0 || style >= MAX_LIGHTSTYLES)
 		Com_Error(ERR_DROP, "CL_SetLightStyle: style = %i", style);
@@ -116,7 +118,7 @@ void CL_SetLightStyle (int style){
 	string = cl.configStrings[CS_LIGHTS + style];
 
 	length = Str_Length(string);
-	if (length >= MAX_QPATH)
+	if (length >= MAX_PATH_LENGTH)
 		Com_Error(ERR_DROP, "CL_SetLightStyle: style length = %i", length);
 
 	cl_lightStyles[style].length = length;
@@ -156,8 +158,8 @@ static dlight_t				cl_dynamicLights[MAX_DLIGHTS];
 */
 static dlight_t *CL_AllocDynamicLight (){
 
-	int		i;
 	int		time, index;
+	int		i;
 
 	for (i = 0; i < MAX_DLIGHTS; i++){
 		if (!cl_dynamicLights[i].active){
@@ -178,6 +180,7 @@ static dlight_t *CL_AllocDynamicLight (){
 	}
 
 	Mem_Fill(&cl_dynamicLights[index], 0, sizeof(cl_dynamicLights[index]));
+
 	return &cl_dynamicLights[index];
 }
 
@@ -342,7 +345,7 @@ void CL_ParsePlayerMuzzleFlash (){
 	vec3_t		forward, right;
 	int			weapon;
 	float		volume = 1.0f;
-	char		name[MAX_QPATH];
+	char		name[MAX_PATH_LENGTH];
 	vec3_t		origin;
 
 	entity = MSG_ReadShort(&net_message);
@@ -522,7 +525,7 @@ void CL_ParseMonsterMuzzleFlash (){
 	centity_t	*centity;
 	vec3_t		forward, right;
 	int			flash;
-	char		name[MAX_QPATH];
+	char		name[MAX_PATH_LENGTH];
 	vec3_t		origin;
 
 	entity = MSG_ReadShort(&net_message);

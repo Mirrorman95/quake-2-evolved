@@ -29,15 +29,15 @@
 #include "common.h"
 
 
-netAdr_t				net_from;
-msg_t					net_message;
-byte					net_messageBuffer[MAX_MSGLEN];
+netAdr_t					net_from;
+msg_t						net_message;
+byte						net_messageBuffer[MAX_MSGLEN];
 
-static const char *		net_sourceString[2] = {"client", "server"};
+static const char *			net_sourceString[2] = {"client", "server"};
 
-static cvar_t *			net_qport;
-static cvar_t *			net_showPackets;
-static cvar_t *			net_showDrop;
+static cvar_t *				net_qport;
+static cvar_t *				net_showPackets;
+static cvar_t *				net_showDrop;
 
 
 /*

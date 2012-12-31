@@ -94,37 +94,37 @@
 */
 
 typedef struct {
-	netSrc_t			sock;
+	netSrc_t				sock;
 
-	int					dropped;						// Between last packet and previous
+	int						dropped;						// Between last packet and previous
 
-	int					lastReceived;					// For time-outs
-	int					lastSent;						// For retransmits
+	int						lastReceived;					// For time-outs
+	int						lastSent;						// For retransmits
 
-	netAdr_t			remoteAddress;
-	int					channelPort;					// Channel port value to write when transmitting
+	netAdr_t				remoteAddress;
+	int						channelPort;					// Channel port value to write when transmitting
 
 	// Sequencing variables
-	int					incomingSequence;
-	int					incomingAcknowledged;
-	int					incomingReliableSequence;		// Single bit, maintained local
-	int					incomingReliableAcknowledged;	// Single bit
+	int						incomingSequence;
+	int						incomingAcknowledged;
+	int						incomingReliableSequence;		// Single bit, maintained local
+	int						incomingReliableAcknowledged;	// Single bit
 
-	int					outgoingSequence;
-	int					reliableSequence;				// Single bit
-	int					lastReliableSequence;			// Sequence number of last send
+	int						outgoingSequence;
+	int						reliableSequence;				// Single bit
+	int						lastReliableSequence;			// Sequence number of last send
 
 	// Reliable staging and holding areas
-	msg_t				message;						// Writing buffer to send to server
-	byte				messageBuffer[MAX_MSGLEN-16];	// Leave space for header
+	msg_t					message;						// Writing buffer to send to server
+	byte					messageBuffer[MAX_MSGLEN-16];	// Leave space for header
 
 	// Message is copied to this buffer when it is first transfered
-	int					reliableLength;
-	byte				reliableBuffer[MAX_MSGLEN-16];	// Unacked reliable message
+	int						reliableLength;
+	byte					reliableBuffer[MAX_MSGLEN-16];	// Unacked reliable message
 } netChan_t;
 
-extern netAdr_t			net_from;
-extern msg_t			net_message;
+extern netAdr_t				net_from;
+extern msg_t				net_message;
 
 // Initializes the network channel subsystem
 void			NetChan_Init ();

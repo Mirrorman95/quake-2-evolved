@@ -307,7 +307,7 @@ typedef ushort						half;
 #define	MAX_INFO_VALUE		1024
 #define	MAX_INFO_STRING		1024
 
-#define	MAX_QPATH			64		// Max length of a Quake game pathname
+//#define	MAX_QPATH			64		// Max length of a Quake game pathname
 #define	MAX_OSPATH			256		// Max length of a filesystem pathname
 
 // Per-level limits

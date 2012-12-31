@@ -534,7 +534,7 @@ int	CIN_PlayCinematic (const char *name, int flags){
 	fileHandle_t	file;
 	byte			buffer[ROQ_CHUNK_HEADER_SIZE];
 	word			id, fps;
-	char			checkName[MAX_OSPATH], loadName[MAX_OSPATH];
+	char			checkName[MAX_PATH_LENGTH], loadName[MAX_PATH_LENGTH];
 	bool			isRoQ;
 	int				handle;
 	int				size;

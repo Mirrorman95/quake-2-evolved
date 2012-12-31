@@ -1,0 +1,130 @@
+
+// TODO:
+// - view weapons, some diffuse texture are missing
+
+//
+// BFG10K
+//
+
+models/weapons/g_bfg/skin
+{
+	bumpMap			models/weapons/g_bfg/skin_local.tga
+	diffuseMap		models/weapons/g_bfg/skin_d.tga
+	{
+		specularmap	models/weapons/g_bfg/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Chaingun
+//
+
+models/weapons/g_chain/skin
+{
+	bumpMap			models/weapons/g_chain/skin_local.tga
+	diffuseMap		models/weapons/g_chain/skin_d.tga
+	{
+		specularmap	models/weapons/g_chain/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Hyperblaster
+//
+
+models/weapons/g_hyperb/skin
+{
+	bumpMap			models/weapons/g_hyperb/skin_local.tga
+	diffuseMap		models/weapons/g_hyperb/skin_d.tga
+	{
+		specularmap	models/weapons/g_hyperb/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Grenade Launcher
+//
+
+models/weapons/g_launch/skin
+{
+	bumpMap			models/weapons/g_launch/skin_local.tga
+	diffuseMap		models/weapons/g_launch/skin_d.tga
+	{
+		specularmap	models/weapons/g_launch/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Machinegun
+//
+
+models/weapons/g_machn/skin
+{
+	bumpMap			models/weapons/g_machn/skin_local.tga
+	diffuseMap		models/weapons/g_machn/skin_d.tga
+	{
+		specularmap	models/weapons/g_machn/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Railgun
+//
+
+models/weapons/g_rail/skin
+{
+	bumpMap			models/weapons/g_rail/skin_local.tga
+	diffuseMap		models/weapons/g_rail/skin_d.tga
+	{
+		specularmap	models/weapons/g_rail/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Rocket Launcher
+//
+
+models/weapons/g_rocket/skin
+{
+	bumpMap			models/weapons/g_rocket/skin_local.tga
+	diffuseMap		models/weapons/g_rocket/skin_d.tga
+	{
+		specularmap	models/weapons/g_rocket/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Shotgun
+//
+
+models/weapons/g_shotg/skin
+{
+	bumpMap			models/weapons/g_shotg/skin_local.tga
+	diffuseMap		models/weapons/g_shotg/skin_d.tga
+	{
+		specularmap	models/weapons/g_shotg/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Super Shotgun
+//
+
+models/weapons/g_shotg2/skin
+{
+	bumpMap			models/weapons/g_shotg2/skin_local.tga
+	diffuseMap		models/weapons/g_shotg2/skin_d.tga
+	{
+		specularmap	models/weapons/g_shotg2/skin_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+

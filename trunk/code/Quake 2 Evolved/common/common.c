@@ -25,9 +25,6 @@
 // common.c - Misc. functions used in client and server
 //
 
-// TODO
-// - Com_AddEarlyCommands, Com_AddLateCommands, Com_Init
-
 
 #include "common.h"
 #include <setjmp.h>
@@ -56,11 +53,9 @@ static char					com_errorMessage[MAX_PRINT_MESSAGE];
 
 static jmp_buf				com_abortFrame;
 
-// TODO: remove/replace these
-int							com_timeBefore, com_timeBetween, com_timeAfter;
-int							com_timeBeforeGame, com_timeAfterGame;
-int							com_timeBeforeRef, com_timeAfterRef;
-// ------
+int							com_frameTime;
+int							com_frameMsec;
+int							com_frameCount;
 
 int							com_timeAll = 0;
 int							com_timeWaiting = 0;
@@ -73,19 +68,17 @@ int							com_timeSound = 0;
 bool						com_initialized = false;
 
 cvar_t *					com_version;
-cvar_t *					com_developer;
-cvar_t *					dedicated;
+cvar_t *					com_dedicated;
 cvar_t *					com_paused;
-cvar_t *					com_timeDemo;
-cvar_t *					fixedtime;
-cvar_t *					timescale;
-cvar_t *					com_aviDemo;
-cvar_t *					com_forceAviDemo;
-cvar_t *					com_speeds;
-cvar_t *					com_debugMemory;
-cvar_t *					com_zoneMegs;
-cvar_t *					com_hunkMegs;
+cvar_t *					com_developer;
 cvar_t *					com_logFile;
+cvar_t *					com_fixedTime;
+cvar_t *					com_timeScale;
+cvar_t *					com_speeds;
+cvar_t *					com_clientRunning;
+cvar_t *					com_serverRunning;
+cvar_t *					com_timeDemo;
+cvar_t *					com_maxFPS;
 
 
 /*
@@ -509,84 +502,6 @@ void Com_WriteConfigToFile (const char *name){
 
 /*
  ==================
- Com_Quit_f
-
- Both client and server can use this, and it will do the appropriate
- things
- ==================
-*/
-static void Com_Quit_f (){
-
-	Sys_Quit();
-}
-
-/*
- ==================
- Com_ShowConsole_f
- ==================
-*/
-static void Com_ShowConsole_f (){
-
-	Sys_ShowConsole(true);
-}
-
-/*
- ==================
- Com_Error_f
-
- Just trow a fatal or drop error to test error shutdown procedures
- ==================
-*/
-static void Com_Error_f (){
-
-	if (!com_developer || !com_developer->integerValue){
-		Com_Printf("This command can only be used in developer mode\n");
-		return;
-	}
-
-	if (Cmd_Argc() > 1)
-		Com_Error(ERR_DROP, "Testing drop error...");
-	else
-		Com_Error(ERR_FATAL, "Testing fatal error...");
-}
-
-/*
- ==================
- Com_Setenv_f
- ==================
-*/
-static void Com_Setenv_f (){
-
-	char	buffer[1024], *env;
-	int		i;
-
-	if (Cmd_Argc() < 2){
-		Com_Printf("Usage: setenv <variable> [value]\n");
-		return;
-	}
-
-	if (Cmd_Argc() == 2){
-		env = getenv(Cmd_Argv(1));
-		if (env)
-			Com_Printf("%s=%s\n", Cmd_Argv(1), env);
-		else
-			Com_Printf("%s undefined\n", Cmd_Argv(1), env);
-	}
-	else {
-		Str_Copy(buffer, Cmd_Argv(1), sizeof(buffer));
-		Str_Append(buffer, "=", sizeof(buffer));
-
-		for (i = 2; i < Cmd_Argc(); i++){
-			Str_Append(buffer, Cmd_Argv(i), sizeof(buffer));
-			Str_Append(buffer, " ", sizeof(buffer));
-		}
-
-		putenv(buffer);
-	}
-}
-
-/*
- ==================
  Com_WriteConfig_f
  ==================
 */
@@ -609,6 +524,96 @@ static void Com_WriteConfig_f (){
 
 /*
  ==================
+ Com_ShowConsole_f
+ ==================
+*/
+static void Com_ShowConsole_f (){
+
+	Sys_ShowConsole(true);
+}
+
+/*
+ ==================
+ Com_Error_f
+
+ Just throw a drop error to test error shutdown procedures
+ ==================
+*/
+static void Com_Error_f (){
+
+	if (!com_developer || !com_developer->integerValue){
+		Com_Printf("This command can only be used in developer mode\n");
+		return;
+	}
+
+	Com_Error(ERR_DROP, "Testing drop error");
+}
+
+/*
+ ==================
+ Com_FatalError_f
+
+ Just throw a fatal error to test error shutdown procedures
+ ==================
+*/
+static void Com_FatalError_f (){
+
+	if (!com_developer || !com_developer->integerValue){
+		Com_Printf("This command can only be used in developer mode\n");
+		return;
+	}
+
+	Com_Error(ERR_FATAL, "Testing fatal error");
+}
+
+/*
+ ==================
+ Com_Freeze_f
+
+ Just freeze in place for a given number of milliseconds to test error recovery
+ ==================
+*/
+static void Com_Freeze_f (){
+
+	int		msec;
+
+	if (!com_developer || !com_developer->integerValue){
+		Com_Printf("This command can only be used in developer mode\n");
+		return;
+	}
+
+	if (Cmd_Argc() > 2){
+		Com_Printf("Usage: freeze [msec]\n");
+		return;
+	}
+
+	if (Cmd_Argc() == 1)
+		msec = 1000;
+	else
+		msec = Str_ToInteger(Cmd_Argv(1));
+
+	Sys_Sleep(msec);
+}
+
+/*
+ ==================
+ Com_Crash_f
+
+ A way to force a bus error for development reasons
+ ==================
+*/
+static void Com_Crash_f (){
+
+	if (!com_developer || !com_developer->integerValue){
+		Com_Printf("This command can only be used in developer mode\n");
+		return;
+	}
+
+	*(int *)0 = 0x12345678;
+}
+
+/*
+ ==================
  Com_Pause_f
  ==================
 */
@@ -621,6 +626,19 @@ static void Com_Pause_f (){
 	}
 
 	CVar_SetVariableInteger("paused", !com_paused->integerValue, false);
+}
+
+/*
+ ==================
+ Com_Quit_f
+
+ Both client and server can use this, and it will do the appropriate
+ things
+ ==================
+*/
+static void Com_Quit_f (){
+
+	Sys_Quit();
 }
 
 
@@ -662,88 +680,73 @@ static void Com_ParseCommandLine (const char *cmdLine){
 }
 
 /*
- =================
- Com_AddEarlyCommands
+ ==================
+ Com_AddStartupCommands
 
  Adds command line parameters as script statements.
- Commands lead with a +, and continue until another +.
+ Commands are separated by + signs.
 
- Set commands are added early, so they are guaranteed to be set before
- the client and server initialize for the first time.
-
- Other commands are added late, after all initialization is complete.
- =================
+ Returns true if any commands were added, which will keep the default action
+ from running.
+ ==================
 */
-static void Com_AddEarlyCommands (bool clear){
+static bool Com_AddStartupCommands (){
 
+	bool	added = false;
 	int		i;
 
-	for (i = 1; i < com_argc; i++){
-		if (Q_stricmp(com_argv[i], "+set"))
+	for (i = 0; i < com_argc; i++){
+		if (!com_argv[i] || !com_argv[i][0])
 			continue;
 
-		Cmd_AppendText(va("set %s %s\n", com_argv[i+1], com_argv[i+2]));
+		if (!Str_ICompare(com_argv[i], "safe"))
+			continue;
 
-		if (clear){
-			com_argv[i+0] = "";
-			com_argv[i+1] = "";
-			com_argv[i+2] = "";
-		}
+		if (Str_ICompareChars(com_argv[i], "set", 3))
+			added = true;
 
-		i += 2;
+		Cmd_AppendText(Str_VarArgs("%s\n", com_argv[i]));
 	}
+
+	return added;
 }
 
 /*
- =================
- Com_AddLateCommands
+ ==================
+ Com_StartupVariable
 
- Adds command line parameters as script statements.
- Commands lead with a + and continue until another +.
-
- Returns true if any late commands were added, which will keep the 
- logo cinematic from immediately starting.
- =================
+ Searches for command line parameters that are "set" commands.
+ If match is not NULL, only that variable will be looked for.
+ This is necessary because some variables need to be set before executing
+ config files, but we want other parameters to override the settings from the
+ config files.
+ If once is true, the command will be removed. This is to keep it from being
+ executed multiple times.
+ ==================
 */
-static bool Com_AddLateCommands (void){
+void Com_StartupVariable (const char *match, bool once){
 
-	int		i, j;
-	char	text[1024];
-	bool	ret = false;
+	int		i;
 
-	for (i = 1; i < com_argc; ){
-		if (com_argv[i][0] != '+'){
-			i++;
+	for (i = 0; i < com_argc; i++){
+		if (!com_argv[i] || !com_argv[i][0])
 			continue;
-		}
 
-		for (j = 1; com_argv[i][j]; j++){
-			if (com_argv[i][j] != '+')
-				break;
-		}
+		if (!Str_ICompare(com_argv[i], "safe"))
+			continue;
 
-		Q_strncpyz(text, com_argv[i]+j, sizeof(text));
-		Q_strncatz(text, " ", sizeof(text));
-		i++;
+		if (Str_ICompareChars(com_argv[i], "set", 3))
+			continue;
 
-		while (i < com_argc){
-			if (com_argv[i][0] == '+')
-				break;
+		Cmd_TokenizeString(com_argv[i]);
 
-			Q_strncatz(text, com_argv[i], sizeof(text));
-			Q_strncatz(text, " ", sizeof(text));
-			i++;
-		}
+		if (!match || !Str_ICompare(Cmd_Argv(1), match)){
+			CVar_SetVariableString(Cmd_Argv(1), Cmd_Argv(2), false);
 
-		if (text[0]){
-			ret = true;
-
-			text[strlen(text)-1] = '\n';
-			Cmd_AppendText(text);
+			if (once)
+				com_argv[i] = NULL;
 		}
 	}
-
-	return ret;
 }
 
 /*
@@ -782,20 +785,20 @@ bool Com_SafeMode (){
 */
 static void Com_PrintStats (){
 
-	int		all, sv, gm, cl, rf;
+	if (com_speeds->integerValue){
+		com_timeClient -= (com_timeFrontEnd + com_timeBackEnd + com_timeSound);
 
-	if (!com_speeds->integerValue)
-		return;
+		Com_Printf("frame: %i, all: %3i (w: %3i), sv: %3i, cl: %3i, rf: %3i, rb: %3i, snd: %3i\n", com_frameCount, com_timeAll, com_timeWaiting, com_timeServer, com_timeClient, com_timeFrontEnd, com_timeBackEnd, com_timeSound);
+	}
 
-	all = com_timeAfter - com_timeBefore;
-	sv = com_timeBetween - com_timeBefore;
-	cl = com_timeAfter - com_timeBetween;
-	gm = com_timeAfterGame - com_timeBeforeGame;
-	rf = com_timeAfterRef - com_timeBeforeRef;
-	sv -= gm;
-	cl -= rf;
-
-	Com_Printf("all:%3i sv:%3i, gm:%3i, cl:%3i, rf:%3i\n", all, sv, gm, cl, rf);
+	// Clear for next frame
+	com_timeAll = 0;
+	com_timeWaiting = 0;
+	com_timeServer = 0;
+	com_timeClient = 0;
+	com_timeFrontEnd = 0;
+	com_timeBackEnd = 0;
+	com_timeSound = 0;
 }
 
 
@@ -813,26 +816,18 @@ static void Com_PrintStats (){
  Com_Frame
  ==================
 */
-void Com_Frame (int msec){
+void Com_Frame (){
+
+	int		timeAll, timeWaiting;
+	int		lastFrameTime;
+	int		msec, minMsec;
 
 	// If an error occurred, drop the entire frame
 	if (setjmp(com_abortFrame))
 		return;
 
-	// Modify msec
-	if (!com_timeDemo->integerValue){
-		if (com_aviDemo->integerValue > 0)
-			msec = 1000 / com_aviDemo->integerValue;
-		else {
-			if (fixedtime->integerValue)
-				msec = fixedtime->integerValue;
-			if (timescale->floatValue)
-				msec *= timescale->floatValue;
-		}
-	}
-
-	if (msec < 1)
-		msec = 1;
+	if (com_speeds->integerValue)
+		timeAll = Sys_Milliseconds();
 
 	// Update the config file if needed
 	if (CVar_GetModifiedFlags() & CVAR_ARCHIVE){
@@ -841,26 +836,70 @@ void Com_Frame (int msec){
 		Com_WriteConfigToFile(CONFIG_FILE);
 	}
 
+	// We may want to spin here if things are going too fast
+	if ((com_dedicated->integerValue && com_serverRunning->integerValue) || com_timeDemo->integerValue)
+		minMsec = 1;
+	else
+		minMsec = 1000 / com_maxFPS->integerValue;
+
+	// Main event loop
+	lastFrameTime = com_frameTime;
+
+	while (1){
+		com_frameTime = Sys_ProcessEvents();
+		if (lastFrameTime > com_frameTime)
+			lastFrameTime = com_frameTime;		// Time wrapped?
+
+		msec = com_frameTime - lastFrameTime;
+		if (msec >= minMsec)
+			break;
+
+		// If not running a dedicated server, sleep until time enough for a
+		// frame has gone by
+		if (!com_dedicated->integerValue || !com_serverRunning->integerValue){
+			if (com_speeds->integerValue)
+				timeWaiting = Sys_Milliseconds();
+
+			Sys_Sleep(minMsec - msec);
+
+			if (com_speeds->integerValue)
+				com_timeWaiting += (Sys_Milliseconds() - timeWaiting);
+		}
+	}
+
+	// Modify msec
+	com_frameMsec = msec;
+
+	if (!com_timeDemo->integerValue){
+		if (com_fixedTime->integerValue)
+			msec = com_fixedTime->integerValue;
+		if (com_timeScale->floatValue != 1.0f)
+			msec *= com_timeScale->floatValue;
+	}
+
+	if (msec < 1)
+		msec = 1;
+
+	// Bump frame count
+	com_frameCount++;
+
 	// Process commands
 	Cmd_ExecuteBuffer();
 
-	if (com_speeds->integerValue)
-		com_timeBefore = Sys_Milliseconds();
-
 	// Run server frame
 	SV_Frame(msec);
-
-	if (com_speeds->integerValue)
-		com_timeBetween = Sys_Milliseconds();
 
 	// Run client frame
 	CL_Frame(msec);
 
 	if (com_speeds->integerValue)
-		com_timeAfter = Sys_Milliseconds();
+		com_timeAll += (Sys_Milliseconds() - timeAll);
 
 	// Print collision system statistics
 	CM_PrintStats();
+
+	// Print memory manager statistics
+	Mem_PrintStats();
 
 	// Print common statistics
 	Com_PrintStats();
@@ -878,7 +917,7 @@ void Com_Frame (int msec){
 
 /*
  ==================
- 
+ Com_Init
  ==================
 */
 void Com_Init (const char *cmdLine){
@@ -891,10 +930,7 @@ void Com_Init (const char *cmdLine){
 	// Parse the command line
 	Com_ParseCommandLine(cmdLine);
 
-	// We need to call Com_InitMemory twice, because some strings and
-	// structs need to be allocated during initialization, but we want
-	// to get the amount of memory to allocate for the main zone and
-	// hunk from the config files
+	// Initialize memory manager
 	Mem_Init();
 
 	// Initialize the rest of the subsystems
@@ -909,44 +945,35 @@ void Com_Init (const char *cmdLine){
 	// Initialize key binding/input
 	Key_Init();
 
-	// We need to add the early commands twice, because some file system
-	// cvars need to be set before execing config files, but we want
-	// other parms to override the settings of the config files
-	Com_AddEarlyCommands(false);
-	Cmd_ExecuteBuffer();
-
 	// Initialize file system
 	FS_Init();
 
-	Com_AddEarlyCommands(true);
-	Cmd_ExecuteBuffer();
+	// Override the settings from the config files with command line parameters
+	Com_StartupVariable(NULL, true);
 
 	// Register variables
 	com_version = CVar_Register("version", Str_VarArgs("%s (%s)", ENGINE_VERSION, __DATE__), CVAR_STRING, CVAR_SERVERINFO | CVAR_READONLY, "Game version", 0, 0);
-	com_developer = CVar_Register("com_developer", "0", CVAR_BOOL, 0, "Developer mode", 0, 0);
-	dedicated = CVar_Register("dedicated", "0", CVAR_BOOL, CVAR_INIT, "Dedicated server", 0, 0);
+	com_dedicated = CVar_Register("dedicated", "0", CVAR_BOOL, CVAR_INIT, "Dedicated server", 0, 0);
 	com_paused = CVar_Register("paused", "0", CVAR_BOOL, CVAR_CHEAT, "Pauses the game", 0, 0);
-	com_timeDemo = CVar_Register("com_timeDemo", "0", CVAR_BOOL, CVAR_CHEAT, "Timing a demo", 0, 0);
-	fixedtime = CVar_Register("fixedtime", "0", CVAR_INTEGER, CVAR_CHEAT, "Fixed time", 0, 1000);
-	timescale = CVar_Register("timescale", "1", CVAR_FLOAT, CVAR_CHEAT, "Time scale", 0.0f, 1000.0f);
-	com_aviDemo = CVar_Register("com_aviDemo", "0", CVAR_INTEGER, CVAR_CHEAT, NULL, 0, 1000);
-	com_forceAviDemo = CVar_Register("com_forceAviDemo", "0", CVAR_BOOL, CVAR_CHEAT, NULL, 0, 0);
-	com_speeds = CVar_Register("com_speeds", "0", CVAR_BOOL, CVAR_CHEAT, "Show engine speeds", 0, 0);
-	com_debugMemory = CVar_Register("com_debugMemory", "0", CVAR_BOOL, CVAR_CHEAT, NULL, 0, 0);
-	com_zoneMegs = CVar_Register("com_zoneMegs", "16", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, NULL, 0, 1000);
-	com_hunkMegs = CVar_Register("com_hunkMegs", "48", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, NULL, 0, 1000);
+	com_developer = CVar_Register("com_developer", "0", CVAR_BOOL, 0, "Developer mode", 0, 0);
 	com_logFile = CVar_Register("com_logFile", "0", CVAR_INTEGER, 0, "Log console messages (1 = write, 2 = unbuffered write, 3 = append, 4 = unbuffered append)", 0, 4);
+	com_fixedTime = CVar_Register("com_fixedTime", "0", CVAR_INTEGER, CVAR_CHEAT, "Fixed time", 0, 1000);
+	com_timeScale = CVar_Register("com_timeScale", "1.0", CVAR_FLOAT, CVAR_CHEAT, "Time scale", 0.0f, 1000.0f);
+	com_speeds = CVar_Register("com_speeds", "0", CVAR_BOOL, CVAR_CHEAT, "Show engine speeds", 0, 0);
+	com_clientRunning = CVar_Register("com_clientRunning", "0", CVAR_BOOL, CVAR_READONLY, "Client is running", 0, 0);
+	com_serverRunning = CVar_Register("com_serverRunning", "0", CVAR_BOOL, CVAR_READONLY, "Server is running", 0, 0);	
+	com_timeDemo = CVar_Register("com_timeDemo", "0", CVAR_BOOL, CVAR_CHEAT, "Timing a demo", 0, 0);
+	com_maxFPS = CVar_Register("com_maxFPS", "60", CVAR_INTEGER, CVAR_ARCHIVE, "Maximum framerate", 1, 125);
 
 	// Add commands
-	Cmd_AddCommand("quit", Com_Quit_f, "Quits the game", NULL);
+	Cmd_AddCommand("writeConfig", Com_WriteConfig_f, "Writes a config file", NULL);
 	Cmd_AddCommand("showConsole", Com_ShowConsole_f, "Shows the system console", NULL);
 	Cmd_AddCommand("error", Com_Error_f, "Throws an error", NULL);
-	Cmd_AddCommand("setenv", Com_Setenv_f, NULL, NULL);
-	Cmd_AddCommand("writeConfig", Com_WriteConfig_f, "Writes a config file", NULL);
+	Cmd_AddCommand("fatalError", Com_FatalError_f, "Throws a fatal error", NULL);
+	Cmd_AddCommand("freeze", Com_Freeze_f, "Freezes the game", NULL);
+	Cmd_AddCommand("crash", Com_Crash_f, "Crashes the game", NULL);
 	Cmd_AddCommand("pause", Com_Pause_f, "Pauses the game", NULL);
-
-	// Initialize main zone and hunk memory
-	Mem_Init();
+	Cmd_AddCommand("quit", Com_Quit_f, "Quits the game", NULL);
 
 	// Initialize server and client
 	SV_Init();
@@ -964,19 +991,24 @@ void Com_Init (const char *cmdLine){
 	LUT_Init();
 
 	// Show or hide the system console
-	if (dedicated->integerValue)
+	if (com_dedicated->integerValue)
 		Sys_ShowConsole(true);
 	else
 		Sys_ShowConsole(false);
 
-	dedicated->modified = false;
+	com_dedicated->modified = false;
 
 	// Add commands from the command line
-	if (!Com_AddLateCommands()){
+	if (!Com_AddStartupCommands()){
 		// If the user didn't give any commands, run default action
-		if (!dedicated->integerValue)
+		if (!com_dedicated->integerValue)
 			Cmd_AppendText(DEFAULT_ACTION);
 	}
+
+	// Set initial frame time, msec, and count
+	com_frameTime = Sys_Milliseconds();
+	com_frameMsec = 1;
+	com_frameCount = 0;
 
 	// Initialized
 	com_initialized = true;
@@ -1002,12 +1034,14 @@ void Com_Shutdown (){
 	com_initialized = false;
 
 	// Remove commands
-	Cmd_RemoveCommand("quit");
+	Cmd_RemoveCommand("writeconfig");
 	Cmd_RemoveCommand("showConsole");
 	Cmd_RemoveCommand("error");
-	Cmd_RemoveCommand("setenv");
-	Cmd_RemoveCommand("writeconfig");
+	Cmd_RemoveCommand("fatalError");
+	Cmd_RemoveCommand("freeze");
+	Cmd_RemoveCommand("crash");
 	Cmd_RemoveCommand("pause");
+	Cmd_RemoveCommand("quit");
 
 	// Shutdown server and client
 	SV_Shutdown("Server quit\n", false);

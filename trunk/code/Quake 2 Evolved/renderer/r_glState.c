@@ -399,17 +399,17 @@ void GL_BindVertexBuffer (arrayBuffer_t *vertexBuffer){
  GL_Viewport
  ==================
 */
-void GL_Viewport (int x, int y, int width, int height){
+void GL_Viewport (rect_t rect){
 
-	if (glState.viewportX == x && glState.viewportY == y && glState.viewportWidth == width && glState.viewportHeight == height)
+	if (glState.viewportX == rect.x && glState.viewportY == rect.y && glState.viewportWidth == rect.width && glState.viewportHeight == rect.height)
 		return;
 
-	glState.viewportX = x;
-	glState.viewportY = y;
-	glState.viewportWidth = width;
-	glState.viewportHeight = height;
+	glState.viewportX = rect.x;
+	glState.viewportY = rect.y;
+	glState.viewportWidth = rect.width;
+	glState.viewportHeight = rect.height;
 
-	qglViewport(x, y, width, height);
+	qglViewport(rect.x, rect.y, rect.width, rect.height);
 }
 
 
@@ -425,21 +425,45 @@ void GL_Viewport (int x, int y, int width, int height){
 /*
  ==================
  GL_Scissor
-
- TODO: use rec_t
  ==================
 */
-void GL_Scissor (int x, int y, int width, int height){
+void GL_Scissor (rect_t rect){
 
-	if (glState.scissorX == x && glState.scissorY == y && glState.scissorWidth == width && glState.scissorHeight == height)
+	if (glState.scissorX == rect.x && glState.scissorY == rect.y && glState.scissorWidth == rect.width && glState.scissorHeight == rect.height)
 		return;
 
-	glState.scissorX = x;
-	glState.scissorY = y;
-	glState.scissorWidth = width;
-	glState.scissorHeight = height;
+	glState.scissorX = rect.x;
+	glState.scissorY = rect.y;
+	glState.scissorWidth = rect.width;
+	glState.scissorHeight = rect.height;
 
-	qglScissor(x, y, width, height);
+	qglScissor(rect.x, rect.y, rect.width, rect.height);
+}
+
+
+/*
+ ==============================================================================
+
+ DEPTH BOUNDS FUNCTION
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ GL_DepthBounds
+ ==================
+*/
+void GL_DepthBounds (float min, float max){
+
+	if (glState.depthBoundsMin == min && glState.depthBoundsMax == max)
+		return;
+
+	glState.depthBoundsMin = min;
+	glState.depthBoundsMax = max;
+
+	qglDepthBoundsEXT(min, max);
 }
 
 
@@ -933,10 +957,14 @@ void GL_Setup3D (int time){
 	backEnd.currentDepthCaptured = false;
 
 	// Set up the viewport
-	GL_Viewport(backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height);
+	GL_Viewport(backEnd.viewport);
 
 	// Set up the scissor
-	GL_Scissor(backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height);
+	GL_Scissor(backEnd.viewport);
+
+	// Set up the depth bounds
+	if (glConfig.depthBoundsTestAvailable)
+		GL_DepthBounds(0.0f, 1.0f);
 
 	// Set the projection matrix
 	GL_LoadMatrix(GL_PROJECTION, backEnd.viewParms.projectionMatrix);
@@ -1035,10 +1063,14 @@ void GL_Setup2D (int time){
 	backEnd.currentDepthCaptured = false;
 
 	// Set up the viewport
-	GL_Viewport(backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height);
+	GL_Viewport(backEnd.viewport);
 
 	// Set up the scissor
-	GL_Scissor(backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height);
+	GL_Scissor(backEnd.viewport);
+
+	// Set up the depth bounds
+	if (glConfig.depthBoundsTestAvailable)
+		GL_DepthBounds(0.0f, 1.0f);
 
 	// Set the projection matrix
 	GL_LoadMatrix(GL_PROJECTION, projectionMatrix);
@@ -1060,7 +1092,7 @@ void GL_Setup2D (int time){
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	GL_DepthMask(GL_FALSE);
-	GL_StencilMask(0);
+	GL_StencilMask(255);
 
 	// Disable the clip plane
 	qglDisable(GL_CLIP_PLANE0);
@@ -1120,6 +1152,9 @@ void GL_SetDefaultState (){
 	glState.scissorY = 0;
 	glState.scissorWidth = glConfig.videoWidth;
 	glState.scissorHeight = glConfig.videoHeight;
+
+	glState.depthBoundsMin = 0.0f;
+	glState.depthBoundsMax = 1.0f;
 
 	glState.texUnit = 0;
 
@@ -1244,6 +1279,9 @@ void GL_SetDefaultState (){
 	qglEnable(GL_SCISSOR_TEST);
 	qglScissor(0, 0, glConfig.videoWidth, glConfig.videoHeight);
 
+	qglEnable(GL_DEPTH_BOUNDS_TEST_EXT);
+	qglDepthBoundsEXT(0.0f, 1.0f);
+
 	qglFrontFace(GL_CCW);
 
 	qglShadeModel(GL_SMOOTH);
@@ -1268,7 +1306,7 @@ void GL_SetDefaultState (){
 	qglDepthFunc(GL_LEQUAL);
 
 	qglDisable(GL_STENCIL_TEST);
-	qglStencilFunc(GL_ALWAYS, 0, 255);
+	qglStencilFunc(GL_ALWAYS, 128, 255);
 	qglStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 
 	qglDepthRange(0.0f, 1.0f);
@@ -1289,7 +1327,7 @@ void GL_SetDefaultState (){
 
 	qglClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	qglClearDepth(1.0f);
-	qglClearStencil(0);
+	qglClearStencil(128);
 
 	qglEnableClientState(GL_VERTEX_ARRAY);
 

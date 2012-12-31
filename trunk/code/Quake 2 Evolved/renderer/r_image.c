@@ -2064,7 +2064,7 @@ static textureFormat_t R_SelectImageFormat (int numImages, byte **images, int wi
 */
 static bool R_LoadImageFormat (const char *name, const char *realName, textureWrap_t wrap, byte **image, int *width, int *height, bool isImageProgram){
 
-	char	loadName[MAX_OSPATH];
+	char	loadName[MAX_PATH_LENGTH];
 	bool	failed = true;
 	byte	*imgData;
 	int		imgWidth, imgHeight;

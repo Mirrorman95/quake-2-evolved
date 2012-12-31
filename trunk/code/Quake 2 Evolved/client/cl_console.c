@@ -188,7 +188,7 @@ static void Con_ClearCommands (){
 static void Con_CarriageReturn (){
 
 	// Mark time for transparent overlay
-	con.notifyTimes[con.currentLine % NOTIFY_TIMES] = cls.frameTime;
+	con.notifyTimes[con.currentLine % NOTIFY_TIMES] = cls.realTime;
 
 	// Clear the line
 	Mem_Fill(con.text[con.currentLine % TOTAL_LINES], 0, MAX_LINE_LENGTH * sizeof(short));
@@ -204,7 +204,7 @@ static void Con_CarriageReturn (){
 static void Con_LineFeed (){
 
 	// Mark time for transparent overlay
-	con.notifyTimes[con.currentLine % NOTIFY_TIMES] = cls.frameTime;
+	con.notifyTimes[con.currentLine % NOTIFY_TIMES] = cls.realTime;
 
 	// Scroll down and advance
 	if (con.displayLine == con.currentLine)
@@ -1433,7 +1433,7 @@ static void Con_DrawNotify (){
 		if (time == 0)
 			continue;
 
-		if (cls.frameTime - time > SEC2MS(con_notifyTime->floatValue))
+		if (cls.realTime - time > SEC2MS(con_notifyTime->floatValue))
 			continue;
 
 		// Draw the text

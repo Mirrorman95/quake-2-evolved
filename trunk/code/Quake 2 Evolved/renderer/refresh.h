@@ -78,10 +78,9 @@ typedef enum {
 typedef enum {
 	VIEW_NONE						= 0,
 	VIEW_MAIN						= BIT(0),
-	VIEW_SKY						= BIT(1),
-	VIEW_MIRROR						= BIT(2),
-	VIEW_REMOTE						= BIT(3),
-	VIEW_ALL						= BIT(4) - 1
+	VIEW_MIRROR						= BIT(1),
+	VIEW_REMOTE						= BIT(2),
+	VIEW_ALL						= BIT(3) - 1
 } viewType_t;
 
 // Horizontal adjustment for 2D drawing
@@ -179,6 +178,15 @@ typedef struct {
 	vec3_t					beamEnd;
 	float					beamWidth;
 	float					beamLength;
+
+	// Subview parameters for portals and remote cameras
+	bool					hasSubview;
+
+	vec3_t					subviewOrigin;
+	vec3_t					subviewAngles;
+
+	float					subviewFovX;		// Only used for remote cameras
+	float					subviewFovY;		// Only used for remote cameras
 
 	// Entity attributes
 	bool					depthHack;			// Hack the depth range to avoid poking into geometry (implies noShadows)
@@ -307,6 +315,7 @@ typedef struct {
 	bool					textureFilterAnisotropicAvailable;
 	bool					swapControlAvailable;
 	bool					swapControlTearAvailable;
+	bool					depthBoundsTestAvailable;
 	bool					stencilWrapAvailable;
 	bool					stencilTwoSideAvailable;
 	bool					atiSeparateStencilAvailable;

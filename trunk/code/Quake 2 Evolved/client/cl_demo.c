@@ -76,19 +76,19 @@ static bool CL_FindDemoName (char *name, int maxLength){
 */
 void CL_WriteDemoMessage (){
 
-	int		length, swLen;
+	int		length, swLength;
 
 	if (!cls.demoFile || cls.demoWaiting)
 		return;
 
 	// The first eight bytes are just packet sequencing stuff
 	length = net_message.curSize - 8;
-	swLen = LittleLong(length);
+	swLength = LittleLong(length);
 
-	if (!swLen)
+	if (!swLength)
 		return;
 
-	FS_Write(cls.demoFile, &swLen, sizeof(swLen));
+	FS_Write(cls.demoFile, &swLength, sizeof(swLength));
 	FS_Write(cls.demoFile, net_message.data + 8, length);
 }
 
@@ -109,11 +109,12 @@ void CL_WriteDemoMessage (){
 */
 void CL_Record_f (){
 
-	char			name[MAX_QPATH];
+	entity_state_t	*entity, nullState;
+	char			name[MAX_PATH_LENGTH];
 	char			data[MAX_MSGLEN];
 	msg_t			msg;
-	int				i, length;
-	entity_state_t	*entity, nullState;
+	int				length;
+	int				i;
 
 	if (Cmd_Argc() > 2){
 		Com_Printf("Usage: record [name]\n");

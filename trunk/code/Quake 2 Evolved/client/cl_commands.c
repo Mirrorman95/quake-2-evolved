@@ -27,7 +27,6 @@
 
 // TODO:
 // - testSound, testDecal
-// - add subview stuff later on to the commands
 
 
 #include "client.h"
@@ -97,6 +96,12 @@ static void CL_TestModel_f (){
 	Matrix3_Identity(cl.testModel.renderEntity.axis);
 
 	cl.testModel.renderEntity.model = R_RegisterModel(Cmd_Argv(1));
+
+	cl.testModel.renderEntity.hasSubview = false;
+	VectorCopy(cl.renderView.origin, cl.testModel.renderEntity.subviewOrigin);
+	VectorCopy(cl.renderViewAngles, cl.testModel.renderEntity.subviewAngles);
+	cl.testModel.renderEntity.subviewFovX = 90.0f;
+	cl.testModel.renderEntity.subviewFovY = 90.0f;
 
 	cl.testModel.renderEntity.depthHack = false;
 
@@ -211,6 +216,50 @@ static void CL_TestMaterialParm_f (){
 		cl.testModel.renderEntity.materialParms[index] = -MS2SEC(cl.time);
 	else
 		cl.testModel.renderEntity.materialParms[index] = Str_ToFloat(Cmd_Argv(2));
+}
+
+/*
+ ==================
+ CL_TestRemoteView_f
+ ==================
+*/
+static void CL_TestRemoteView_f (){
+
+	if (Cmd_Argc() != 4 && Cmd_Argc() != 7 && Cmd_Argc() != 9){
+		Com_Printf("Usage: testRemoteView <origin x y z> [angles x y z] [fov x y]\n");
+		return;
+	}
+
+	if (!cl.testModel.active){
+		Com_Printf("No active testModel\n");
+		return;
+	}
+
+	// Set up the subview with the specified values
+	cl.testModel.renderEntity.hasSubview = true;
+
+	cl.testModel.renderEntity.subviewOrigin[0] = Str_ToFloat(Cmd_Argv(1));
+	cl.testModel.renderEntity.subviewOrigin[1] = Str_ToFloat(Cmd_Argv(2));
+	cl.testModel.renderEntity.subviewOrigin[2] = Str_ToFloat(Cmd_Argv(3));
+
+	if (Cmd_Argc() < 5)
+		VectorClear(cl.testModel.renderEntity.subviewAngles);
+	else {
+		cl.testModel.renderEntity.subviewAngles[0] = Str_ToFloat(Cmd_Argv(4));
+		cl.testModel.renderEntity.subviewAngles[1] = Str_ToFloat(Cmd_Argv(5));
+		cl.testModel.renderEntity.subviewAngles[2] = Str_ToFloat(Cmd_Argv(6));
+
+		AnglesNormalize360(cl.testModel.renderEntity.subviewAngles[PITCH], cl.testModel.renderEntity.subviewAngles[YAW], cl.testModel.renderEntity.subviewAngles[ROLL]);
+	}
+
+	if (Cmd_Argc() < 8){
+		cl.testModel.renderEntity.subviewFovX = 90.0f;
+		cl.testModel.renderEntity.subviewFovY = 90.0f;
+	}
+	else {
+		cl.testModel.renderEntity.subviewFovX = ClampFloat(Str_ToFloat(Cmd_Argv(7)), 1.0f, 160.0f);
+		cl.testModel.renderEntity.subviewFovY = ClampFloat(Str_ToFloat(Cmd_Argv(8)), 1.0f, 160.0f);
+	}
 }
 
 /*
@@ -423,6 +472,8 @@ static void CL_TestSprite_f (){
 
 	cl.testSprite.renderEntity.spriteRotation = 0.0f;
 
+	cl.testSprite.renderEntity.hasSubview = false;
+
 	cl.testSprite.renderEntity.depthHack = false;
 
 	cl.testSprite.renderEntity.allowInView = VIEW_ALL;
@@ -580,6 +631,8 @@ static void CL_TestBeam_f (){
 		else
 			cl.testBeam.renderEntity.beamLength = length / segments;
 	}
+
+	cl.testBeam.renderEntity.hasSubview = false;
 
 	cl.testBeam.renderEntity.depthHack = false;
 
@@ -832,6 +885,7 @@ void CL_AddCommands (){
 	Cmd_AddCommand("testGun", CL_TestGun_f, "Tests the current test model as a gun model", NULL);
 	Cmd_AddCommand("testMaterial", CL_TestMaterial_f, "Tests a material on the current test model", Cmd_ArgCompletion_MaterialName);
 	Cmd_AddCommand("testMaterialParm", CL_TestMaterialParm_f, "Tests a material parm on the current test model", NULL);
+	Cmd_AddCommand("testRemoteView", CL_TestRemoteView_f, "Tests a remote view on the current test model", NULL);
 	Cmd_AddCommand("nextFrame", CL_NextFrame_f, NULL, NULL);
 	Cmd_AddCommand("prevFrame", CL_PrevFrame_f, NULL, NULL);
 	Cmd_AddCommand("nextSkin", CL_NextSkin_f, NULL, NULL);
@@ -858,6 +912,7 @@ void CL_ShutdownCommands (){
 	Cmd_RemoveCommand("testGun");
 	Cmd_RemoveCommand("testMaterial");
 	Cmd_RemoveCommand("testMaterialParm");
+	Cmd_RemoveCommand("testRemoteView");
 	Cmd_RemoveCommand("nextFrame");
 	Cmd_RemoveCommand("prevFrame");
 	Cmd_RemoveCommand("nextSkin");

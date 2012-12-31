@@ -95,7 +95,7 @@ static void SV_WipeSaveGame (const char *saveName){
 */
 static void SV_CopySaveGame (const char *src, const char *dst){
 
-	char		path[MAX_QPATH], nameSrc[MAX_QPATH], nameDst[MAX_QPATH];
+	char		path[MAX_PATH_LENGTH], nameSrc[MAX_PATH_LENGTH], nameDst[MAX_PATH_LENGTH];
 	char		name[MAX_PATH_LENGTH];
 	const char	**fileList;
 	int			numFiles;
@@ -200,7 +200,7 @@ static void SV_WriteServerFile (bool autoSave){
 	FS_CloseFile(f);
 
 	// Write the game state
-	Str_SPrintf(name, sizeof(name), "%s/%s/save/current/game.ssv", CVar_GetVariableString("fs_homePath"), CVar_GetVariableString("fs_game"));
+	Str_SPrintf(name, sizeof(name), "%s/%s/save/current/game.ssv", CVar_GetVariableString("fs_savePath"), CVar_GetVariableString("fs_game"));
 	ge->WriteGame(name, autoSave);
 }
 
@@ -249,7 +249,7 @@ static void SV_ReadServerFile (){
 	Str_Copy(svs.mapCmd, mapCmd, sizeof(svs.mapCmd));
 
 	// Read the game state
-	Str_SPrintf(name, sizeof(name), "%s/%s/save/current/game.ssv", CVar_GetVariableString("fs_homePath"), CVar_GetVariableString("fs_game"));
+	Str_SPrintf(name, sizeof(name), "%s/%s/save/current/game.ssv", CVar_GetVariableString("fs_savePath"), CVar_GetVariableString("fs_game"));
 	ge->ReadGame(name);
 }
 
@@ -261,7 +261,7 @@ static void SV_ReadServerFile (){
 void SV_WriteLevelFile (){
 
 	fileHandle_t	f;
-	char			name[MAX_QPATH];
+	char			name[MAX_PATH_LENGTH];
 
 	Com_DPrintf("SV_WriteLevelFile()\n");
 
@@ -276,7 +276,7 @@ void SV_WriteLevelFile (){
 	CM_WritePortalState(f);
 	FS_CloseFile(f);
 
-	Str_SPrintf(name, sizeof(name), "%s/%s/save/current/%s.sav", CVar_GetVariableString("fs_homePath"), CVar_GetVariableString("fs_game"), sv.name);
+	Str_SPrintf(name, sizeof(name), "%s/%s/save/current/%s.sav", CVar_GetVariableString("fs_savePath"), CVar_GetVariableString("fs_game"), sv.name);
 	ge->WriteLevel(name);
 }
 
@@ -288,7 +288,7 @@ void SV_WriteLevelFile (){
 void SV_ReadLevelFile (){
 
 	fileHandle_t	f;
-	char			name[MAX_QPATH];
+	char			name[MAX_PATH_LENGTH];
 
 	Com_DPrintf("SV_ReadLevelFile()\n");
 
@@ -303,7 +303,7 @@ void SV_ReadLevelFile (){
 	CM_ReadPortalState(f);
 	FS_CloseFile(f);
 
-	Str_SPrintf(name, sizeof(name), "%s/%s/save/current/%s.sav", CVar_GetVariableString("fs_homePath"), CVar_GetVariableString("fs_game"), sv.name);
+	Str_SPrintf(name, sizeof(name), "%s/%s/save/current/%s.sav", CVar_GetVariableString("fs_savePath"), CVar_GetVariableString("fs_game"), sv.name);
 	ge->ReadLevel(name);
 }
 
@@ -314,7 +314,7 @@ void SV_ReadLevelFile (){
 */
 void SV_LoadGame_f (){
 
-	char	name[MAX_QPATH];
+	char	name[MAX_PATH_LENGTH];
 	char	*dir;
 
 	if (Cmd_Argc() != 2){
@@ -476,7 +476,7 @@ static void SV_GameMap (const char *map){
 	Str_Copy(svs.mapCmd, Cmd_Argv(1), sizeof(svs.mapCmd));
 
 	// Copy off the level to the autosave slot
-	if (!dedicated->integerValue){
+	if (!com_dedicated->integerValue){
 		SV_WriteServerFile(true);
 		SV_CopySaveGame("current", "save0");
 	}
@@ -509,8 +509,8 @@ void SV_GameMap_f (){
 */
 void SV_Map_f (){
 
-	char	map[MAX_QPATH];
-	char	checkName[MAX_QPATH];
+	char	map[MAX_PATH_LENGTH];
+	char	checkName[MAX_PATH_LENGTH];
 
 	if (Cmd_Argc() != 2){
 		Com_Printf("Usage: map <name>\n");
@@ -544,8 +544,8 @@ void SV_Map_f (){
 */
 void SV_Demo_f (){
 
-	char	map[MAX_QPATH];
-	char	checkName[MAX_QPATH];
+	char	map[MAX_PATH_LENGTH];
+	char	checkName[MAX_PATH_LENGTH];
 
 	if (Cmd_Argc() != 2){
 		Com_Printf("Usage: demo <demoName>\n");
@@ -816,7 +816,7 @@ void SV_DumpUser_f (){
 void SV_ServerRecord_f (){
 
 	msg_t	msg;
-	char	name[MAX_QPATH];
+	char	name[MAX_PATH_LENGTH];
 	char	data[32768];
 	int		length;
 	int		i;

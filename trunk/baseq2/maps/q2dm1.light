@@ -1,0 +1,372 @@
+light 0
+{
+name                light_0
+origin              ( 1495 51 701 )
+material            lights/default
+}
+light 1
+{
+name                light_1
+origin              ( 1891 123 704 )
+material            lights/default
+}
+light 2
+{
+name                light_2
+origin              ( 1666 -33 703 )
+material            lights/default
+}
+light 3
+{
+name                light_3
+origin              ( 1871 446 708 )
+material            lights/default
+}
+light 4
+{
+name                light_4
+origin              ( 1981 369 757 )
+material            lights/default
+}
+light 5
+{
+name                light_5
+origin              ( 1986 204 756 )
+material            lights/default
+}
+light 6
+{
+name                light_6
+origin              ( 1989 82 754 )
+material            lights/default
+}
+light 7
+{
+name                light_7
+origin              ( 1989 -48 745 )
+material            lights/default
+}
+light 8
+{
+name                light_8
+origin              ( 1986 -179 737 )
+material            lights/default
+}
+light 9
+{
+name                light_9
+origin              ( 1847 -183 744 )
+material            lights/default
+}
+light 10
+{
+name                light_10
+origin              ( 1704 -189 743 )
+material            lights/default
+}
+light 11
+{
+name                light_11
+origin              ( 1591 -182 739 )
+material            lights/default
+}
+light 12
+{
+name                light_12
+origin              ( 1465 -182 743 )
+material            lights/default
+}
+light 13
+{
+name                light_13
+origin              ( 1338 -184 741 )
+material            lights/default
+}
+light 14
+{
+name                light_14
+origin              ( 1202 -122 743 )
+material            lights/default
+}
+light 15
+{
+name                light_15
+origin              ( 1260 753 1170 )
+material            lights/default
+}
+light 16
+{
+name                light_16
+origin              ( 2015 770 413 )
+material            lights/default
+}
+light 17
+{
+name                light_17
+origin              ( 2037 645 411 )
+material            lights/default
+}
+light 18
+{
+name                light_18
+origin              ( 1931 630 405 )
+material            lights/default
+}
+light 19
+{
+name                light_19
+origin              ( 1941 520 409 )
+material            lights/default
+}
+light 20
+{
+name                light_20
+origin              ( 2050 508 407 )
+material            lights/default
+}
+light 21
+{
+name                light_21
+origin              ( 2038 388 408 )
+material            lights/default
+}
+light 22
+{
+name                light_22
+origin              ( 1930 366 408 )
+material            lights/default
+}
+light 23
+{
+name                light_23
+origin              ( 1887 511 968 )
+material            lights/default
+}
+light 24
+{
+name                light_24
+origin              ( 1849 153 1070 )
+material            lights/default
+}
+light 25
+{
+name                light_25
+origin              ( 1650 -58 1076 )
+material            lights/default
+}
+light 26
+{
+name                light_26
+origin              ( 265 336 1124 )
+material            lights/default
+}
+light 27
+{
+name                light_27
+origin              ( 406 1145 830 )
+material            lights/default
+}
+light 28
+{
+name                light_28
+origin              ( 571 1428 839 )
+material            lights/default
+}
+light 29
+{
+name                light_29
+origin              ( 832 1720 827 )
+material            lights/default
+}
+light 30
+{
+name                light_30
+origin              ( 940 1609 831 )
+material            lights/default
+}
+light 31
+{
+name                light_31
+origin              ( 940 1319 1046 )
+material            lights/default
+}
+light 32
+{
+name                light_32
+origin              ( 769 1288 1071 )
+material            lights/default
+}
+light 33
+{
+name                light_33
+origin              ( 956 1419 1078 )
+material            lights/default
+}
+light 34
+{
+name                light_34
+origin              ( 1079 1742 815 )
+material            lights/default
+}
+light 35
+{
+name                light_35
+origin              ( 1208 1761 811 )
+material            lights/default
+}
+light 36
+{
+name                light_36
+origin              ( 1333 1767 809 )
+material            lights/default
+}
+light 37
+{
+name                light_37
+origin              ( 1458 1750 809 )
+material            lights/default
+}
+light 38
+{
+name                light_38
+origin              ( 1486 1615 807 )
+material            lights/default
+}
+light 39
+{
+name                light_39
+origin              ( 1500 1484 806 )
+material            lights/default
+}
+light 40
+{
+name                light_40
+origin              ( 1503 1355 806 )
+material            lights/default
+}
+light 41
+{
+name                light_41
+origin              ( 1494 1218 806 )
+material            lights/default
+}
+light 42
+{
+name                light_42
+origin              ( 1333 1208 808 )
+material            lights/default
+}
+light 43
+{
+name                light_43
+origin              ( 1335 1339 802 )
+material            lights/default
+}
+light 44
+{
+name                light_44
+origin              ( 1374 1577 1067 )
+material            lights/default
+}
+light 45
+{
+name                light_45
+origin              ( 1270 1694 1065 )
+material            lights/default
+}
+light 46
+{
+name                light_46
+origin              ( 1353 1244 1004 )
+material            lights/default
+}
+light 47
+{
+name                light_47
+origin              ( 1484 1247 999 )
+material            lights/default
+}
+light 48
+{
+name                light_48
+origin              ( 1420 934 358 )
+material            lights/default
+}
+light 49
+{
+name                light_49
+origin              ( 1396 585 366 )
+material            lights/default
+}
+light 50
+{
+name                light_50
+origin              ( 1384 844 361 )
+material            lights/default
+}
+light 51
+{
+name                light_51
+origin              ( 1210 863 359 )
+material            lights/default
+}
+light 52
+{
+name                light_52
+origin              ( 1191 586 354 )
+material            lights/default
+}
+light 53
+{
+name                light_53
+origin              ( 1004 579 359 )
+material            lights/default
+}
+light 54
+{
+name                light_54
+origin              ( 998 868 360 )
+material            lights/default
+}
+light 55
+{
+name                light_55
+origin              ( 818 594 358 )
+material            lights/default
+}
+light 56
+{
+name                light_56
+origin              ( 780 863 375 )
+material            lights/default
+}
+light 57
+{
+name                light_57
+origin              ( 240 -9 378 )
+material            lights/default
+}
+light 58
+{
+name                light_58
+origin              ( 241 -115 385 )
+material            lights/default
+}
+light 59
+{
+name                light_59
+origin              ( 247 -225 769 )
+material            lights/default
+}
+light 60
+{
+name                light_60
+origin              ( 188 -416 478 )
+material            lights/default
+}
+light 61
+{
+name                light_61
+origin              ( 313 -417 474 )
+material            lights/default
+}

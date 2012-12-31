@@ -29,7 +29,7 @@
 #include "r_local.h"
 
 
-#define BACKFACE_EPSILON	0.01f
+#define BACKFACE_EPSILON			0.01f
 
 
 /*
@@ -83,6 +83,8 @@ static bool R_CullSurface (surface_t *surface, const vec3_t origin, int clipFlag
 /*
  ==================
  R_AddSurface
+
+ FIXME: texture frame animation does not work
  ==================
 */
 static void R_AddSurface (surface_t *surface, renderEntity_t *entity){
@@ -104,6 +106,12 @@ static void R_AddSurface (surface_t *surface, renderEntity_t *entity){
 	}
 
 	material = texInfo->material;
+
+	// Add a subview surface if needed
+	if (material->subviewType != ST_NONE){
+		if (!R_AddSubviewSurface(MESH_SURFACE, surface, entity, material))
+			return;
+	}
 
 	// Add it
 	R_AddMeshToList(MESH_SURFACE, surface, entity, material);

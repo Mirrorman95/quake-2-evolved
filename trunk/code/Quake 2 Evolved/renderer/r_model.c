@@ -271,13 +271,13 @@ static void R_GetTexSize (texInfo_t *texInfo){
 
 	material_t		*material = texInfo->material;
 	stage_t			*stage;
-	char			name[MAX_OSPATH];
+	char			name[MAX_PATH_LENGTH];
 	mipTex_t		mt;
 	fileHandle_t	f;
 	int				i;
 
 	// Look for a .wal texture first. This is so that retextures work.
-	Q_snprintfz(name, sizeof(name), "%s.wal", material->name);
+	Str_SPrintf(name, sizeof(name), "%s.wal", material->name);
 	FS_OpenFile(name, FS_READ, &f);
 	if (f){
 		// Found it, use its dimensions
@@ -351,7 +351,7 @@ static void R_LoadTexInfo (const byte *data, const bspLump_t *lump){
 	bspTexInfo_t	*in;
 	texInfo_t		*out, *step;
 	int				next;
-	char			name[MAX_QPATH];
+	char			name[MAX_PATH_LENGTH];
 	int 			i, j;
 	uint			surfaceParm;
 
@@ -370,8 +370,6 @@ static void R_LoadTexInfo (const byte *data, const bspLump_t *lump){
 			out->vecs[0][j] = LittleFloat(in->vecs[0][j]);
 			out->vecs[1][j] = LittleFloat(in->vecs[1][j]);
 		}
-
-		out->numFrames = 1;
 
 		next = LittleLong(in->nextTexInfo);
 		if (next > 0)
@@ -432,6 +430,7 @@ static void R_LoadTexInfo (const byte *data, const bspLump_t *lump){
 
 	// Count animation frames
 	for (i = 0, out = rg.worldModel->texInfo; i < rg.worldModel->numTexInfo; i++, out++){
+		out->numFrames = 1;
 		for (step = out->next; step && step != out; step = step->next)
 			out->numFrames++;
 	}
@@ -1365,7 +1364,7 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 	mdlTriangle_t	*outTriangle;
 	mdlSt_t			*outSt;
 	mdlXyzNormal_t	*outXyzNormal;
-	char			checkName[MAX_OSPATH];
+	char			checkName[MAX_PATH_LENGTH];
 	vec3_t			scale, translate;
 	float			lat, lng;
 	int				id, version;
@@ -1594,7 +1593,7 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 	mdlFrame_t		*outFrame;
 	mdlXyzNormal_t	*outXyzNormal;
 	mdlMaterial_t	*outMaterial;
-	char			checkName[MAX_OSPATH];
+	char			checkName[MAX_PATH_LENGTH];
 	vec3_t			scale, translate;
 	glIndex_t		tmpXyzIndices[MD2_MAX_TRIANGLES*3], tmpStIndices[MD2_MAX_TRIANGLES*3];
 	int				indexRemap[MD2_MAX_TRIANGLES*3];
@@ -1777,7 +1776,7 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 	*size += outSurface->numMaterials * sizeof(mdlMaterial_t);
 
 	for (i = 0; i < outSurface->numMaterials; i++, outMaterial++){
-		Str_Copy(checkName, (char *)inHeader + LittleLong(inHeader->ofsSkins) + i*MAX_QPATH, sizeof(checkName));
+		Str_Copy(checkName, (char *)inHeader + LittleLong(inHeader->ofsSkins) + i*MAX_PATH_LENGTH, sizeof(checkName));
 		Str_StripFileExtension(checkName);
 
 		outMaterial->material = R_FindMaterial(checkName, MT_GENERIC, SURFACEPARM_LIGHTING);
@@ -1814,7 +1813,7 @@ static bool R_LoadSP2Model (const char *name, spr_t **model, int *size){
 	sp2Frame_t	*inFrame;
 	spr_t		*outModel;
 	sprFrame_t	*outFrame;
-	char		checkName[MAX_QPATH];
+	char		checkName[MAX_PATH_LENGTH];
 	int			id, version;
 	int			width, height;
 	int			i;
@@ -1920,7 +1919,7 @@ static model_t *R_LoadModel (const char *name, bool defaulted, modelType_t type,
 model_t *R_FindModel (const char *name){
 
 	model_t	*model;
-	char	extension[MAX_PATH_LENGTH];
+	char	extension[MAX_PATH_LENGTH >> 4];
 	void	*data;
 	int		size;
 	int		i;
@@ -2282,6 +2281,7 @@ void R_InitModels (){
 
 	// Set up the world entity
 	rg.worldEntity = &rg.scene.entities[0];
+
 	Mem_Fill(rg.worldEntity, 0, sizeof(renderEntity_t));
 
 	rg.worldEntity->type = RE_MODEL;
@@ -2292,6 +2292,8 @@ void R_InitModels (){
 
 	VectorClear(rg.worldEntity->origin);
 	Matrix3_Identity(rg.worldEntity->axis);
+
+	rg.worldEntity->hasSubview = false;
 
 	rg.worldEntity->depthHack = false;
 

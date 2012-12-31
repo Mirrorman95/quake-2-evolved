@@ -39,6 +39,35 @@ static void R_PerformanceCounters (){
 	if (r_showCull->integerValue)
 		Com_Printf("in: %i (b: %i, s: %i, l: %i), clip: %i (b: %i, s: %i, l: %i), out: %i (b: %i, s: %i, l: %i)\n", rg.pc.cullBoundsIn + rg.pc.cullSphereIn + rg.pc.cullLineIn, rg.pc.cullBoundsIn, rg.pc.cullSphereIn, rg.pc.cullLineIn, rg.pc.cullBoundsClip + rg.pc.cullSphereClip + rg.pc.cullLineClip, rg.pc.cullBoundsClip, rg.pc.cullSphereClip, rg.pc.cullLineClip, rg.pc.cullBoundsOut + rg.pc.cullSphereOut + rg.pc.cullLineOut, rg.pc.cullBoundsOut, rg.pc.cullSphereOut, rg.pc.cullLineOut);
 
+	if (r_showScene->integerValue)
+		Com_Printf("entities: %i, lights: %i, particles: %i, decals: %i\n", rg.pc.entities, rg.pc.lights, rg.pc.particles, rg.pc.decals);
+
+	if (r_showLights->integerValue)
+		Com_Printf("lights: %i (static: %i, dynamic: %i)\n", rg.pc.lights, rg.pc.staticLights, rg.pc.dynamicLights);
+
+	if (r_showDynamic->integerValue)
+		Com_Printf("tris: %i verts: %i (sprite: %i, beam: %i, particle: %i, decal: %i)\n", rg.pc.dynamicIndices / 3, rg.pc.dynamicVertices, rg.pc.dynamicSprite, rg.pc.dynamicBeam, rg.pc.dynamicParticle,  rg.pc.dynamicDecal);
+
+	if (r_showDeforms->integerValue)
+		Com_Printf("tris: %i verts: %i (expand: %i, move: %i, sprite: %i, tube: %i, beam: %i)\n", rg.pc.deformIndices / 3, rg.pc.deformVertices, rg.pc.deformExpand, rg.pc.deformMove, rg.pc.deformSprite, rg.pc.deformTube, rg.pc.deformBeam);
+
+	// TODO: r_showPrimitives
+
+	if (r_showIndexBuffers->integerValue)
+		Com_Printf("index buffers: %i = %i KB (static: %i = %i KB, dynamic: %i = %i KB)\n", rg.pc.indexBuffers[0] + rg.pc.indexBuffers[1], (rg.pc.indexBufferBytes[0] + rg.pc.indexBufferBytes[1]) >> 10, rg.pc.indexBuffers[0], rg.pc.indexBufferBytes[0] >> 10, rg.pc.indexBuffers[1], rg.pc.indexBufferBytes[1] >> 10);
+
+	if (r_showVertexBuffers->integerValue)
+		Com_Printf("vertex buffers: %i = %i KB (static: %i = %i KB, dynamic: %i = %i KB)\n", rg.pc.vertexBuffers[0] + rg.pc.vertexBuffers[1], (rg.pc.vertexBufferBytes[0] + rg.pc.vertexBufferBytes[1]) >> 10, rg.pc.vertexBuffers[0], rg.pc.vertexBufferBytes[0] >> 10, rg.pc.vertexBuffers[1], rg.pc.vertexBufferBytes[1] >> 10);
+
+	if (r_showTextureUsage->integerValue)
+		Com_Printf("textures: %i = %.2f MB\n", rg.pc.textures, rg.pc.textureBytes * (1.0f / 1048576.0f));
+
+	if (r_showOverdraw->integerValue)
+		Com_Printf("overdraw: %.2f\n", rg.pc.overdraw);
+
+	if (r_showLightCount->integerValue)
+		Com_Printf("light overdraw: %.2f\n", rg.pc.overdrawLights);
+
 	// Clear for next frame
 	Mem_Fill(&rg.pc, 0, sizeof(performanceCounters_t));
 }

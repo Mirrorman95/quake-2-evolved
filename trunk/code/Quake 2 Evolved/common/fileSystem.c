@@ -27,10 +27,6 @@
 
 // TODO:
 // - fileInPath->name is wrong when loading from pk3 files (see FS_ListFiles)
-// - FS_AddGameDirectory
-// - directory crap?
-// - console commands
-// - Com_SafeMode in FS_Init
 
 
 #include "common.h"
@@ -49,65 +45,68 @@
 #define MAX_PACK_FILES				1024
 
 typedef struct {
-	char				name[MAX_QPATH];
-	fsMode_t			mode;
+	char					name[MAX_PATH_LENGTH];
+	fsMode_t				mode;
 
-	FILE *				realFile;			// Only one of realFile or
-	unzFile				zipFile;			// zipFile will be used
+	FILE *					realFile;			// Only one of realFile or
+	unzFile					zipFile;			// zipFile will be used
 } file_t;
 
 typedef struct fileInPack_s {
-	char				name[MAX_QPATH];
-	bool				isDirectory;
+	char					name[MAX_PATH_LENGTH];
+	bool					isDirectory;
 
-	int					size;
-	int					offset;				// This is ignored in PK3 files
+	int						size;
+	int						offset;				// This is ignored in PK3 files
 
-	struct fileInPack_s *nextHash;
+	struct fileInPack_s *	nextHash;
 } fileInPack_t;
 
 typedef struct {
-	char				name[MAX_OSPATH];
+	char					path[MAX_PATH_LENGTH];
+	char					game[MAX_PATH_LENGTH];
+
+	FILE *					pak;				// Only one of pak or
+	unzFile					pk3;				// pk3 will be used
 	
-	FILE *				pak;				// Only one of pak or
-	unzFile				pk3;				// pk3 will be used
-	
-	int					numFiles;
-	fileInPack_t *		files;
-	fileInPack_t *		filesHashTable[FILES_HASH_SIZE];
+	int						numFiles;
+	fileInPack_t *			files;
+	fileInPack_t *			filesHashTable[FILES_HASH_SIZE];
 } pack_t;
 
-typedef struct fsSearchPath_s {
-	char				path[MAX_OSPATH];	// Only one of path or
-	pack_t *			pack;				// pack will be used
+typedef struct directory_s {
+	char					base[MAX_PATH_LENGTH];
+	char					game[MAX_PATH_LENGTH];
+} directory_t;
 
-	struct fsSearchPath_s *next;
+typedef struct searchPath_s {
+	pack_t *				pack;				// Only one of pack or
+	directory_t *			directory;			// directory will be used
+
+	struct searchPath_s *	next;
 } searchPath_t;
 
-static file_t			fs_fileHandles[MAX_FILE_HANDLES];
+static file_t				fs_fileHandles[MAX_FILE_HANDLES];
 
-static searchPath_t	*	fs_searchPaths;
+static searchPath_t	*		fs_searchPaths;
 
-static int				fs_readCount;
-static int				fs_writeCount;
+static int					fs_readCount;
+static int					fs_writeCount;
 
-static char				fs_gameDirectory[MAX_OSPATH];
-static char				fs_curGame[MAX_QPATH];
+static int					fs_packFilesCount;
 
-static cvar_t *			fs_debug;
-static cvar_t *			fs_savePath;
-cvar_t *				fs_game;
+static char					fs_curGame[MAX_PATH_LENGTH];
 
-
-cvar_t *				fs_homePath;
-static cvar_t *			fs_basePath;
-static cvar_t *			fs_baseGame;
+static cvar_t *				fs_debug;
+static cvar_t *				fs_basePath;
+static cvar_t *				fs_savePath;
+cvar_t *					fs_game;
 
 
 /*
  ==============================================================================
 
- INDEX FILE HANDLE
+ FILE INDEX HANDLE
 
  ==============================================================================
 */
@@ -679,7 +678,8 @@ static int FS_OpenFileRead (const char *name, FILE **realFile, unzFile *zipFile)
 	searchPath_t	*searchPath;
 	pack_t			*pack;
 	fileInPack_t	*fileInPack;
-	char			path[MAX_OSPATH];
+	directory_t		*directory;
+	char			path[MAX_PATH_LENGTH];
 	uint			hashKey;
 
 	// Get the hash key for the given file name
@@ -695,11 +695,11 @@ static int FS_OpenFileRead (const char *name, FILE **realFile, unzFile *zipFile)
 				if (!FS_FileNameCompare(fileInPack->name, name)){
 					// Found it!
 					if (fs_debug->integerValue)
-						Com_Printf("FS_OpenFileRead: '%s' (found in '%s')\n", name, pack->name);
+						Com_Printf("FS_OpenFileRead: '%s' (found in '%s')\n", name, pack->path);
 
 					if (pack->pak){
 						// PAK
-						*realFile = fopen(pack->name, "rb");
+						*realFile = fopen(pack->path, "rb");
 						if (*realFile){
 							fseek(*realFile, fileInPack->offset, SEEK_SET);
 
@@ -708,7 +708,7 @@ static int FS_OpenFileRead (const char *name, FILE **realFile, unzFile *zipFile)
 					}
 					else if (pack->pk3){
 						// PK3
-						*zipFile = unzOpen(pack->name);
+						*zipFile = unzOpen(pack->path);
 						if (*zipFile){
 							if (unzLocateFile(*zipFile, name, 2) == UNZ_OK){
 								if (unzOpenCurrentFile(*zipFile) == UNZ_OK)
@@ -719,19 +719,23 @@ static int FS_OpenFileRead (const char *name, FILE **realFile, unzFile *zipFile)
 						}
 					}
 
-					Com_Error(ERR_FATAL, "Couldn't reopen %s", pack->name);
+					Com_DPrintf(S_COLOR_RED "FS_OpenFileRead: couldn't reopen '%s'\n", pack->path);
+
+					return -1;
 				}
 			}
 		}
-		else {
+		else if (searchPath->directory){
 			// Search in a directory tree
-			Str_SPrintf(path, sizeof(path), "%s/%s", searchPath->path, name);
+			directory = searchPath->directory;
+
+			FS_BuildOSPath(directory->base, directory->game, name, path);
 
 			*realFile = fopen(path, "rb");
 			if (*realFile){
 				// Found it!
 				if (fs_debug->integerValue)
-					Com_Printf("FS_OpenFileRead: %s (found in %s)\n", name, searchPath->path);
+					Com_Printf("FS_OpenFileRead: '%s' (found in '%s%s%s')\n", name, directory->base, PATH_SEPARATOR_STRING, directory->game);
 
 				return FS_FileLength(*realFile);
 			}
@@ -754,7 +758,7 @@ static int FS_OpenFileRead (const char *name, FILE **realFile, unzFile *zipFile)
 */
 static int FS_OpenFileWrite (const char *name, FILE **realFile){
 
-	char	path[MAX_OSPATH];
+	char	path[MAX_PATH_LENGTH];
 
 	FS_BuildOSPath(fs_savePath->value, fs_game->value, name, path);
 
@@ -785,7 +789,7 @@ static int FS_OpenFileWrite (const char *name, FILE **realFile){
 */
 static int FS_OpenFileAppend (const char *name, FILE **realFile){
 
-	char	path[MAX_OSPATH];
+	char	path[MAX_PATH_LENGTH];
 
 	FS_BuildOSPath(fs_savePath->value, fs_game->value, name, path);
 
@@ -1008,6 +1012,7 @@ findFile_t FS_FindFile (const char *name, char sourcePath[MAX_PATH_LENGTH]){
 	searchPath_t	*searchPath;
 	pack_t			*pack;
 	fileInPack_t	*fileInPack;
+	directory_t		*directory;
 	char			path[MAX_PATH_LENGTH];
 	FILE			*f;
 	uint			hashKey;
@@ -1028,29 +1033,31 @@ findFile_t FS_FindFile (const char *name, char sourcePath[MAX_PATH_LENGTH]){
 				if (!FS_FileNameCompare(fileInPack->name, name)){
 					// Found it!
 					if (fs_debug->integerValue)
-						Com_Printf("FS_FindFile: '%s' (found in '%s')\n", name, pack->name);
+						Com_Printf("FS_FindFile: '%s' (found in '%s')\n", name, pack->path);
 
 					if (sourcePath)
-						Str_Copy(sourcePath, pack->name, MAX_PATH_LENGTH);
+						Str_Copy(sourcePath, pack->path, MAX_PATH_LENGTH);
 
 					return FIND_PACK;
 				}
 			}
 		}
-		else {
+		else if (searchPath->directory){
 			// Search in the directory tree
-			Str_SPrintf(path, sizeof(path), "%s/%s", searchPath->path, name);
+			directory = searchPath->directory;
+
+			FS_BuildOSPath(directory->base, directory->game, name, path);
 
 			f = fopen(path, "rb");
 			if (f){
 				// Found it!
 				if (fs_debug->integerValue)
-					Com_Printf("FS_FindFile: '%s' (found in '%s%s')\n", name, searchPath->path);
+					Com_Printf("FS_FindFile: '%s' (found in '%s%s%s')\n", name, directory->base, PATH_SEPARATOR_STRING, directory->game);
 
 				fclose(f);
 
 				if (sourcePath)
-					Str_SPrintf(sourcePath, MAX_PATH_LENGTH, "%s", searchPath->path);
+					Str_SPrintf(sourcePath, MAX_PATH_LENGTH, "%s%s%s", directory->base, PATH_SEPARATOR_STRING, directory->game);
 
 				return FIND_DIRECTORY;
 			}
@@ -1088,7 +1095,7 @@ int FS_ReadFile (const char *name, void **buffer){
 		return size;
 	}
 
-	*buffer = ptr = (byte *)Mem_ClearedAlloc(size + 1, TAG_TEMPORARY);
+	*buffer = ptr = (byte *)Mem_Alloc(size + 1, TAG_TEMPORARY);
 
 	FS_Read(f, ptr, size);
 	FS_CloseFile(f);
@@ -1249,6 +1256,7 @@ const char **FS_ListFiles (const char *path, const char *extension, bool sort, i
 	searchPath_t	*searchPath;
 	pack_t			*pack;
 	fileInPack_t	*fileInPack;
+	directory_t		*directory;
 	char			name[MAX_PATH_LENGTH];
 	const char		**sysFileList;
 	int				sysNumFiles;
@@ -1291,7 +1299,9 @@ const char **FS_ListFiles (const char *path, const char *extension, bool sort, i
 		}
 		else {
 			// Search in the directory tree
-			Str_SPrintf(name, sizeof(name), "%s/%s", searchPath->path, path);
+			directory = searchPath->directory;
+
+			Str_SPrintf(name, sizeof(name), "%s/%s/%s", directory->base, directory->game, path);
 
 			// Scan the directory
 			sysFileList = Sys_ListFiles(name, extension, false, &sysNumFiles);
@@ -1314,7 +1324,7 @@ const char **FS_ListFiles (const char *path, const char *extension, bool sort, i
 		qsort(files, fileCount, sizeof(char *), FS_SortFileList);
 
 	// Copy the list
-	fileList = (const char **)Mem_ClearedAlloc((fileCount + 1) * sizeof(char *), TAG_TEMPORARY);
+	fileList = (const char **)Mem_Alloc((fileCount + 1) * sizeof(char *), TAG_TEMPORARY);
 
 	for (i = 0; i < fileCount; i++)
 		fileList[i] = files[i];
@@ -1336,6 +1346,7 @@ const char **FS_ListFilteredFiles (const char *filter, bool sort, int *numFiles)
 	searchPath_t	*searchPath;
 	pack_t			*pack;
 	fileInPack_t	*fileInPack;
+	directory_t		*directory;
 	char			name[MAX_PATH_LENGTH];
 	const char		**sysFileList;
 	int				sysNumFiles;
@@ -1361,7 +1372,9 @@ const char **FS_ListFilteredFiles (const char *filter, bool sort, int *numFiles)
 		}
 		else {
 			// Search in the directory tree
-			Str_SPrintf(name, sizeof(name), "%s", searchPath->path);
+			directory = searchPath->directory;
+
+			Str_SPrintf(name, sizeof(name), "%s/%s", directory->base, directory->game);
 
 			// Scan the directory
 			sysFileList = Sys_ListFilteredFiles(name, filter, false, &sysNumFiles);
@@ -1384,7 +1397,7 @@ const char **FS_ListFilteredFiles (const char *filter, bool sort, int *numFiles)
 		qsort(files, fileCount, sizeof(char *), FS_SortFileList);
 
 	// Copy the list
-	fileList = (const char **)Mem_ClearedAlloc((fileCount + 1) * sizeof(char *), TAG_TEMPORARY);
+	fileList = (const char **)Mem_Alloc((fileCount + 1) * sizeof(char *), TAG_TEMPORARY);
 
 	for (i = 0; i < fileCount; i++)
 		fileList[i] = files[i];
@@ -1478,7 +1491,7 @@ static int FS_AddModToList (const char *name, modList_t **mods, int modCount){
 	else {
 		length = FS_FileLength(f);
 
-		description = (char *)Mem_ClearedAlloc(length + 1, TAG_TEMPORARY);
+		description = (char *)Mem_Alloc(length + 1, TAG_TEMPORARY);
 
 		fread(description, 1, length, f);
 		description[length] = 0;
@@ -1487,7 +1500,7 @@ static int FS_AddModToList (const char *name, modList_t **mods, int modCount){
 	}
 
 	// Add it
-	mods[modCount] = (modList_t *)Mem_ClearedAlloc(sizeof(modList_t), TAG_TEMPORARY);
+	mods[modCount] = (modList_t *)Mem_Alloc(sizeof(modList_t), TAG_TEMPORARY);
 
 	mods[modCount]->directory = Mem_DupString(name, TAG_TEMPORARY);
 	mods[modCount]->description = description;
@@ -1537,7 +1550,7 @@ modList_t **FS_ListMods (bool sort, int *numMods){
 		qsort(mods, modCount, sizeof(modList_t *), FS_SortModList);
 
 	// Copy the list
-	modList = (modList_t **)Mem_ClearedAlloc((modCount + 1) * sizeof(modList_t *), TAG_TEMPORARY);
+	modList = (modList_t **)Mem_Alloc((modCount + 1) * sizeof(modList_t *), TAG_TEMPORARY);
 
 	for (i = 0; i < modCount; i++)
 		modList[i] = mods[i];
@@ -1661,7 +1674,7 @@ void FS_ResetWriteCount (){
  the list so they override previous pack files.
  ==================
 */
-static pack_t *FS_LoadPAK (const char *packPath){
+static pack_t *FS_LoadPAK (const char *packPath, const char *packGame){
 
 	pack_t			*pack;
 	fileInPack_t	*fileInPack;
@@ -1702,14 +1715,15 @@ static pack_t *FS_LoadPAK (const char *packPath){
 	}
 
 	// Allocate the pack
-	pack = (pack_t *)Mem_ClearedAlloc(sizeof(pack_t), TAG_COMMON);
+	pack = (pack_t *)Mem_Alloc(sizeof(pack_t), TAG_COMMON);
 
 	// Fill it in
-	Str_Copy(pack->name, packPath, sizeof(pack->name));
+	Str_Copy(pack->path, packPath, sizeof(pack->path));
+	Str_Copy(pack->game, packGame, sizeof(pack->game));
 	pack->pak = handle;
 	pack->pk3 = NULL;
 	pack->numFiles = numFiles;
-	pack->files = fileInPack = (fileInPack_t *)Mem_ClearedAlloc(numFiles * sizeof(fileInPack_t), TAG_COMMON);
+	pack->files = fileInPack = (fileInPack_t *)Mem_Alloc(numFiles * sizeof(fileInPack_t), TAG_COMMON);
 	Mem_Fill(pack->filesHashTable, 0, sizeof(pack->filesHashTable));
 
 	// Parse the directory
@@ -1757,14 +1771,14 @@ static pack_t *FS_LoadPAK (const char *packPath){
  the list so they override previous pack files.
  ==================
 */
-static pack_t *FS_LoadPK3 (const char *packPath){
+static pack_t *FS_LoadPK3 (const char *packPath, const char *packGame){
 
 	pack_t			*pack;
 	fileInPack_t	*fileInPack;
 	unzFile			handle;
 	unz_global_info	header;
 	unz_file_info	info;
-	char			name[MAX_QPATH];
+	char			name[MAX_PATH_LENGTH];
 	int				length;
 	bool			isDirectory;
 	int				i, numFiles;
@@ -1796,14 +1810,15 @@ static pack_t *FS_LoadPK3 (const char *packPath){
 	}
 
 	// Allocate the pack
-	pack = (pack_t *)Mem_ClearedAlloc(sizeof(pack_t), TAG_COMMON);
+	pack = (pack_t *)Mem_Alloc(sizeof(pack_t), TAG_COMMON);
 
 	// Fill it in
-	Str_Copy(pack->name, packPath, sizeof(pack->name));
+	Str_Copy(pack->path, packPath, sizeof(pack->path));
+	Str_Copy(pack->game, packGame, sizeof(pack->game));
 	pack->pak = NULL;
 	pack->pk3 = handle;
 	pack->numFiles = 0;
-	pack->files = fileInPack = (fileInPack_t *)Mem_ClearedAlloc(numFiles * sizeof(fileInPack_t), TAG_COMMON);
+	pack->files = fileInPack = (fileInPack_t *)Mem_Alloc(numFiles * sizeof(fileInPack_t), TAG_COMMON);
 	Mem_Fill(pack->filesHashTable, 0, sizeof(pack->filesHashTable));
 
 	// Parse the directory
@@ -1857,79 +1872,102 @@ static pack_t *FS_LoadPK3 (const char *packPath){
 
 /*
  ==================
- 
- Sets fs_gameDirectory, adds the directory to the head of the path, then loads
- and adds all the pack files found (in alphabetical order).
+ FS_AddGameDirectory
+
+ Adds the directory to the head of the path, then loads and adds all
+ the pack files found (in alphabetical order).
  
  PK3 files are loaded later so they override PAK files.
  ==================
 */
-static void FS_AddGameDirectory (const char *directory){
+static void FS_AddGameDirectory (const char *base, const char *game){
 
 	searchPath_t	*searchPath;
 	pack_t			*pack;
-	char			name[MAX_OSPATH];
+	directory_t		*directory;
+	char			path[MAX_PATH_LENGTH];
 	const char		**fileList;
 	int				numFiles;
 	int				i;
 
-	if (!directory || !directory[0])
-		return;
-
 	// Don't add the same directory twice
 	for (searchPath = fs_searchPaths; searchPath; searchPath = searchPath->next){
-		if (!FS_FileNameCompare(searchPath->path, directory))
-			return;
+		if (searchPath->directory){
+			directory = searchPath->directory;
+
+			if (!FS_FileNameCompare(directory->base, base) && !FS_FileNameCompare(directory->game, game))
+				return;
+		}
 	}
 
-	Str_Copy(fs_gameDirectory, directory, sizeof(fs_gameDirectory));
+	// Set up the path
+	Str_SPrintf(path, sizeof(path), "%s/%s", base, game);
 
-	// Add any PAK files
-	fileList = Sys_ListFiles(directory, ".pak", true, &numFiles);
+	// Scan the directory for any PAK files
+	fileList = Sys_ListFiles(path, ".pak", true, &numFiles);
 
 	for (i = 0; i < numFiles; i++){
-		Str_SPrintf(name, sizeof(name), "%s/%s", directory, fileList[i]);
+		FS_BuildOSPath(base, game, fileList[i], path);
 
 		// Load it
-		pack = FS_LoadPAK(name);
+		pack = FS_LoadPAK(path, game);
 		if (!pack)
 			continue;
 
 		// Add the pack file to the search paths
-		searchPath = (searchPath_t *)Mem_ClearedAlloc(sizeof(searchPath_t), TAG_COMMON);
+		if (fs_packFilesCount == MAX_PACK_FILES)
+			Com_Error(ERR_FATAL, "FS_AddGameDirectory: MAX_PACK_FILES hit");
+
+		searchPath = (searchPath_t *)Mem_Alloc(sizeof(searchPath_t), TAG_COMMON);
 
 		searchPath->pack = pack;
+		searchPath->directory = NULL;
 		searchPath->next = fs_searchPaths;
 		fs_searchPaths = searchPath;
+
+		fs_packFilesCount++;
 	}
 
 	Sys_FreeFileList(fileList);
 
-	// Add any PK3 files
-	fileList = Sys_ListFiles(directory, ".pk3", true, &numFiles);
+	// Scan the directory for any PK3 files
+	fileList = Sys_ListFiles(path, ".pk3", true, &numFiles);
 
 	for (i = 0; i < numFiles; i++){
-		Str_SPrintf(name, sizeof(name), "%s/%s", directory, fileList[i]);
+		FS_BuildOSPath(base, game, fileList[i], path);
 
 		// Load it
-		pack = FS_LoadPK3(name);
+		pack = FS_LoadPK3(path, game);
 		if (!pack)
 			continue;
 
 		// Add the pack file to the search paths
-		searchPath = (searchPath_t *)Mem_ClearedAlloc(sizeof(searchPath_t), TAG_COMMON);
+		if (fs_packFilesCount == MAX_PACK_FILES)
+			Com_Error(ERR_FATAL, "FS_AddGameDirectory: MAX_PACK_FILES hit");
+
+		searchPath = (searchPath_t *)Mem_Alloc(sizeof(searchPath_t), TAG_COMMON);
 
 		searchPath->pack = pack;
+		searchPath->directory = NULL;
 		searchPath->next = fs_searchPaths;
 		fs_searchPaths = searchPath;
+
+		fs_packFilesCount++;
 	}
 
 	Sys_FreeFileList(fileList);
+
+	// Create a new directory
+	directory = (directory_t *)Mem_Alloc(sizeof(directory_t), TAG_COMMON);
+
+	Str_Copy(directory->base, base, sizeof(directory->base));
+	Str_Copy(directory->game, game, sizeof(directory->game));
 
 	// Add the directory to the search paths
-	searchPath = (searchPath_t *)Mem_ClearedAlloc(sizeof(searchPath_t), TAG_COMMON);
+	searchPath = (searchPath_t *)Mem_Alloc(sizeof(searchPath_t), TAG_COMMON);
 
-	Str_Copy(searchPath->path, directory, sizeof(searchPath->path));
+	searchPath->pack = NULL;
+	searchPath->directory = directory;
 	searchPath->next = fs_searchPaths;
 	fs_searchPaths = searchPath;
 }
@@ -1996,6 +2034,7 @@ static void FS_ListSearchPaths_f (){
 
 	searchPath_t	*searchPath;
 	pack_t			*pack;
+	directory_t		*directory;
 	int				totalPacks = 0, totalFiles = 0;
 
 	Com_Printf("Current search paths:\n");
@@ -2004,13 +2043,16 @@ static void FS_ListSearchPaths_f (){
 		if (searchPath->pack){
 			pack = searchPath->pack;
 
-			Com_Printf("%s (%i files)\n", pack->name, pack->numFiles);
+			Com_Printf("%s (%i files)\n", pack->path, pack->numFiles);
 
 			totalPacks++;
 			totalFiles += pack->numFiles;
 		}
-		else
-			Com_Printf("%s\n", searchPath->path);
+		else if (searchPath->directory){
+			directory = searchPath->directory;
+
+			Com_Printf("%s%s%s\n", directory->base, PATH_SEPARATOR_STRING, directory->game);
+		}
 	}
 
 	Com_Printf("---------------------\n");
@@ -2142,27 +2184,29 @@ static void FS_TouchFile_f (){
 
 /*
  ==================
- 
+ FS_Startup
+
+ TODO: there are other variables used in the engine but do we need to really set them?
  ==================
 */
 static void FS_Startup (){
 
-	// Add the directories
-	FS_AddGameDirectory(fs_basePath->value);
+	// Make sure the variables are valid
+	if (!fs_basePath->value[0])
+		CVar_SetString(fs_basePath, Sys_DefaultBaseDirectory());
 
-	if (strstr(fs_baseGame->value, "..") || Str_FindChar(fs_baseGame->value, '.') || Str_FindChar(fs_baseGame->value, '/') || Str_FindChar(fs_baseGame->value, '\\') || Str_FindChar(fs_baseGame->value, ':') || !fs_baseGame->value[0] || !FS_FileNameCompare(fs_game->value, CODE_DIRECTORY) || !Str_ICompare(fs_game->value, DOCS_DIRECTORY) || !Str_ICompare(fs_game->value, SVN_DIRECTORY)){
-		Com_Printf("Invalid game directory\n");
-		CVar_SetString(fs_baseGame, BASE_DIRECTORY);
-	}
+	if (!fs_savePath->value[0])
+		CVar_SetString(fs_savePath, Sys_DefaultSaveDirectory());
 
-	FS_AddGameDirectory(Str_VarArgs("%s/%s", fs_homePath->value, fs_baseGame->value));
-
-	if (strstr(fs_game->value, "..") || Str_FindChar(fs_game->value, '.') || Str_FindChar(fs_game->value, '/') || Str_FindChar(fs_game->value, '\\') || Str_FindChar(fs_game->value, ':') || !fs_game->value[0] || !FS_FileNameCompare(fs_game->value, CODE_DIRECTORY) || !Str_ICompare(fs_game->value, DOCS_DIRECTORY) || !Str_ICompare(fs_game->value, SVN_DIRECTORY)){
-		Com_Printf("Invalid game directory\n");
+	if (!fs_game->value[0] || Str_FindChar(fs_game->value, ':') || Str_FindChar(fs_game->value, '/') || Str_FindChar(fs_game->value, '\\') || Str_FindChar(fs_game->value, '.') || Str_FindChar(fs_game->value, ' ') || !Str_ICompare(fs_game->value, CODE_DIRECTORY) || !Str_ICompare(fs_game->value, DOCS_DIRECTORY) || !Str_ICompare(fs_game->value, SVN_DIRECTORY))
 		CVar_SetString(fs_game, BASE_DIRECTORY);
-	}
 
-	FS_AddGameDirectory(Str_VarArgs("%s/%s", fs_homePath->value, fs_game->value));
+	// Add the directories
+	FS_AddGameDirectory(fs_basePath->value, BASE_DIRECTORY);
+	FS_AddGameDirectory(fs_savePath->value, BASE_DIRECTORY);
+
+	FS_AddGameDirectory(fs_basePath->value, fs_game->value);
+	FS_AddGameDirectory(fs_savePath->value, fs_game->value);
 
 	// Set the current game
 	Str_Copy(fs_curGame, fs_game->value, sizeof(fs_curGame));
@@ -2173,7 +2217,7 @@ static void FS_Startup (){
 
 /*
  ==================
- 
+ FS_Restart
  ==================
 */
 void FS_Restart (){
@@ -2203,21 +2247,24 @@ void FS_Restart (){
 
 /*
  ==================
- 
+ FS_Init
  ==================
 */
 void FS_Init (){
 
 	Com_Printf("-------- File System Initialization --------\n");
 
+	// Allow command line parameters to override our defaults
+	Com_StartupVariable("fs_debug", true);
+	Com_StartupVariable("fs_basePath", true);
+	Com_StartupVariable("fs_savePath", true);
+	Com_StartupVariable("fs_game", true);
+
 	// Register variables
 	fs_debug = CVar_Register("fs_debug", "0", CVAR_BOOL, 0, "Print debugging information", 0, 0);
+	fs_basePath = CVar_Register("fs_basePath", Sys_DefaultBaseDirectory(), CVAR_STRING, CVAR_INIT, "Base path", 0, 0);
 	fs_savePath = CVar_Register("fs_savePath", Sys_DefaultSaveDirectory(), CVAR_STRING, CVAR_INIT, "Save path", 0, 0);
 	fs_game = CVar_Register("fs_game", BASE_DIRECTORY, CVAR_STRING, CVAR_SERVERINFO | CVAR_INIT, "Current game directory", 0, 0);
-
-	fs_homePath = CVar_Register("fs_homePath", Sys_CurrentDirectory(), CVAR_STRING,  CVAR_INIT, NULL, 0, 0);
-	fs_basePath = CVar_Register("fs_basePath", Str_VarArgs("%s/%s", Sys_CurrentDirectory(), BASE_DIRECTORY), CVAR_STRING,  CVAR_INIT, NULL, 0, 0);
-	fs_baseGame = CVar_Register("fs_baseGame", BASE_DIRECTORY, CVAR_STRING, CVAR_INIT, NULL, 0, 0);
 
 	// Add commands
 	Cmd_AddCommand("listFileHandles", FS_ListFileHandles_f, "Lists active file handles", NULL);
@@ -2238,8 +2285,17 @@ void FS_Init (){
 
 	// Execute config files
 	Cmd_AppendText("exec default.cfg\n");
-	Cmd_AppendText("exec q2econfig.cfg\n");
-	Cmd_AppendText("exec autoexec.cfg\n");
+
+	// Skip the rest if "safe" is on the command line
+	if (!Com_SafeMode()){
+		// Make sure we only execute these config files from the current game
+		// directory, never from another directory or from pack files
+		if (FS_FileExists(CONFIG_FILE))
+			Cmd_AppendText("exec Quake2Evolved.cfg\n");
+
+		if (FS_FileExists("autoexec.cfg"))
+			Cmd_AppendText("exec autoexec.cfg\n");
+	}
 
 	Cmd_ExecuteBuffer();
 
@@ -2248,14 +2304,13 @@ void FS_Init (){
 
 /*
  ==================
- 
+ FS_Shutdown
  ==================
 */
 void FS_Shutdown (){
 
-	file_t			*handle;
-	searchPath_t	*next;
-	pack_t			*pack;
+	file_t			*file;
+	searchPath_t	*searchPath, *nextSearchPath;
 	int				i;
 
 	// Remove commands
@@ -2267,40 +2322,45 @@ void FS_Shutdown (){
 	Cmd_RemoveCommand("touchFile");
 
 	// Close all files
-	for (i = 0, handle = fs_fileHandles; i < MAX_FILE_HANDLES; i++, handle++){
-		if (!handle->realFile && !handle->zipFile)
+	for (i = 0, file = fs_fileHandles; i < MAX_FILE_HANDLES; i++, file++){
+		if (!file->realFile && !file->zipFile)
 			continue;
 
-		if (handle->realFile)
-			fclose(handle->realFile);
-		else if (handle->zipFile){
-			unzCloseCurrentFile(handle->zipFile);
-			unzClose(handle->zipFile);
+		if (file->realFile)
+			fclose(file->realFile);
+		else {
+			unzCloseCurrentFile(file->zipFile);
+			unzClose(file->zipFile);
 		}
 
-		Mem_Fill(handle, 0, sizeof(*handle));
+		Mem_Fill(file, 0, sizeof(file_t));
 	}
 
 	// Free search paths
-	while (fs_searchPaths){
-		if (fs_searchPaths->pack){
-			pack = fs_searchPaths->pack;
+	for (searchPath = fs_searchPaths; searchPath; searchPath = nextSearchPath){
+		nextSearchPath = searchPath->next;
 
-			if (pack->pak)
-				fclose(pack->pak);
-			else if (pack->pk3)
-				unzClose(pack->pk3);
+		if (searchPath->pack){
+			if (searchPath->pack->pak)
+				fclose(searchPath->pack->pak);
+			else if (searchPath->pack->pk3)
+				unzClose(searchPath->pack->pk3);
 
-			Mem_Free(pack->files);
-			Mem_Free(pack);
+			Mem_Free(searchPath->pack->files);
+			Mem_Free(searchPath->pack);
 		}
+		else if (searchPath->directory)
+			Mem_Free(searchPath->directory);
 
-		next = fs_searchPaths->next;
-		Mem_Free(fs_searchPaths);
-		fs_searchPaths = next;
+		Mem_Free(searchPath);
 	}
+
+	fs_searchPaths = NULL;
 
 	// Reset I/O counters
 	fs_readCount = 0;
 	fs_writeCount = 0;
+
+	// Reset pack files counter
+	fs_packFilesCount = 0;
 }

@@ -72,6 +72,7 @@ void			VectorMax (const vec3_t v1, const vec3_t v2, vec3_t out);
 void			VectorNegate (const vec3_t v, vec3_t out);
 void			VectorInverse (vec3_t v);
 vec_t			VectorLength (const vec3_t v);
+vec_t			VectorLengthFast (const vec3_t v);
 vec_t			VectorLengthSquared (const vec3_t v);
 void			VectorLerp (const vec3_t from, const vec3_t to, float frac, vec3_t out);
 void			VectorRotate (const vec3_t v, const vec3_t matrix[3], vec3_t out);

@@ -110,7 +110,7 @@ void			Sys_Sleep (int msec);
 
 // Processes events like user input and other system specific events.
 // Returns the current time in milliseconds.
-void			Sys_ProcessEvents ();
+int				Sys_ProcessEvents ();
 
 // Sys_Milliseconds should only be used for profiling purposes, any game
 // related timing information should come from event timestamps

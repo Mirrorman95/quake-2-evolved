@@ -1,0 +1,52 @@
+
+//
+// Cyborg Player Models
+//
+
+players/cyborg/oni911
+{
+	bumpMap			players/cyborg/oni911_local.tga
+	diffuseMap		players/cyborg/oni911_d.tga
+	{
+		specularmap	players/cyborg/oni911_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+players/cyborg/ps9000
+{
+	bumpMap			players/cyborg/ps9000_local.tga
+	diffuseMap		players/cyborg/ps9000_d.tga
+	{
+		specularmap	players/cyborg/ps9000_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+players/cyborg/tyr574
+{
+	bumpMap			players/cyborg/tyr574_local.tga
+	diffuseMap		players/cyborg/tyr574_d.tga
+	{
+		specularmap	players/cyborg/tyr574_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+players/cyborg/weapon
+{
+	bumpMap			players/cyborg/weapon_local.tga
+	diffuseMap		players/cyborg/weapon_d.tga
+	{
+		specularmap	players/cyborg/weapon_s.tga
+		specularParms	4.0, 2.0
+	}
+}
+
+//
+// Female Player Models
+//
+
+//
+// Male Player Models
+//

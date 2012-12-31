@@ -1,0 +1,160 @@
+
+==================================================
+Future Releases
+==================================================
+- Post-Processing
+- GUI system
+- Splash Screen
+- New Dedicated Server
+- New Particle System
+- Flare/Corona editor?
+- A New Map Editor (though this has nothing to do with the engine)
+- Faster file downloading, the current way is too slow for modern standards
+
+==================================================
+Client
+==================================================
+Cleanups
+- cl_main.c
+  - variables that might no be in use
+  - CL_Register
+- cl_parse.c
+  - Replace Com_StripExtension
+
+Features
+- View Blendings
+- Console
+- Cinematic
+- TrueType Font drawing
+- Finish dynamic lights
+
+Fixes
+- cl_drawGodModeShell should turn on when == 1 not == 0
+- HUD layout drawing needs to be scaled, also the layout is wrong
+
+Optimizations
+- The loading had uppercase characters before, should we change it back?
+
+==================================================
+Collision
+==================================================
+Cleanups
+- Continue cleaning it up and sort it into the proper files
+
+Features
+
+Fixes
+
+Optimizations
+
+==================================================
+Common
+==================================================
+Cleanups
+- common.h needs to be finished
+- pmove.c
+- protocol.h
+
+Features
+- File System
+  - Use CONFIG_FILE instaid of "Quake2Evovled.cfg"
+  - Add pack loading functions?
+- Console Variable System
+
+Fixes
+- com_speeds crashes in CL_Frame
+- Make sure Com_AddStartupCommands is doing Cmd_AppendText right
+
+Optimizations
+
+==================================================
+Renderer
+==================================================
+Cleanups
+- Rewrite parts of RB_BatchParticle
+
+Features
+- Subviews
+- Make sure the debug tools are working as they should with GL_DepthBounds etc.
+- Internal Default Model
+- rg.pc.dynamicDecal needs to be set
+
+Fixes
+- Stencil Shadows are flickering
+  - 1.) Vertex buffer problem?
+  - 2.) It some how "works" with light scissors
+- Blend, fog, and ambient lights are flickering/not working.
+  - 1.) Plane problem?
+  - 2.) Matrix problem?
+- noDraw has no texture
+- R_UniformMatrix3 has a warning C4047: 'function' : 'const float *' differs in levels of indirection from 'vec3_t [3]'
+
+Optimizations
+
+==================================================
+Server
+==================================================
+Cleanups
+
+Features
+
+Fixes
+- Some console variables are incorrect
+- Connecting to a server stops when we are about to enter a game
+  - 1.) Connected to MAX_PATH_LENGTH changes? (config string)
+
+Optimizations
+
+==================================================
+Shared
+==================================================
+Cleanups
+
+Features
+- Move over to C++
+- Add C++ classes
+
+Fixes
+
+Optimizations
+
+==================================================
+Sound
+==================================================
+Cleanups
+
+Features
+- Rewrite parts of this when ready
+
+Fixes
+
+Optimizations
+
+==================================================
+UI
+==================================================
+Cleanups
+
+Features
+- Get string drawing functions to work
+
+Fixes
+- The scale of things are messed up due to the ratio changes
+
+Optimizations
+
+==================================================
+Windows
+==================================================
+Cleanups
+
+Features
+- Rewrite input to support Xbox controller etc.?
+- Rewrite the light editor window
+- System Console needs other colors
+
+Fixes
+- Seems like Sys_Error crashes when it should print to the system console
+- The notify icon created by the system console does not get removed
+
+Optimizations

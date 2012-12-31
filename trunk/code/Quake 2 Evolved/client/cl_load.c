@@ -69,7 +69,7 @@ static void CL_UpdateLoading (const char *string){
 */
 static void CL_RegisterLoadingInfo (){
 
-	char	levelshot[MAX_OSPATH];
+	char	levelshot[MAX_PATH_LENGTH];
 	int		i, j;
 
 	// Get the map name
@@ -169,7 +169,7 @@ static void CL_RegisterSounds (){
 */
 static void CL_RegisterGraphics (){
 
-	char	name[MAX_QPATH];
+	char	name[MAX_PATH_LENGTH];
 	float	skyRotate;
 	vec3_t	skyAxis;
 	int		i;
@@ -388,11 +388,13 @@ static void CL_LoadAssets (){
 /*
  ==================
 
+ TODO: get the static light data from the parsed lights, then copy the
+ data into renderLight_t which sends it to the renderer for pre-cacheing
  ==================
 */
 static void CL_PrecacheLights (){
 
-	char		name[MAX_OSPATH];
+	char		name[MAX_PATH_LENGTH];
 
 	// Load and parse the lights
 	Str_SPrintf(name, sizeof(name), "maps/%s.light", cls.loadingInfo.map);
@@ -499,9 +501,9 @@ void CL_LoadingState (){
 void CL_LoadClientInfo (clientInfo_t *clientInfo, const char *string){
 
 	char	*ch;
-	char	model[MAX_OSPATH], skin[MAX_OSPATH], name[MAX_OSPATH];
-	char	checkMD3[MAX_OSPATH], checkMD2[MAX_OSPATH];
-	char	checkTGA[MAX_OSPATH], checkPCX[MAX_OSPATH];
+	char	model[MAX_PATH_LENGTH], skin[MAX_PATH_LENGTH], name[MAX_PATH_LENGTH];
+	char	checkMD3[MAX_PATH_LENGTH], checkMD2[MAX_PATH_LENGTH];
+	char	checkTGA[MAX_PATH_LENGTH], checkPCX[MAX_PATH_LENGTH];
 	int		i;
 
 	Mem_Fill(clientInfo, 0, sizeof(clientInfo_t));

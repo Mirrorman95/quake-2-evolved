@@ -154,7 +154,7 @@ static void SV_CreateBaseLine (){
 static void SV_CheckForSaveGame (){
 
 	serverState_t	previousState;
-	char			name[MAX_QPATH];
+	char			name[MAX_PATH_LENGTH];
 	int				i;
 
 	if (sv_noReload->integerValue)
@@ -256,7 +256,7 @@ static void SV_SpawnServer (const char *levelName, const char *spawnPoint, bool 
 	}
 
 	if (serverState == SS_GAME){
-		Str_SPrintf(sv.configStrings[CS_MODELS + 1], sizeof(sv.configStrings[CS_MODELS + 1]), "maps/base1.bsp", levelName);	// FIXME!!!
+		Str_SPrintf(sv.configStrings[CS_MODELS + 1], sizeof(sv.configStrings[CS_MODELS + 1]), "maps/%s.bsp", levelName);	// FIXME!!!
 		sv.models[1] = CM_LoadMap(sv.configStrings[CS_MODELS + 1], false, &checksum);
 	}
 	else {
@@ -356,7 +356,7 @@ void SV_InitGame (){
 
 	// Dedicated servers can't be singleplayer and are usually DM so
 	// unless they explicity set coop, force it to deathmatch
-	if (dedicated->integerValue){
+	if (com_dedicated->integerValue){
 		if (!CVar_GetVariableBool("coop"))
 			CVar_SetVariableInteger("deathmatch", 1, true);
 	}
@@ -401,6 +401,9 @@ void SV_InitGame (){
 		edict->s.number = e+1;
 		svs.clients[e].edict = edict;
 	}
+
+	// Set the com_serverRunning variable
+	CVar_SetBool(com_serverRunning, true);
 }
 
 /*
@@ -422,7 +425,7 @@ void SV_InitGame (){
 void SV_Map (const char *levelString, bool attractLoop, bool loadGame){
 
 	const char *gameDir;
-	char		server[MAX_QPATH], spawnPoint[MAX_QPATH];
+	char		server[MAX_PATH_LENGTH], spawnPoint[MAX_PATH_LENGTH];
 	char		extension[8], *ch;
 
 	Str_Copy(server, levelString, sizeof(server));

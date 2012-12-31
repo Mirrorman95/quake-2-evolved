@@ -55,7 +55,9 @@
  ==============================================================================
 */
 
-typedef int fileHandle_t;
+#define	MAX_PATH_LENGTH				256			// Max length of a file system path
+
+typedef int					fileHandle_t;
 
 typedef enum {
 	FS_READ,
@@ -76,8 +78,8 @@ typedef enum {
 } findFile_t;
 
 typedef struct {
-	const char *		directory;
-	const char *		description;
+	const char *			directory;
+	const char *			description;
 } modList_t;
 
 // Reads data from a file, properly handling partial reads.

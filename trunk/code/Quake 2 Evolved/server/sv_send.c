@@ -105,7 +105,7 @@ void SV_BroadcastPrintf (int level, const char *fmt, ...){
 	va_end(argPtr);
 
 	// Echo to console
-	if (dedicated->integerValue)
+	if (com_dedicated->integerValue)
 		Com_Printf("%s", string);
 
 	for (i = 0, cl = svs.clients; i < sv_maxClients->integerValue; i++, cl++){
