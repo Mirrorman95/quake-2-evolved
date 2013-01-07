@@ -88,6 +88,7 @@ cvar_t *					r_offsetFactor;
 cvar_t *					r_offsetUnits;
 cvar_t *					r_shadowOffsetFactor;
 cvar_t *					r_shadowOffsetUnits;
+cvar_t *					r_postProcessTime;
 cvar_t *					r_forceImagePrograms;
 cvar_t *					r_writeImagePrograms;
 cvar_t *					r_colorMipLevels;
@@ -109,6 +110,7 @@ cvar_t *					r_showIndexBuffers;
 cvar_t *					r_showVertexBuffers;
 cvar_t *					r_showTextureUsage;
 cvar_t *					r_showTextures;
+cvar_t *					r_showBloom;
 cvar_t *					r_showDepth;
 cvar_t *					r_showOverdraw;
 cvar_t *					r_showLightCount;
@@ -189,6 +191,8 @@ cvar_t *					r_playerShadow;
 cvar_t *					r_dynamicLights;
 cvar_t *					r_modulate;
 cvar_t *					r_caustics;
+cvar_t *					r_postProcess;
+cvar_t *					r_bloom;
 cvar_t *					r_seamlessCubeMaps;
 cvar_t *					r_inGameVideos;
 cvar_t *					r_precompressedImages;
@@ -338,6 +342,8 @@ static void R_ClearRender (){
 	// Clear view clusters
 	rg.viewCluster = rg.oldViewCluster = -1;
 	rg.viewCluster2 = rg.oldViewCluster2 = -1;
+
+	rg.viewArea = -1;
 
 	// Clear light styles
 	for (i = 0; i < MAX_LIGHTSTYLES; i++){
@@ -498,6 +504,7 @@ static void R_Register (){
 	r_offsetUnits = CVar_Register("r_offsetUnits", "-2.0", CVAR_FLOAT, CVAR_CHEAT, "Polygon offset units", 0.0f, 0.0f);
 	r_shadowOffsetFactor = CVar_Register("r_shadowOffsetFactor", "2.0", CVAR_FLOAT, CVAR_CHEAT, "Shadow polygon offset factor", 0.0f, 0.0f);
 	r_shadowOffsetUnits = CVar_Register("r_shadowOffsetUnits", "10.0", CVAR_FLOAT, CVAR_CHEAT, "Shadow polygon offset units", 0.0f, 0.0f);	
+	r_postProcessTime = CVar_Register("r_postProcessTime", "1.0", CVAR_FLOAT, CVAR_CHEAT, "Post-process transition time in seconds", 0.0f, 60.0f);
 	r_forceImagePrograms = CVar_Register("r_forceImagePrograms", "0", CVAR_BOOL, CVAR_CHEAT, "Force processing of image programs", 0, 0);
 	r_writeImagePrograms = CVar_Register("r_writeImagePrograms", "0", CVAR_BOOL, CVAR_CHEAT, "Write final images to disk after processing image programs", 0, 0);	
 	r_colorMipLevels = CVar_Register("r_colorMipLevels", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_LATCH, "Color mip levels for testing mipmap usage", 0, 0);
@@ -509,7 +516,7 @@ static void R_Register (){
 	r_singleLight = CVar_Register("r_singleLight", "-1", CVAR_INTEGER, CVAR_CHEAT, "Only draw the specified light", -1, MAX_RENDER_LIGHTS - 1);
 	r_showCluster = CVar_Register("r_showCluster", "0", CVAR_BOOL, CVAR_CHEAT, "Show the current view cluster", 0, 0);
 	r_showFarClip = CVar_Register("r_showFarClip", "0", CVAR_BOOL, CVAR_CHEAT, "Show the calculated far clip plane distance", 0, 0);
-	r_showCull = CVar_Register("r_showCull", "0", CVAR_BOOL, CVAR_CHEAT, "Show culling statistics", 0, 0);
+	r_showCull = CVar_Register("r_showCull", "0", CVAR_INTEGER, CVAR_CHEAT, "Show culling (1 = statistics, 2 = drawing, 3 = statistics and drawing)", 0, 2);
 	r_showScene = CVar_Register("r_showScene", "0", CVAR_BOOL, CVAR_CHEAT, "Show number of entities, lights, particles, and decals in view", 0, 0);
 	r_showSurfaces = CVar_Register("r_showSurfaces", "0", CVAR_BOOL, CVAR_CHEAT, "Show number of surfaces in view", 0, 0);
 	r_showLights = CVar_Register("r_showLights", "0", CVAR_BOOL, CVAR_CHEAT, "Show number of lights in view", 0, 0);
@@ -519,6 +526,7 @@ static void R_Register (){
 	r_showVertexBuffers = CVar_Register("r_showVertexBuffers", "0", CVAR_BOOL, CVAR_CHEAT, "Show vertex buffer usage", 0, 0);	
 	r_showTextureUsage = CVar_Register("r_showTextureUsage", "0", CVAR_BOOL, CVAR_CHEAT, "Show texture memory usage", 0, 0);
 	r_showTextures = CVar_Register("r_showTextures", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw all textures instead of rendering (2 = draw in proportional size)", 0, 2);
+	r_showBloom = CVar_Register("r_showBloom", "0", CVAR_BOOL, CVAR_CHEAT, "Draw the bloom composite texture", 0, 0);
 	r_showDepth = CVar_Register("r_showDepth", "0", CVAR_BOOL, CVAR_CHEAT, "Draw the contents of the depth buffer", 0, 0);
 	r_showOverdraw = CVar_Register("r_showOverdraw", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw triangles colored by overdraw (1 = ambient, 2 = interaction, 3 = ambient and interaction)", 0, 3);
 	r_showLightCount = CVar_Register("r_showLightCount", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw triangles colored by light count (1 = count visible ones, 2 = count everything through walls)", 0, 2);
@@ -534,7 +542,7 @@ static void R_Register (){
 	r_showNormals = CVar_Register("r_showNormals", "0.0", CVAR_FLOAT, CVAR_CHEAT, "Draw vertex normals", 0.0f, 10.0f);
 	r_showTextureVectors = CVar_Register("r_showTextureVectors", "0.0", CVAR_FLOAT, CVAR_CHEAT, "Draw texture (tangent) vectors", 0.0f, 10.0f);
 	r_showBatchSize = CVar_Register("r_showBatchSize", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw triangles colored by batch size (1 = draw visible ones, 2 = draw everything through walls)", 0, 2);
-	r_showModelBounds = CVar_Register("r_showModelBounds", "0", CVAR_BOOL, CVAR_CHEAT, "Draw model bounds", 0, 0);
+	r_showModelBounds = CVar_Register("r_showModelBounds", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw model bounds (1 = draw visible ones, 2 = draw everything through walls)", 0, 2);
 	r_showLeafBounds = CVar_Register("r_showLeafBounds", "0", CVAR_BOOL, CVAR_CHEAT, "Draw leaf bounds", 0, 0);
 	r_skipVisibility = CVar_Register("r_skipVisibility", "0", CVAR_BOOL, CVAR_CHEAT, "Skip visibility determination tests", 0, 0);
 	r_skipSuppress = CVar_Register("r_skipSuppress", "0", CVAR_BOOL, CVAR_CHEAT, "Skip per-view suppressions", 0, 0);
@@ -598,6 +606,8 @@ static void R_Register (){
 	r_dynamicLights = CVar_Register("r_dynamicLights", "1", CVAR_BOOL, CVAR_ARCHIVE, "Render dynamic lights", 0, 0);	
 	r_modulate = CVar_Register("r_modulate", "1.0", CVAR_FLOAT, CVAR_ARCHIVE | CVAR_LATCH, "Modulates lightmap colors", 0.0f, 1.0f);
 	r_caustics = CVar_Register("r_caustics", "1", CVAR_BOOL, CVAR_ARCHIVE, "Render underwater caustics", 0, 0);
+	r_postProcess = CVar_Register("r_postProcess", "1", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Render post-process effects", 0, 0);
+	r_bloom = CVar_Register("r_bloom", "0", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Enable bloom", 0, 0);	
 	r_seamlessCubeMaps = CVar_Register("r_seamlessCubeMaps", "0", CVAR_BOOL, CVAR_ARCHIVE, "Sample multiple faces from cube map textures", 0, 0);
 	r_inGameVideos = CVar_Register("r_inGameVideos", "1", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Play in-game videos", 0, 0);
 	r_precompressedImages = CVar_Register("r_precompressedImages", "1", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Always load precompressed images if present", 0, 0);
@@ -683,6 +693,7 @@ void R_Init (bool all){
 	R_InitArrayBuffers();
 	R_InitModels();
 	R_InitLightEditor();
+	R_InitPostProcessEditor();
 
 	RB_InitBackEnd();
 
@@ -705,6 +716,7 @@ void R_Shutdown (bool all){
 	// Shutdown all the renderer modules
 	RB_ShutdownBackEnd();
 
+	R_ShutdownPostProcessEditor();
 	R_ShutdownLightEditor();
 	R_ShutdownModels();
 	R_ShutdownArrayBuffers();

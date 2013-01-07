@@ -100,7 +100,7 @@ void Cmd_AddCommand (const char *name, cmdFunction_t function, const char *descr
 	}
 
 	// Allocate a new command
-	cmd = (cmd_t *)Mem_ClearedAlloc(sizeof(cmd_t), TAG_COMMON);
+	cmd = (cmd_t *)Mem_Alloc(sizeof(cmd_t), TAG_COMMON);
 
 	cmd->name = Mem_DupString(name, TAG_COMMON);
 	cmd->function = function;
@@ -466,6 +466,16 @@ void Cmd_ArgCompletion_VideoName (void (*callback)(const char *string)){
 void Cmd_ArgCompletion_MaterialName (void (*callback)(const char *string)){
 
 	R_EnumMaterialDefs(callback);
+}
+
+/*
+ ==================
+ Cmd_ArgCompletion_SoundShaderName
+ ==================
+*/
+void Cmd_ArgCompletion_SoundShaderName (void (*callback)(const char *string)){
+
+	S_EnumSoundShaderDefs(callback);
 }
 
 
@@ -1037,7 +1047,7 @@ static void Cmd_Alias_f (){
 
 	if (!alias){
 		// Allocate a new alias
-		alias = (cmdAlias_t *)Mem_ClearedAlloc(sizeof(cmdAlias_t), TAG_COMMON);
+		alias = (cmdAlias_t *)Mem_Alloc(sizeof(cmdAlias_t), TAG_COMMON);
 
 		alias->name = Mem_DupString(name, TAG_COMMON);
 
@@ -1138,7 +1148,7 @@ void Cmd_Init (){
 
 	// Add commands
 	Cmd_AddCommand("wait", Cmd_Wait_f, "Delays remaining commands a given number of frames", NULL);
-	Cmd_AddCommand("exec", Cmd_Exec_f, "Executes a config file", NULL);
+	Cmd_AddCommand("exec", Cmd_Exec_f, "Executes a config file", Cmd_ArgCompletion_ConfigName);
 	Cmd_AddCommand("echo", Cmd_Echo_f, "Echoes text to the console", NULL);
 	Cmd_AddCommand("alias", Cmd_Alias_f, "Creates a new command that executes a command string (possibly ; separated)", NULL);
 	Cmd_AddCommand("listCmds", Cmd_ListCmds_f, "Lists commands", NULL);

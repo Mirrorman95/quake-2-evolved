@@ -3351,7 +3351,7 @@ static void R_ParseMaterialFile (script_t *script){
 		}
 
 		// Store the material definition
-		materialDef = (materialDef_t *)Mem_ClearedAlloc(sizeof(materialDef_t), TAG_RENDERER);
+		materialDef = (materialDef_t *)Mem_Alloc(sizeof(materialDef_t), TAG_RENDERER);
 
 		Str_Copy(materialDef->name, token.string, sizeof(materialDef->name));
 		materialDef->text = (char *)Mem_Alloc(length + 1, TAG_RENDERER);

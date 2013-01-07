@@ -25,12 +25,6 @@
 // s_main.c - Primary sound file
 //
 
-// TODO:
-// - channel states
-// - sound spatialization
-// - cinematic streaming
-// - music stream problem
-
 
 #include "s_local.h"
 
@@ -41,6 +35,7 @@ alConfig_t					alConfig;
 
 cvar_t *					s_logFile;
 cvar_t *					s_ignoreALErrors;
+cvar_t *					s_singleSoundShader;
 cvar_t *					s_showStreaming;
 cvar_t *					s_skipStreaming;
 cvar_t *					s_skipShakes;
@@ -52,6 +47,7 @@ cvar_t *					s_masterVolume;
 cvar_t *					s_voiceCapture;
 cvar_t *					s_maxChannels;
 cvar_t *					s_musicVolume;
+cvar_t *					s_maxSoundsPerShader;
 cvar_t *					s_soundQuality;
 cvar_t *					s_playDefaultSound;
 
@@ -533,6 +529,7 @@ static void S_Register (){
 	// Register variables
 	s_logFile = CVar_Register("s_logFile", "0", CVAR_INTEGER, CVAR_CHEAT, "Number of frames to log AL calls", 0, 0);
 	s_ignoreALErrors = CVar_Register("s_ignoreALErrors", "1", CVAR_BOOL, CVAR_CHEAT, "Ignore AL errors", 0, 0);
+	s_singleSoundShader = CVar_Register("s_singleSoundShader", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_LATCH, "Use a single default sound shader on every emitter", 0, 0);
 	s_showStreaming = CVar_Register("s_showStreaming", "0", CVAR_BOOL, CVAR_CHEAT, "Show streaming sounds activity", 0, 0);
 	s_skipStreaming = CVar_Register("s_skipStreaming", "0", CVAR_BOOL, CVAR_CHEAT, "Skip playing streaming sounds", 0, 0);
 	s_skipShakes = CVar_Register("s_skipShakes", "0", CVAR_BOOL, CVAR_CHEAT, "Skip sound shakes", 0, 0);
@@ -544,6 +541,7 @@ static void S_Register (){
 	s_maxChannels = CVar_Register("s_maxChannels", "64", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Maximum number of mixing channels", 32, MAX_SOUND_CHANNELS);
 	s_musicVolume = CVar_Register("s_musicVolume", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Music volume", 0.0f, 1.0f);
 	s_voiceCapture = CVar_Register("s_voiceCapture", "0", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Enable voice capture", 0, 0);
+	s_maxSoundsPerShader = CVar_Register("s_maxSoundsPerShader", "2", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Maximum number of sounds per shader", 1, MAX_SOUNDS_PER_SHADER);
 	s_soundQuality = CVar_Register("s_soundQuality", "1", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Sound quality (0 = low, 1 = medium, 2 = high)", 0, 2);
 	s_playDefaultSound = CVar_Register("s_playDefaultSound", "1", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Play a beep for missing sounds", 0, 0);
 
@@ -675,6 +673,7 @@ void S_Init (bool all){
 
 	// Initialize all the sound system modules
 	S_InitSounds();
+	S_InitSoundShaders();
 	S_InitMusic();
 	S_InitRawSamples();
 	S_InitChannels();
@@ -699,6 +698,7 @@ void S_Shutdown (bool all){
 	S_ShutdownChannels();
 	S_ShutdownRawSamples();
 	S_ShutdownMusic();
+	S_ShutdownSoundShaders();
 	S_ShutdownSounds();
 
 	if (all){

@@ -32,6 +32,7 @@
 
 #include "../client/client.h"
 #include "../windows/qgl.h"
+#include "../common/editor.h"
 
 
 // This is defined in shared.h
@@ -892,6 +893,12 @@ typedef struct {
 	mdlXyzNormal_t *		xyzNormals;
 	mdlSt_t *				st;
 	mdlMaterial_t *			materials;
+
+	arrayBuffer_t *			indexBuffer;		// Indices in write-only array buffer memory
+	int						indexOffset;		// Offset into first surface index inside indexBuffer
+
+	arrayBuffer_t *			vertexBuffer;		// Vertices in write-only array buffer memory
+	int						vertexOffset;		// Offset into first surface vertex inside vertexBuffer
 } mdlSurface_t;
 
 typedef struct {
@@ -1036,9 +1043,9 @@ void			R_ShutdownImages ();
  ==============================================================================
 */
 
-#include "../common/editor.h"
-
 #define MAX_STATIC_LIGHTS			4096
+
+#define LIGHT_PLANEBITS				(BIT(6) - 1)
 
 typedef struct {
 	bool					valid;
@@ -1059,7 +1066,8 @@ typedef struct {
 	vec3_t					axis[3];
 
 	vec3_t					corners[8];
-	vec3_t					bounds[2];
+	vec3_t					mins;
+	vec3_t					maxs;
 	cplane_t				frustum[6];
 
 	float					lightRange;
@@ -1095,8 +1103,6 @@ typedef struct {
 	struct mesh_s *			interactions;
 } lightMeshes_t;
 
-int				R_LightCullBounds (lightData_t *lightData, const vec3_t mins, const vec3_t maxs, int planeBits);
-
 void			R_AllocLightMeshes ();
 void			R_GenerateLightMeshes (struct light_s *light);
 void			R_ClearLightMeshes ();
@@ -1105,6 +1111,44 @@ void			R_RefreshLightEditor ();
 
 void			R_InitLightEditor ();
 void			R_ShutdownLightEditor ();
+
+/*
+ ==============================================================================
+
+ POST-PROCESSING EFFECTS
+
+ ==============================================================================
+*/
+
+#define MAX_POST_PROCESS_AREAS		BSP_MAX_AREAS
+
+typedef struct {
+	bool					editing;
+	int						editingArea;
+
+	postProcessParms_t		postProcessGeneric;
+
+	char					postProcessName[MAX_PATH_LENGTH];
+	postProcessParms_t		postProcessList[MAX_POST_PROCESS_AREAS];
+
+	postProcessParms_t		postProcessParms;
+
+	// Interpolation parameters
+	int						time;
+
+	postProcessParms_t		previous;
+	postProcessParms_t *	current;
+} postProcess_t;
+
+void			R_LoadColorTable (const char *name, byte colorTable[256][4]);
+void			R_BlendColorTables (byte colorTable[256][4], const byte previousTable[256][4], const byte currentTable[256][4], float frac);
+
+void			R_EditAreaPostProcess (int area);
+
+void			R_UpdatePostProcess ();
+
+void			R_InitPostProcessEditor ();
+void			R_ShutdownPostProcessEditor ();
 
 /*
  ==============================================================================
@@ -1365,6 +1409,14 @@ typedef enum {
 	NUM_AMBIENT_TYPES
 } ambientType_t;
 
+typedef enum {
+	BLUR_5X5,
+	BLUR_9X9,
+	BLUR_13X13,
+	BLUR_17X17,
+	NUM_BLUR_FILTERS
+} blurFilter_t;
+
 typedef struct {
 	bool					primaryView;
 	int						viewType;
@@ -1543,6 +1595,8 @@ typedef struct {
 	int						viewCluster, viewCluster2;
 	int						oldViewCluster, oldViewCluster2;
 
+	int						viewArea;
+
 	// Light styles
 	lightStyle_t			lightStyles[MAX_LIGHTSTYLES];
 
@@ -1579,6 +1633,9 @@ typedef struct {
 	model_t *				worldModel;
 	renderEntity_t *		worldEntity;
 
+	// Post-processing effects
+	postProcess_t			postProcess;
+
 	// Static lights
 	lightData_t				staticLights[MAX_STATIC_LIGHTS];
 	int						numStaticLights;
@@ -1609,10 +1666,12 @@ typedef struct {
 	texture_t *				cubicFilterTexture;
 	texture_t *				fogTexture;
 	texture_t *				fogEnterTexture;
+	texture_t *				colorTableTexture;
 	texture_t *				cinematicTextures[MAX_CINEMATICS];
 	texture_t *				skyTexture;
 	texture_t *				mirrorTexture;
 	texture_t *				remoteTexture;
+	texture_t *				bloomTexture;
 	texture_t *				currentColorTexture;
 	texture_t *				currentDepthTexture;
 
@@ -1620,6 +1679,9 @@ typedef struct {
 	program_t *				ambientLightPrograms[NUM_AMBIENT_TYPES];
 	program_t *				blendLightProgram;
 	program_t *				fogLightProgram;
+	program_t *				blurPrograms[NUM_BLUR_FILTERS];
+	program_t *				bloomProgram;
+	program_t *				colorCorrectionProgram;
 
 	material_t *			defaultMaterial;
 	material_t *			defaultLightMaterial;
@@ -1655,6 +1717,7 @@ extern cvar_t *				r_offsetFactor;
 extern cvar_t *				r_offsetUnits;
 extern cvar_t *				r_shadowOffsetFactor;
 extern cvar_t *				r_shadowOffsetUnits;
+extern cvar_t *				r_postProcessTime;
 extern cvar_t *				r_forceImagePrograms;
 extern cvar_t *				r_writeImagePrograms;
 extern cvar_t *				r_colorMipLevels;
@@ -1676,6 +1739,7 @@ extern cvar_t *				r_showIndexBuffers;
 extern cvar_t *				r_showVertexBuffers;
 extern cvar_t *				r_showTextureUsage;
 extern cvar_t *				r_showTextures;
+extern cvar_t *				r_showBloom;
 extern cvar_t *				r_showDepth;
 extern cvar_t *				r_showOverdraw;
 extern cvar_t *				r_showLightCount;
@@ -1755,6 +1819,8 @@ extern cvar_t *				r_playerShadow;
 extern cvar_t *				r_dynamicLights;
 extern cvar_t *				r_modulate;
 extern cvar_t *				r_caustics;
+extern cvar_t *				r_postProcess;
+extern cvar_t *				r_bloom;
 extern cvar_t *				r_seamlessCubeMaps;
 extern cvar_t *				r_inGameVideos;
 extern cvar_t *				r_precompressedImages;
@@ -1786,8 +1852,19 @@ void			R_AddAliasModel (renderEntity_t *entity);
 
 void			R_SetFarClip ();
 
+int				R_CullBounds (const vec3_t mins, const vec3_t maxs, int planeBits);
+int				R_CullLocalBounds (const vec3_t mins, const vec3_t maxs, const vec3_t origin, const vec3_t axis[3], int planeBits);
+
 bool			R_CullBox (const vec3_t mins, const vec3_t maxs, int clipFlags);
 bool			R_CullSphere (const vec3_t origin, float radius, int clipFlags);
+
+int				R_LightCullBounds (lightData_t *lightData, const vec3_t mins, const vec3_t maxs, int planeBits);
+int				R_LightCullLocalBounds (lightData_t *lightData, const vec3_t mins, const vec3_t maxs, const vec3_t origin, const vec3_t axis[2], int planeBits);
+
+int				R_LightCullLocalSphere (lightData_t *lightData, const float radius, const vec3_t origin, const vec3_t axis[3], int planeBits);
+
+int				R_CullLightBounds (lightData_t *lightData, int planeBits);
+int				R_CullLightVolume (lightData_t *lightData, int planeBits);
 
 void			R_AdjustHorzCoords (horzAdjust_t adjust, float percent, float xIn, float wIn, float *xOut, float *wOut);
 void			R_AdjustVertCoords (vertAdjust_t adjust, float percent, float yIn, float hIn, float *yOut, float *hOut);
@@ -1948,6 +2025,8 @@ typedef struct {
 	int						time;
 
 	renderViewParms_t		viewParms;
+
+	postProcessParms_t		postProcessParms;
 } renderViewCommand_t;
 
 typedef struct {
@@ -2079,6 +2158,30 @@ typedef struct {
 } fogLightParms_t;
 
 typedef struct {
+	uniform_t *				stOffset1;
+	uniform_t *				stOffset2;
+	uniform_t *				stOffset3;
+	uniform_t *				bloomContrast;
+	uniform_t *				bloomThreshold;
+} bloomParms_t;
+
+typedef struct {
+	uniform_t *				coordScale;
+} blurParms_t;
+
+typedef struct {
+	uniform_t *				baseIntensity;
+	uniform_t *				glowIntensity;
+	uniform_t *				colorShadows;
+	uniform_t *				colorHighlights;
+	uniform_t *				colorMidtones;
+	uniform_t *				colorMinOutput;
+	uniform_t *				colorMaxOutput;
+	uniform_t *				colorSaturation;
+	uniform_t *				colorTint;
+} colorCorrectionParms_t;
+
+typedef struct {
 	vec2_t					colorScaleAndBias;
 
 	vec3_t					diffuseColor;
@@ -2132,6 +2235,9 @@ typedef struct {
 	ambientLightParms_t		ambientLightParms[NUM_AMBIENT_TYPES];
 	blendLightParms_t		blendLightParms;
 	fogLightParms_t			fogLightParms;
+	blurParms_t				blurParms[NUM_BLUR_FILTERS];
+	bloomParms_t			bloomParms;
+	colorCorrectionParms_t	colorCorrectionParms;
 
 	// Debug visualization
 	int						numDebugPolygons;
@@ -2254,6 +2360,8 @@ void			RB_RenderMaterialPasses (int numMeshes, mesh_t *meshes, ambientPass_t pas
 void			RB_RenderLights (int numLights, light_t *lights);
 void			RB_RenderBlendLights (int numLights, light_t *lights);
 void			RB_RenderFogLights (int numLights, light_t *lights);
+
+void			RB_PostProcess (const postProcessParms_t *postProcessParms);
 
 void			RB_DrawMaterial2D ();
 

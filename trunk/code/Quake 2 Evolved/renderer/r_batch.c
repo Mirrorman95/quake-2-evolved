@@ -33,7 +33,7 @@
  ==================
  RB_CheckMeshOverflow
 
- TODO: modify for shadows?
+ TODO: modify for shadows max indices/vertices?
  ==================
 */
 void RB_CheckMeshOverflow (int numIndices, int numVertices){

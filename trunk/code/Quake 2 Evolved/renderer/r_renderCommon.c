@@ -1493,6 +1493,250 @@ void RB_RenderFogLights (int numLights, light_t *lights){
 /*
  ==============================================================================
 
+ BLOOM AND COLOR CORRECTION POST-PROCESSING
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ RB_BloomFilter
+ ==================
+*/
+static void RB_BloomFilter (const postProcessParms_t *postProcessParms, float sScale, float tScale){
+
+	bloomParms_t	*parms;
+
+	// Bind the program
+	GL_BindProgram(rg.bloomProgram);
+
+	// Set up the program uniforms
+	parms = &backEnd.bloomParms;
+
+	R_UniformFloat2(parms->stOffset1, 0.5f * sScale, 0.0f);
+	R_UniformFloat2(parms->stOffset2, 0.0f, 0.5f * tScale);
+	R_UniformFloat2(parms->stOffset3, 0.5f * sScale, 0.5f * tScale);
+	R_UniformFloat(parms->bloomContrast, postProcessParms->bloomContrast);
+	R_UniformFloat(parms->bloomThreshold, postProcessParms->bloomThreshold);
+
+	// Bind the texture
+	GL_BindMultitexture(rg.currentColorTexture, 0);
+
+	// Draw it
+	qglBegin(GL_QUADS);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 0.0f, 0.0f);
+	qglVertex2f(-1.0f, -1.0f);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 1.0f, 0.0f);
+	qglVertex2f( 1.0f, -1.0f);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 1.0f, 1.0f);
+	qglVertex2f( 1.0f,  1.0f);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 0.0f, 1.0f);
+	qglVertex2f(-1.0f,  1.0f);
+	qglEnd();
+
+	// Check for errors
+	if (!r_ignoreGLErrors->integerValue)
+		GL_CheckForErrors();
+}
+
+/*
+ ==================
+ RB_BloomBlur
+ ==================
+*/
+static void RB_BloomBlur (const postProcessParms_t *postProcessParms, float sScale, float tScale){
+
+	blurParms_t	*parms;
+
+	// Bind the program
+	GL_BindProgram(rg.blurPrograms[BLUR_17X17]);
+
+	// Set up the program uniforms
+	parms = &backEnd.blurParms[BLUR_17X17];
+
+	R_UniformFloat2(parms->coordScale, sScale, tScale);
+
+	// Bind the texture
+	GL_BindMultitexture(rg.bloomTexture, 0);
+
+	// Draw it
+	qglBegin(GL_QUADS);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 0.0f, 0.0f);
+	qglVertex2f(-1.0f, -1.0f);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 1.0f, 0.0f);
+	qglVertex2f( 1.0f, -1.0f);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 1.0f, 1.0f);
+	qglVertex2f( 1.0f,  1.0f);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 0.0f, 1.0f);
+	qglVertex2f(-1.0f,  1.0f);
+	qglEnd();
+
+	// Check for errors
+	if (!r_ignoreGLErrors->integerValue)
+		GL_CheckForErrors();
+}
+
+/*
+ ==================
+ RB_ColorCorrection
+ ==================
+*/
+static void RB_ColorCorrection (const postProcessParms_t *postProcessParms){
+
+	colorCorrectionParms_t	*parms;
+
+	// Bind the program
+	GL_BindProgram(rg.colorCorrectionProgram);
+
+	// Set up the program uniforms
+	parms = &backEnd.colorCorrectionParms;
+
+	R_UniformFloat(parms->baseIntensity, postProcessParms->baseIntensity);
+	R_UniformFloat(parms->glowIntensity, postProcessParms->glowIntensity);
+	R_UniformVector3(parms->colorShadows, postProcessParms->colorShadows);
+	R_UniformVector3(parms->colorHighlights, postProcessParms->colorHighlights);
+	R_UniformVector3(parms->colorMidtones, postProcessParms->colorMidtones);
+	R_UniformVector3(parms->colorMinOutput, postProcessParms->colorMinOutput);
+	R_UniformVector3(parms->colorMaxOutput, postProcessParms->colorMaxOutput);
+	R_UniformVector3(parms->colorSaturation, postProcessParms->colorSaturation);
+	R_UniformVector3(parms->colorTint, postProcessParms->colorTint);
+
+	// Bind the textures
+	if (r_showBloom->integerValue)
+		GL_BindMultitexture(rg.blackTexture, 0);
+	else
+		GL_BindMultitexture(rg.currentColorTexture, 0);
+
+	if (r_bloom->integerValue)
+		GL_BindMultitexture(rg.bloomTexture, 1);
+	else
+		GL_BindMultitexture(rg.blackTexture, 1);
+
+	GL_BindMultitexture(rg.colorTableTexture, 2);
+
+	// Draw it
+	qglBegin(GL_QUADS);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 0.0f, 0.0f);
+	qglVertex2f(-1.0f, -1.0f);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 1.0f, 0.0f);
+	qglVertex2f( 1.0f, -1.0f);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 1.0f, 1.0f);
+	qglVertex2f( 1.0f,  1.0f);
+	qglVertexAttrib2f(GL_ATTRIB_TEXCOORD, 0.0f, 1.0f);
+	qglVertex2f(-1.0f,  1.0f);
+	qglEnd();
+
+	// Check for errors
+	if (!r_ignoreGLErrors->integerValue)
+		GL_CheckForErrors();
+}
+
+/*
+ ==================
+ RB_PostProcess
+ ==================
+*/
+void RB_PostProcess (const postProcessParms_t *postProcessParms){
+
+	rect_t	rect;
+	float	sScale, tScale;
+
+	if (!r_postProcess->integerValue || rg.envShotRendering)
+		return;
+
+	if (!backEnd.viewParms.primaryView || backEnd.viewParms.viewType != VIEW_MAIN)
+		return;
+
+	QGL_LogPrintf("---------- RB_PostProcess ----------\n");
+
+	// Unbind the index buffer
+	GL_BindIndexBuffer(NULL);
+
+	// Unbind the vertex buffer
+	GL_BindVertexBuffer(NULL);
+
+	// Set the GL state
+	GL_LoadIdentity(GL_PROJECTION);
+	GL_LoadIdentity(GL_MODELVIEW);
+
+	GL_PolygonMode(GL_FILL);
+
+	GL_Disable(GL_CULL_FACE);
+	GL_Disable(GL_POLYGON_OFFSET_FILL);
+	GL_Disable(GL_BLEND);
+	GL_Disable(GL_ALPHA_TEST);
+	GL_Disable(GL_DEPTH_TEST);
+	GL_Disable(GL_STENCIL_TEST);
+
+	GL_DepthRange(0.0f, 1.0f);
+
+	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	GL_DepthMask(GL_FALSE);
+	GL_StencilMask(0);
+
+	// Capture framebuffer
+	R_CopyFramebufferToTexture(rg.currentColorTexture, 0, backEnd.viewport.x, backEnd.viewport.y, backEnd.viewport.width, backEnd.viewport.height);
+
+	// Perform bloom post-processing if desired
+	if (r_bloom->integerValue){
+		rect.x = 0;
+		rect.y = 0;
+		rect.width = Max(backEnd.viewport.width >> 2, 1);
+		rect.height = Max(backEnd.viewport.height >> 2, 1);
+
+		sScale = 1.0f / rect.width;
+		tScale = 1.0f / rect.height;
+
+		// Set up the viewport
+		GL_Viewport(rect);
+
+		// Set up the scissor
+		GL_Scissor(rect);
+
+		// Downsample and filter out dark pixels
+		RB_BloomFilter(postProcessParms, sScale, tScale);
+
+		// Capture framebuffer
+		R_CopyFramebufferToTexture(rg.bloomTexture, 0, rect.x, rect.y, rect.width, rect.height);
+
+		// Blur horizontally
+		RB_BloomBlur(postProcessParms, sScale, 0.0f);
+
+		// Capture framebuffer
+		R_CopyFramebufferToTexture(rg.bloomTexture, 0, rect.x, rect.y, rect.width, rect.height);
+
+		// Blur vertically
+		RB_BloomBlur(postProcessParms, 0.0f, tScale);
+
+		// Capture framebuffer
+		R_CopyFramebufferToTexture(rg.bloomTexture, 0, rect.x, rect.y, rect.width, rect.height);
+
+		// Restore the viewport
+		GL_Viewport(backEnd.viewport);
+
+		// Restore the scissor
+		GL_Scissor(backEnd.scissor);
+	}
+
+	// Draw the final post-processed image
+	RB_ColorCorrection(postProcessParms);
+
+	// Restore the GL state
+	GL_LoadMatrix(GL_PROJECTION, backEnd.viewParms.projectionMatrix);
+
+	GL_SelectTexture(0);
+
+	// Unbind the program
+	GL_BindProgram(NULL);
+
+	QGL_LogPrintf("--------------------\n");
+}
+
+
+/*
+ ==============================================================================
+
  2D RENDERING
 
  ==============================================================================

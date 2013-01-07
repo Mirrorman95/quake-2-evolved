@@ -174,7 +174,7 @@ const char **Sys_ListFiles (const char *directory, const char *extension, bool s
 		qsort(files, fileCount, sizeof(char *), Sys_SortFileList);
 
 	// Copy the list
-	fileList = (const char **)Mem_ClearedAlloc((fileCount + 1) * sizeof(char *), TAG_TEMPORARY);
+	fileList = (const char **)Mem_Alloc((fileCount + 1) * sizeof(char *), TAG_TEMPORARY);
 
 	for (i = 0; i < fileCount; i++)
 		fileList[i] = files[i];
@@ -275,7 +275,7 @@ const char **Sys_ListFilteredFiles (const char *directory, const char *filter, b
 		qsort(files, fileCount, sizeof(char *), Sys_SortFileList);
 
 	// Copy the list
-	fileList = (const char **)Mem_ClearedAlloc((fileCount + 1) * sizeof(char *), TAG_TEMPORARY);
+	fileList = (const char **)Mem_Alloc((fileCount + 1) * sizeof(char *), TAG_TEMPORARY);
 
 	for (i = 0; i < fileCount; i++)
 		fileList[i] = files[i];

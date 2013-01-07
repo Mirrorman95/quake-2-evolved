@@ -50,11 +50,26 @@ void CM_PrintStats (){
 		return;
 
 	switch (cm_showStats->integerValue){
-	case 0:
-		// TODO: contents
-		break;
 	case 1:
-		// TODO: traces
+
+		break;
+	case 2:
+
+		break;
+	case 3:
+
+		break;
+	case 4:
+
+		break;
+	case 5:
+		Com_Printf("leafs: %i (points: %i, bounds: %i)\n", cm_stats.leafPoints + cm_stats.leafBounds, cm_stats.leafPoints, cm_stats.leafBounds);
+		break;
+	case 6:
+
+		break;
+	case 7:
+
 		break;
 	}
 
@@ -83,6 +98,9 @@ void CM_Init (){
 	cm_showStats = CVar_Register("cm_showStats", "0", CVAR_INTEGER, CVAR_CHEAT, "Show collision statistics (TODO)", 0, 0);
 	cm_skipAreas = CVar_Register("cm_skipAreas", "0", CVAR_BOOL, CVAR_CHEAT, "Skip area portal connections", 0, 0);
 
+	// Initialize all the collision system modules
+	CM_InitModels();
+
 	cm_initialized = true;
 }
 
@@ -95,6 +113,9 @@ void CM_Shutdown (){
 
 	if (!cm_initialized)
 		return;
+
+	// Shutdown all the collision system modules
+	CM_ShutdownModels();
 
 	// Free all collision system allocations
 	Mem_FreeAll(TAG_COLLISION, false);

@@ -123,6 +123,9 @@ void				S_StopAllSounds ();
 // Updates sounds
 void				S_Update (int time);
 
+// Enumerates sound shader definitions using a callback
+void				S_EnumSoundShaderDefs (void (*callback)(const char *name));
+
 // Initializes the sound subsystem.
 // If all is false, the OpenAL subsystem will not be initialized, which is
 // useful for flushing all data and resetting the state.

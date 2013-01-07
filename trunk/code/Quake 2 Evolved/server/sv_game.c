@@ -174,9 +174,11 @@ static void SG_SetModel (edict_t *edict, char *name){
 
 	// If it is an inline model, get the size information for it
 	if (name[0] == '*'){
-		model = CM_InlineModel(name);
+		model = CM_LoadInlineModel(name);
+
 		VectorCopy(model->mins, edict->mins);
 		VectorCopy(model->maxs, edict->maxs);
+
 		SV_LinkEdict(edict);
 	}
 }
@@ -311,12 +313,12 @@ static bool SG_InPVS (vec3_t p1, vec3_t p2){
 	int		area1, area2;
 	byte	*mask;
 
-	leafNum = CM_PointLeafNum(p1);
+	leafNum = CM_PointInLeaf(p1, 0);
 	cluster = CM_LeafCluster(leafNum);
 	area1 = CM_LeafArea(leafNum);
 	mask = CM_ClusterPVS(cluster);
 
-	leafNum = CM_PointLeafNum(p2);
+	leafNum = CM_PointInLeaf(p2, 0);
 	cluster = CM_LeafCluster(leafNum);
 	area2 = CM_LeafArea(leafNum);
 
@@ -343,12 +345,12 @@ static bool SG_InPHS (vec3_t p1, vec3_t p2){
 	int		area1, area2;
 	byte	*mask;
 
-	leafNum = CM_PointLeafNum(p1);
+	leafNum = CM_PointInLeaf(p1, 0);
 	cluster = CM_LeafCluster(leafNum);
 	area1 = CM_LeafArea(leafNum);
 	mask = CM_ClusterPHS(cluster);
 
-	leafNum = CM_PointLeafNum(p2);
+	leafNum = CM_PointInLeaf(p2, 0);
 	cluster = CM_LeafCluster(leafNum);
 	area2 = CM_LeafArea(leafNum);
 
@@ -383,6 +385,18 @@ static void SG_StartSound (edict_t *edict, int channel, int sound, float volume,
 */
 static void SG_DebugGraph (float value, int color){
 
+}
+
+/*
+ ==================
+ SG_BroadcastPrintf
+
+ HACK: stupid workaround
+ ==================
+*/
+static void SG_BroadcastPrintf (int level, char *fmt, ...){
+
+	SV_BroadcastPrintf(level, fmt);
 }
 
 /*
@@ -425,6 +439,54 @@ static void SG_FreeAll (int tag){
 	Mem_FreeAll((memoryTag_t)tag, true);
 }
 
+/*
+ ==================
+ SG_GameRegister
+
+ HACK: stupid workaround
+ ==================
+*/
+cvar_t *SG_GameRegister (char *name, char *value, int flags){
+
+	return (cvar_t *)CVar_GameRegister(name, value, flags);
+}
+
+/*
+ ==================
+ SG_GameSet
+
+ HACK: stupid workaround
+ ==================
+*/
+cvar_t *SG_GameSet (char *name, char *value){
+
+	return (cvar_t *)CVar_GameSet(name, value);
+}
+
+/*
+ ==================
+ SG_GameForceSet
+
+ HACK: stupid workaround
+ ==================
+*/
+cvar_t *SG_GameForceSet (char *name, char *value){
+
+	return (cvar_t *)CVar_GameForceSet(name, value);
+}
+
+/*
+ ==================
+ SG_AppendText
+
+ HACK: stupid workaround
+ ==================
+*/
+void SG_AppendText (char *text){
+
+	Cmd_AppendText(text);
+}
+
 
 // ============================================================================
 
@@ -432,8 +494,6 @@ static void SG_FreeAll (int tag){
 /*
  ==================
  SG_SetupFramework
-
- TODO: Fix the errors and clean the pointer loading order?
  ==================
 */
 static void SG_SetupFramework (){
@@ -465,7 +525,7 @@ static void SG_SetupFramework (){
 	gi.DebugGraph = SG_DebugGraph;
 
 	gi.multicast = SV_Multicast;
-	gi.bprintf = SV_BroadcastPrintf;
+	gi.bprintf = SG_BroadcastPrintf;
 	gi.positioned_sound = SV_StartSound;
 	gi.linkentity = SV_LinkEdict;
 	gi.unlinkentity = SV_UnlinkEdict;
@@ -482,14 +542,14 @@ static void SG_SetupFramework (){
 	gi.TagFree = SG_Free;
 	gi.FreeTags = SG_FreeAll;
 
-	gi.cvar = CVar_GameRegister;
-	gi.cvar_set = CVar_GameSet;
-	gi.cvar_forceset = CVar_GameForceSet;
+	gi.cvar = SG_GameRegister;
+	gi.cvar_set = SG_GameSet;
+	gi.cvar_forceset = SG_GameForceSet;
 
 	gi.argc = Cmd_Argc;
 	gi.argv = Cmd_Argv;
 	gi.args = Cmd_Args;
-	gi.AddCommandString = Cmd_AppendText;
+	gi.AddCommandString = SG_AppendText;
 
 	gi.SetAreaPortalState = CM_SetAreaPortalState;
 	gi.AreasConnected = CM_AreasAreConnected;

@@ -154,7 +154,7 @@ static bool S_LoadWAV (const char *name, short **wave, int *rate, int *samples){
 	// Read the sound samples
 	in = (short *)file.dataPtr;
 
-	*wave = out = (short *)Mem_ClearedAlloc(file.chunkSize, TAG_TEMPORARY);
+	*wave = out = (short *)Mem_Alloc(file.chunkSize, TAG_TEMPORARY);
 
 	*rate = header.dwSamplesPerSec;
 	*samples = file.chunkSize >> 1;
@@ -201,7 +201,7 @@ static short *S_ResampleSound (sound_t *sound, const short *wave){
 	sound->length = (samples * 1000) / rate;
 	sound->size = samples << 1;
 
-	buffer = (short *)Mem_ClearedAlloc(samples * sizeof(short), TAG_TEMPORARY);
+	buffer = (short *)Mem_Alloc(samples * sizeof(short), TAG_TEMPORARY);
 
 	frac = 0;
 	fracStep = (uint)(256.0f * stepScale);
@@ -228,7 +228,7 @@ static void S_BuildAmplitudeTable (sound_t *sound, const short *wave){
 	int		i, j;
 
 	sound->tableSize = (sound->length + 9) / 10;
-	sound->tableValues = (float *)Mem_ClearedAlloc(sound->tableSize * sizeof(float), TAG_SOUND);
+	sound->tableValues = (float *)Mem_Alloc(sound->tableSize * sizeof(float), TAG_SOUND);
 
 	for (i = 0; i < sound->tableSize; i++){
 		samples = (sound->rate / 100) % sound->samples;
@@ -303,7 +303,7 @@ static sound_t *S_LoadSound (const char *name, short *wave, int rate, int sample
 	if (s_numSounds == MAX_SOUNDS)
 		Com_Error(ERR_DROP, "S_LoadSound: MAX_SOUNDS hit");
 
-	s_sounds[s_numSounds++] = sound = (sound_t *)Mem_ClearedAlloc(sizeof(sound_t), TAG_SOUND);
+	s_sounds[s_numSounds++] = sound = (sound_t *)Mem_Alloc(sizeof(sound_t), TAG_SOUND);
 
 	// Fill it in
 	Str_Copy(sound->name, name, sizeof(sound->name));

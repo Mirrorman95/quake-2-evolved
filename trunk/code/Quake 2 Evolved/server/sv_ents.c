@@ -412,7 +412,7 @@ void SV_BuildClientFrame (client_t *cl){
 	org[1] = clEdict->client->ps.pmove.origin[1] * 0.125 + clEdict->client->ps.viewoffset[1];
 	org[2] = clEdict->client->ps.pmove.origin[2] * 0.125 + clEdict->client->ps.viewoffset[2];
 
-	leafNum = CM_PointLeafNum(org);
+	leafNum = CM_PointInLeaf(org, 0);
 	area = CM_LeafArea(leafNum);
 	cluster = CM_LeafCluster(leafNum);
 

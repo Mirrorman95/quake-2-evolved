@@ -51,7 +51,6 @@ typedef enum {
 	ID_CROSSHAIRSIZE,
 	ID_IDENTIFYTARGET,
 	ID_MAXFPS,
-	ID_ENHANCEDHUD,
 	ID_FOV,
 	ID_HAND,
 	ID_ALLOWDOWNLOAD
@@ -92,7 +91,6 @@ typedef struct {
 	menuField_t				crosshairSize;
 	menuSpinControl_t		identifyTarget;
 	menuField_t				maxFPS;
-	menuSpinControl_t		enhancedHUD;
 	menuField_t				fov;
 	menuSpinControl_t		hand;
 	menuSpinControl_t		allowDownload;
@@ -127,9 +125,6 @@ static void UI_GameOptions_GetConfig (){
 
 	Str_SPrintf(uiGameOptions.maxFPS.buffer, sizeof(uiGameOptions.maxFPS.buffer), "%i", CVar_GetVariableInteger("cl_maxFPS"));
 
-	if (CVar_GetVariableInteger("cl_newHUD"))
-		uiGameOptions.enhancedHUD.curValue = 1;
-
 	Str_SPrintf(uiGameOptions.fov.buffer, sizeof(uiGameOptions.fov.buffer), "%i", CVar_GetVariableInteger("fov"));
 
 	uiGameOptions.hand.curValue = CVar_GetVariableInteger("hand");
@@ -161,8 +156,6 @@ static void UI_GameOptions_SetConfig (){
 	if (atoi(uiGameOptions.maxFPS.buffer) >= 0)
 		CVar_SetVariableInteger("cl_maxFPS", atoi(uiGameOptions.maxFPS.buffer), false);
 
-	CVar_SetVariableInteger("cl_newHUD", (int)uiGameOptions.enhancedHUD.curValue, false);
-
 	if (atoi(uiGameOptions.fov.buffer) >= 1 && atoi(uiGameOptions.fov.buffer) <= 179)
 		CVar_SetVariableInteger("fov", atoi(uiGameOptions.fov.buffer), false);
 
@@ -179,8 +172,6 @@ static void UI_GameOptions_SetConfig (){
 static void UI_GameOptions_UpdateConfig (){
 
 	uiGameOptions.identifyTarget.generic.name = uiGameOptionsYesNo[(int)uiGameOptions.identifyTarget.curValue];
-
-	uiGameOptions.enhancedHUD.generic.name = uiGameOptionsYesNo[(int)uiGameOptions.enhancedHUD.curValue];
 
 	uiGameOptions.hand.generic.name = uiGameOptionsHand[(int)uiGameOptions.hand.curValue];
 
@@ -413,19 +404,6 @@ static void UI_GameOptions_Init (){
 	uiGameOptions.maxFPS.generic.callback		= UI_GameOptions_Callback;
 	uiGameOptions.maxFPS.generic.statusText		= "Cap your game frame rate";
 	uiGameOptions.maxFPS.maxLenght				= 3;
-
-	uiGameOptions.enhancedHUD.generic.id		= ID_ENHANCEDHUD;
-	uiGameOptions.enhancedHUD.generic.type		= QMTYPE_SPINCONTROL;
-	uiGameOptions.enhancedHUD.generic.flags		= QMF_CENTER_JUSTIFY | QMF_PULSEIFFOCUS | QMF_DROPSHADOW;
-	uiGameOptions.enhancedHUD.generic.x			= 580;
-	uiGameOptions.enhancedHUD.generic.y			= 320;
-	uiGameOptions.enhancedHUD.generic.width		= 198;
-	uiGameOptions.enhancedHUD.generic.height	= 30;
-	uiGameOptions.enhancedHUD.generic.callback	= UI_GameOptions_Callback;
-	uiGameOptions.enhancedHUD.generic.statusText	= "Enable/Disable new HUD layout";
-	uiGameOptions.enhancedHUD.minValue			= 0;
-	uiGameOptions.enhancedHUD.maxValue			= 1;
-	uiGameOptions.enhancedHUD.range				= 1;
 	
 	uiGameOptions.fov.generic.id				= ID_FOV;
 	uiGameOptions.fov.generic.type				= QMTYPE_FIELD;
@@ -479,7 +457,6 @@ static void UI_GameOptions_Init (){
 	UI_AddItem(&uiGameOptions.menu, (void *)&uiGameOptions.crosshairSize);
 	UI_AddItem(&uiGameOptions.menu, (void *)&uiGameOptions.identifyTarget);
 	UI_AddItem(&uiGameOptions.menu, (void *)&uiGameOptions.maxFPS);
-	UI_AddItem(&uiGameOptions.menu, (void *)&uiGameOptions.enhancedHUD);
 	UI_AddItem(&uiGameOptions.menu, (void *)&uiGameOptions.fov);
 	UI_AddItem(&uiGameOptions.menu, (void *)&uiGameOptions.hand);
 	UI_AddItem(&uiGameOptions.menu, (void *)&uiGameOptions.allowDownload);

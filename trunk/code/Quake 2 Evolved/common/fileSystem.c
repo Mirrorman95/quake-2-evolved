@@ -27,6 +27,8 @@
 
 // TODO:
 // - fileInPath->name is wrong when loading from pk3 files (see FS_ListFiles)
+//   - could be fixed by adding pack loading functions?
+// - paths are incorrect or something because some skins like models/monsters/tank/ctank/../skin is not loaded
 
 
 #include "common.h"

@@ -1412,10 +1412,25 @@ static void RB_ShowModelBounds (int numMeshes, mesh_t *meshes){
 	GL_PolygonMode(GL_FILL);
 
 	GL_Disable(GL_CULL_FACE);
-	GL_Disable(GL_POLYGON_OFFSET_FILL);
+
+	if (r_showModelBounds->integerValue != 1)
+		GL_Disable(GL_POLYGON_OFFSET_LINE);
+	else {
+		GL_Enable(GL_POLYGON_OFFSET_LINE);
+		GL_PolygonOffset(r_offsetFactor->floatValue, r_offsetUnits->floatValue);
+	}
+
 	GL_Disable(GL_BLEND);
+
 	GL_Disable(GL_ALPHA_TEST);
-	GL_Disable(GL_DEPTH_TEST);
+
+	if (r_showModelBounds->integerValue != 1)
+		GL_Disable(GL_DEPTH_TEST);
+	else {
+		GL_Enable(GL_DEPTH_TEST);
+		GL_DepthFunc(GL_LEQUAL);
+	}
+
 	GL_Disable(GL_STENCIL_TEST);
 
 	GL_ColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -1525,6 +1540,19 @@ static void RB_ShowModelBounds (int numMeshes, mesh_t *meshes){
 		if (!r_ignoreGLErrors->integerValue)
 			GL_CheckForErrors();
 	}
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void RB_ShowCull (int numMeshes, mesh_t *meshes){
+
+	if (!numMeshes)
+		return;
+
+	// TODO: Mark culled out meshes with a color?, kinda like overdraw/light count
 }
 
 /*
@@ -2178,6 +2206,13 @@ void RB_RenderDebugTools (){
 		RB_ShowModelBounds(backEnd.viewParms.numMeshes[1], backEnd.viewParms.meshes[1]);
 		RB_ShowModelBounds(backEnd.viewParms.numMeshes[2], backEnd.viewParms.meshes[2]);
 		RB_ShowModelBounds(backEnd.viewParms.numMeshes[3], backEnd.viewParms.meshes[3]);
+	}
+
+	if (r_showCull->integerValue == 2 || r_showCull->integerValue == 3){
+		RB_ShowCull(backEnd.viewParms.numMeshes[0], backEnd.viewParms.meshes[0]);
+		RB_ShowCull(backEnd.viewParms.numMeshes[1], backEnd.viewParms.meshes[1]);
+		RB_ShowCull(backEnd.viewParms.numMeshes[2], backEnd.viewParms.meshes[2]);
+		RB_ShowCull(backEnd.viewParms.numMeshes[3], backEnd.viewParms.meshes[3]);
 	}
 
 	R_RefreshLightEditor();

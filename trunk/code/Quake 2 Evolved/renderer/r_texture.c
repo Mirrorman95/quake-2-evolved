@@ -1786,6 +1786,18 @@ static void R_CreateInternalTextures (){
 
 	rg.fogEnterTexture = R_LoadTexture("_fogEnter", image, 64, 64, TF_INTERNAL | TF_NOPICMIP | TF_LIGHT, TF_LUMINANCE_ALPHA, TF_LINEAR, TW_CLAMP, true);
 
+	// Color table texture
+	out = image;
+
+	for (i = 0; i < 256; i++, out += 4){
+		out[0] = i;
+		out[1] = i;
+		out[2] = i;
+		out[3] = 255;
+	}
+
+	rg.colorTableTexture = R_LoadTexture("_colorTable", image, 256, 1, TF_INTERNAL | TF_NOPICMIP | TF_UNCOMPRESSED, TF_RGB, TF_NEAREST, TW_CLAMP, true);
+
 	// Cinematic textures
 	for (i = 0; i < MAX_CINEMATICS; i++)
 		rg.cinematicTextures[i] = R_LoadTexture(Str_VarArgs("_cinematic%i", i+1), emptyImage, 4, 4, TF_INTERNAL | TF_NOPICMIP | TF_UNCOMPRESSED, TF_RGB, TF_LINEAR, TW_CLAMP_TO_ZERO, true);
@@ -1795,6 +1807,9 @@ static void R_CreateInternalTextures (){
 
 	// Remote texture
 	rg.remoteTexture = R_LoadTexture("_remote", emptyImage, 4, 4, TF_INTERNAL | TF_ALLOWCAPTURE | TF_NOPICMIP | TF_UNCOMPRESSED, TF_RGB, TF_LINEAR, TW_REPEAT, true);
+
+	// Bloom texture
+	rg.bloomTexture = R_LoadTexture("_bloom", emptyImage, 4, 4, TF_INTERNAL | TF_NOPICMIP | TF_UNCOMPRESSED, TF_RGB, TF_LINEAR, TW_CLAMP, true);
 
 	// Current color texture
 	rg.currentColorTexture = R_LoadTexture("_currentColor", emptyImage, 4, 4, TF_INTERNAL | TF_ALLOWCAPTURE | TF_NOPICMIP | TF_UNCOMPRESSED, TF_RGBA, TF_LINEAR, TW_CLAMP, true);

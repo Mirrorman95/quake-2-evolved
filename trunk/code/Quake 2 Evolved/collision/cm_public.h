@@ -43,6 +43,30 @@ clipInlineModel_t *CM_LoadMap (const char *name, bool clientLoad, uint *checkCou
 // Frees the current map and all the models
 void			CM_FreeMap ();
 
+// Returns the number of inline models in the current map
+int				CM_NumInlineModels ();
+
+// Loads the given inline model
+clipInlineModel_t *CM_LoadInlineModel (const char *name);
+
+// Returns the entity string
+char *			CM_GetEntityString ();
+
+// Sets up a box model for collision detection
+int				CM_SetupBoxModel (const vec3_t mins, const vec3_t maxs);
+
+//
+int				CM_PointInLeaf (const vec3_t point, int nodeNum);
+
+// Fills in a list of all the leafs contacted by the given bounds
+int				CM_BoundsInLeaves (const vec3_t mins, const vec3_t maxs, int *leafs, int maxLeafs, int headNode, int *topNode);
+
+// Returns the number of clusters in the current map
+int				CM_NumClusters ();
+
+// Returns the number of areas in the current map
+int				CM_NumAreas ();
+
 // Returns true if the given areas are connected
 bool			CM_AreasAreConnected (int areaNum1, int areaNum2);
 
@@ -61,26 +85,16 @@ void			CM_Shutdown ();
 
 
 
-int			CM_NumInlineModels (void);
-clipInlineModel_t	*CM_InlineModel (const char *name);
 
-char		*CM_EntityString (void);
 
-int			CM_NumClusters (void);
+
 int			CM_LeafContents (int leafNum);
 int			CM_LeafCluster (int leafNum);
 int			CM_LeafArea (int leafNum);
 
-void		CM_InitBoxHull ();
-
-// Creates a clipping hull for an arbitrary box
-int			CM_HeadNodeForBox (const vec3_t mins, const vec3_t maxs);
-
 // Call with topNode set to the headNode, returns with topNode set to
 // the first node that splits the box
 int			CM_BoxLeafNums (const vec3_t mins, const vec3_t maxs, int *list, int listSize, int *topNode);
-
-int			CM_PointLeafNum (const vec3_t p);
 
 // Returns an ORed contents mask
 int			CM_PointContents (const vec3_t p, int headNode);

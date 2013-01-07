@@ -33,6 +33,39 @@
 /*
  ==============================================================================
 
+ INTEGRATED POST-PROCESSING EDITOR
+
+ ==============================================================================
+*/
+
+typedef struct {
+	float					bloomContrast;
+	float					bloomThreshold;
+	float					baseIntensity;
+	float					glowIntensity;
+
+	vec3_t					colorShadows;
+	vec3_t					colorHighlights;
+	vec3_t					colorMidtones;
+	vec3_t					colorMinOutput;
+	vec3_t					colorMaxOutput;
+	vec3_t					colorSaturation;
+	vec3_t					colorTint;
+	byte					colorTable[256][4];
+	char					colorTableName[MAX_PATH_LENGTH];
+} postProcessParms_t;
+
+void			R_PostProcessEditorUpdateCallback (int index, postProcessParms_t *parms);
+void			R_PostProcessEditorSaveCallback ();
+void			R_PostProcessEditorCloseCallback ();
+
+void *			WIN_CreatePostProcessEditorWindow ();
+void			WIN_DestroyPostProcessEditorWindow ();
+void			WIN_EditPostProcessParameters (int index, postProcessParms_t *parms);
+
+/*
+ ==============================================================================
+
  INTEGRATED LIGHT EDITOR
 
  ==============================================================================

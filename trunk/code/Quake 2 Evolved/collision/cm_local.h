@@ -138,6 +138,10 @@ typedef struct {
 	clipInlineModel_t		nullModel;
 } clipMap_t;
 
+void			CM_CreateBoxModel ();
+
+void			CM_InitModels ();
+void			CM_ShutdownModels ();
 
 /*
  ==============================================================================
@@ -148,7 +152,8 @@ typedef struct {
 */
 
 typedef struct {
-	int todo;
+	int						leafPoints;
+	int						leafBounds;
 } clipStats_t;
 
 extern clipMap_t			cm;

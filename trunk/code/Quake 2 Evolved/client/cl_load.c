@@ -76,6 +76,8 @@ static void CL_RegisterLoadingInfo (){
 	Str_Copy(cls.loadingInfo.map, cl.configStrings[CS_MODELS + 1] + 5, sizeof(cls.loadingInfo.map));
 	Str_StripFileExtension(cls.loadingInfo.map);
 
+	Str_Copy(cls.loadingInfo.name, cl.configStrings[CS_NAME], sizeof(cls.loadingInfo.name));
+
 	// Check if a levelshot for this map exists
 	Str_SPrintf(levelshot, sizeof(levelshot), "ui/assets/levelshots/%s.tga", cls.loadingInfo.map);
 
@@ -180,7 +182,13 @@ static void CL_RegisterGraphics (){
 	skyRotate = Str_ToFloat(cl.configStrings[CS_SKYROTATE]);
 	sscanf(cl.configStrings[CS_SKYAXIS], "%f %f %f", &skyAxis[0], &skyAxis[1], &skyAxis[2]);
 
-	R_LoadMap(cl.configStrings[CS_MODELS+1], cl.configStrings[CS_SKY], skyRotate, skyAxis);
+	R_LoadMap(cl.configStrings[CS_MODELS+1], cl.configStrings[CS_SKY], skyRotate, skyAxis);		// FIXME: change the first paramter to cls.loadingInfo.name ?
+
+	// Load the post-process effects
+	CL_UpdateLoading("post-process effects");
+
+	Str_SPrintf(name, sizeof(name), "maps/%s.postProcess", cls.loadingInfo.name);
+	R_LoadPostProcess(name);
 
 	// Register models
 	CL_UpdateLoading("models");
@@ -222,7 +230,7 @@ static void CL_RegisterGraphics (){
 			cl.media.gameModels[i] = R_RegisterModel(cl.configStrings[CS_MODELS + i]);
 
 			if (cl.configStrings[CS_MODELS + i][0] == '*')
-				cl.media.gameCModels[i] = CM_InlineModel(cl.configStrings[CS_MODELS + i]);
+				cl.media.gameCModels[i] = CM_LoadInlineModel(cl.configStrings[CS_MODELS + i]);
 			else
 				cl.media.gameCModels[i] = NULL;
 		}
@@ -235,6 +243,7 @@ static void CL_RegisterGraphics (){
 	cl.media.disconnectedMaterial = R_RegisterMaterialNoMip("disconnected");
 	cl.media.backTileMaterial = R_RegisterMaterialNoMip("backTile");
 	cl.media.pauseMaterial = R_RegisterMaterialNoMip("pause");
+	cl.media.logoMaterial = R_RegisterMaterialNoMip("logo");
 
 	for (i = 0; i < NUM_CROSSHAIRS; i++)
 		cl.media.crosshairMaterials[i] = R_RegisterMaterialNoMip(Str_VarArgs("gfx/crosshairs/crosshair%i", i + 1));

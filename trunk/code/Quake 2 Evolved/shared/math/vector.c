@@ -136,6 +136,18 @@ void CrossProduct (const vec3_t v1, const vec3_t v2, vec3_t cross){
 
 /*
  ==================
+ VectorLerpFast
+ ==================
+*/
+void VectorLerpFast (const vec3_t from, const vec3_t to, const float frac, vec3_t out){
+
+	out[0] = from[0] + (to[0] - from[0]) * frac;
+	out[1] = from[1] + (to[1] - from[1]) * frac;
+	out[2] = from[2] + (to[2] - from[2]) * frac;
+}
+
+/*
+ ==================
  Distance
  ==================
 */
@@ -245,6 +257,23 @@ bool VectorCompare (const vec3_t v1, const vec3_t v2){
 
 /*
  ==================
+ VectorCompareEpsilon
+ ==================
+*/
+bool VectorCompareEpsilon (const vec3_t v1, const vec3_t v2, const float epsilon){
+
+	if (FAbs(v1[0] - v2[0]) > epsilon)
+		return false;
+	if (FAbs(v1[1] - v2[1]) > epsilon)
+		return false;
+	if (FAbs(v1[2] - v2[2]) > epsilon)
+		return false;
+			
+	return true;
+}
+
+/*
+ ==================
  VectorAdd
  ==================
 */
@@ -325,6 +354,18 @@ void VectorAverage (const vec3_t v1, const vec3_t v2, vec3_t out){
 	out[0] = (v1[0] + v2[0]) * 0.5f;
 	out[1] = (v1[1] + v2[1]) * 0.5f;
 	out[2] = (v1[2] + v2[2]) * 0.5f;
+}
+
+/*
+ ==================
+ VectorClamp
+ ==================
+*/
+void VectorClamp (const float min, const float max, vec3_t out){
+
+	out[0] = (out[0] < min) ? min : (out[0] > max) ? max : out[0];
+	out[1] = (out[1] < min) ? min : (out[1] > max) ? max : out[1];
+	out[2] = (out[2] < min) ? min : (out[2] > max) ? max : out[2];
 }
 
 /*

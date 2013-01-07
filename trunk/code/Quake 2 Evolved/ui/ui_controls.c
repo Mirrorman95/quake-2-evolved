@@ -635,21 +635,21 @@ static void UI_Controls_Ownerdraw (void *self){
 		UI_DrawPic(item->x, item->y, item->width, item->height, colorWhite, ((menuAction_t *)self)->background);
 
 		if (item->flags & QMF_GRAYED){
-			UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, uiColorDarkGray, true, 1.5f, 2.25f, H_NONE, 1.0f, V_NONE, 1.0f);
+			UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, uiColorDarkGray, true, true, H_NONE, 1.0f, V_NONE, 1.0f);
 			return;		// Grayed
 		}
 
 		if (item != (menuCommon_t *)UI_ItemAtCursor(item->parent)){
-			UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, item->color, false, 1.5f, 2.25f, H_NONE, 1.0f, V_NONE, 1.0f);
+			UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, item->color, false, true, H_NONE, 1.0f, V_NONE, 1.0f);
 			return;		// No focus
 		}
 
-		UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, item->color, false, 1.5f, 2.25f, H_NONE, 1.0f, V_NONE, 1.0f);
+		UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, item->color, false, true, H_NONE, 1.0f, V_NONE, 1.0f);
 
 		Vector4Copy(colorWhite, color);
 		color[3] = 1.0f * (0.5f + 0.5f * sin(uiStatic.realTime / UI_PULSE_DIVISOR));
 
-		UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, color, false, 1.5f, 2.25f, H_NONE, 1.0f, V_NONE, 1.0f);
+		UI_DrawString(item->x, item->y, item->charWidth, item->charHeight, name, color, false, true, H_NONE, 1.0f, V_NONE, 1.0f);
 	}
 	else {
 		if (uiControls.menu.items[uiControls.menu.cursor] == self)

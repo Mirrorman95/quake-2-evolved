@@ -103,7 +103,6 @@
     <ClInclude Include="renderer\refresh.h" />
     <ClInclude Include="renderer\r_local.h" />
     <ClInclude Include="server\server.h" />
-    <ClInclude Include="shared\anorms.h" />
     <ClInclude Include="shared\math\angles.h" />
     <ClInclude Include="shared\math\bounds.h" />
     <ClInclude Include="shared\math\color.h" />
@@ -144,10 +143,12 @@
     <ClCompile Include="client\cl_userCmd.c" />
     <ClCompile Include="client\cl_view.c" />
     <ClCompile Include="client\cl_key.c" />
-    <ClCompile Include="collision\cmodel.c" />
     <ClCompile Include="collision\cm_area.c" />
+    <ClCompile Include="collision\cm_contents.c" />
+    <ClCompile Include="collision\cm_leaf.c" />
     <ClCompile Include="collision\cm_main.c" />
     <ClCompile Include="collision\cm_model.c" />
+    <ClCompile Include="collision\cm_pvs.c" />
     <ClCompile Include="collision\cm_trace.c" />
     <ClCompile Include="common\cmdSystem.c" />
     <ClCompile Include="common\common.c" />
@@ -168,6 +169,7 @@
     <ClCompile Include="renderer\r_backEnd.c" />
     <ClCompile Include="renderer\r_batch.c" />
     <ClCompile Include="renderer\r_commands.c" />
+    <ClCompile Include="renderer\r_cull.c" />
     <ClCompile Include="renderer\r_debug.c" />
     <ClCompile Include="renderer\r_decal.c" />
     <ClCompile Include="renderer\r_deform.c" />
@@ -184,6 +186,8 @@
     <ClCompile Include="renderer\r_mesh.c" />
     <ClCompile Include="renderer\r_model.c" />
     <ClCompile Include="renderer\r_polygon.c" />
+    <ClCompile Include="renderer\r_postProcess.c" />
+    <ClCompile Include="renderer\r_postProcessEditor.c" />
     <ClCompile Include="renderer\r_program.c" />
     <ClCompile Include="renderer\r_render.c" />
     <ClCompile Include="renderer\r_renderCommon.c" />
@@ -219,6 +223,7 @@
     <ClCompile Include="sound\s_music.c" />
     <ClCompile Include="sound\s_rawSamples.c" />
     <ClCompile Include="sound\s_sound.c" />
+    <ClCompile Include="sound\s_soundShader.c" />
     <ClCompile Include="ui\ui_advanced.c" />
     <ClCompile Include="ui\ui_audio.c" />
     <ClCompile Include="ui\ui_cinematics.c" />

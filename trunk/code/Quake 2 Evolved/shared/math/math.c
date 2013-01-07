@@ -108,6 +108,18 @@ float FMod (float x, float y){
 
 /*
  ==================
+ FAbs
+ ==================
+*/
+float FAbs (float f){
+
+	*(int *)&f &= 0x7FFFFFFF;
+
+	return f;
+}
+
+/*
+ ==================
  IsPowerOfTwo
  ==================
 */

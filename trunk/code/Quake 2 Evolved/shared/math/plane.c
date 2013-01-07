@@ -103,8 +103,6 @@ float PlaneDistance (const vec3_t normal, const float dist, const vec3_t point){
 
 /*
  ==================
- 
- TODO: rewrite?
 
  Returns 1, 2, or 1 + 2
  ==================
@@ -163,14 +161,12 @@ int BoxOnPlaneSide (const vec3_t mins, const vec3_t maxs, const cplane_t *plane)
 		break;
 	}
 
-	if (dist2 < plane->dist){
-		if (dist1 >= plane->dist)
-			return PLANESIDE_CROSS;
-		else
-			return PLANESIDE_BACK;
-	}
+	if (dist1 >= plane->dist)
+		return PLANESIDE_FRONT;
+	if (dist2 < plane->dist)
+		return PLANESIDE_BACK;
 
-	return PLANESIDE_FRONT;
+	return PLANESIDE_CROSS;
 }
 
 /*

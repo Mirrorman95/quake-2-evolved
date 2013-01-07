@@ -56,7 +56,7 @@ void R_RefreshLightEditor (){
 	lightData_t *lightData;
 	trace_t		trace;
 	vec3_t		origin, textOrigin, forward, angles, axis[3];
-	vec3_t		tmp;
+	vec3_t		tmp, tmp2;
 	vec3_t		mins = {-5.0f, -5.0f, -5.0f}, maxs = {5.0f, 5.0f, 5.0f};
 	char		string[MAX_STRING_LENGTH];
 	float		fraction = 1.0f;
@@ -87,7 +87,7 @@ void R_RefreshLightEditor (){
 		if (Distance(lightData->origin, origin) > 1000.0f){
 			// Check if the view is inside the light bounds. This is so that
 			// huge lights are added no matter how far their origin is.
-			if (BoundsContainsPoint(lightData->bounds[0], lightData->bounds[1], origin))
+			if (BoundsContainsPoint(lightData->mins, lightData->maxs, origin))
 				continue;
 		}
 
@@ -99,7 +99,7 @@ void R_RefreshLightEditor (){
 		return;		// Nothing more to do here
 
 	// Find the closest light that has focus, if any
-	headNode = CM_HeadNodeForBox(mins, maxs);
+	headNode = CM_SetupBoxModel(mins, maxs);
 
 	for (i = 0; i < numVisibleLights; i++){
 		lightData = visibleLights[i];
@@ -133,10 +133,11 @@ void R_RefreshLightEditor (){
 			if (lightData->type == RL_POINT || lightData->type == RL_CUBIC){
 				ClearBounds(mins, maxs);
 
-				VectorSet(mins, -2.0f, -2.0f, -2.0f);
-				VectorSet(maxs, 2.0f, 2.0f, 2.0f);
+				VectorSet(mins, -1.0f, -1.0f, -1.0f);
+				VectorSet(maxs, 1.0f, 1.0f, 1.0f);
 
-				// TODO: axis * center + origin
+				// TODO: origin = axis * center + origin ?
+				// or origin = axis * center
 
 				R_DebugBox(colorRed, origin, axis, mins, maxs, false, VIEW_MAIN);
 			}

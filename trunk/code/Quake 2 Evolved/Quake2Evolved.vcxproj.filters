@@ -153,9 +153,6 @@
     <ClInclude Include="renderer\r_local.h">
       <Filter>Header Files\renderer</Filter>
     </ClInclude>
-    <ClInclude Include="shared\anorms.h">
-      <Filter>Header Files\shared</Filter>
-    </ClInclude>
     <ClInclude Include="shared\q_shared.h">
       <Filter>Header Files\shared</Filter>
     </ClInclude>
@@ -551,9 +548,6 @@
     <ClCompile Include="collision\cm_trace.c">
       <Filter>Source Files\collision</Filter>
     </ClCompile>
-    <ClCompile Include="collision\cmodel.c">
-      <Filter>Source Files\collision</Filter>
-    </ClCompile>
     <ClCompile Include="windows\win_qgl.c">
       <Filter>Source Files\windows</Filter>
     </ClCompile>
@@ -589,6 +583,27 @@
     </ClCompile>
     <ClCompile Include="client\cl_commands.c">
       <Filter>Source Files\client</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_cull.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_leaf.c">
+      <Filter>Source Files\collision</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_contents.c">
+      <Filter>Source Files\collision</Filter>
+    </ClCompile>
+    <ClCompile Include="collision\cm_pvs.c">
+      <Filter>Source Files\collision</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_postProcess.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="renderer\r_postProcessEditor.c">
+      <Filter>Source Files\renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\s_soundShader.c">
+      <Filter>Source Files\sound</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

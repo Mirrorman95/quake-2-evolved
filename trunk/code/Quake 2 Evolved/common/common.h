@@ -199,6 +199,7 @@ void			R_DebugPolygon (const vec4_t color, int numPoints, const vec3_t *points, 
 void			R_DebugText (const vec4_t color, bool forceColor, const vec3_t origin, float cw, float ch, const char *text, bool depthTest, int allowInView);
 
 void			R_EnumMaterialDefs (void (*callback)(const char *string));
+void			S_EnumSoundShaderDefs (void (*callback)(const char *string));
 
 void			Con_Print (const char *text);
 

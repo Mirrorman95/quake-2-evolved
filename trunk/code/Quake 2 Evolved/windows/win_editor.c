@@ -34,6 +34,1160 @@
 /*
  ==============================================================================
 
+ INTEGRATED POST-PROCESSING EDITOR
+
+ ==============================================================================
+*/
+
+#ifdef _WIN32
+
+#define POST_PROCESS_EDITOR_WINDOW_NAME		ENGINE_NAME " Post-Process Editor"
+#define POST_PROCESS_EDITOR_WINDOW_CLASS	ENGINE_NAME " Post-Process Editor"
+#define POST_PROCESS_EDITOR_WINDOW_STYLE	(WS_OVERLAPPED | WS_BORDER | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX)
+
+static postProcessParms_t	win_postProcessParms = {1.0f, 0.5f, 1.0f, 1.0f, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0.0f, 0.0f, 0.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {1.0f, 1.0f, 1.0f}, {0}, "_default"};
+
+typedef struct {
+	bool					initialized;
+	bool					enabled;
+
+	int						editIndex;
+	postProcessParms_t		editParms;
+
+	// Window stuff
+	HINSTANCE				hInstance;
+
+	HWND					hWnd;
+	HWND					hWndArea;
+	HWND					hWndAreaValue;
+	HWND					hWndApplyToAll;
+	HWND					hWndBloom;
+	HWND					hWndBloomContrast;
+	HWND					hWndBloomContrastValue;
+	HWND					hWndBloomContrastSpin;
+	HWND					hWndBloomThreshold;
+	HWND					hWndBloomThresholdValue;
+	HWND					hWndBloomThresholdSpin;
+	HWND					hWndBaseIntensity;
+	HWND					hWndBaseIntensityValue;
+	HWND					hWndBaseIntensitySpin;
+	HWND					hWndGlowIntensity;
+	HWND					hWndGlowIntensityValue;
+	HWND					hWndGlowIntensitySpin;
+	HWND					hWndColorCorrection;
+	HWND					hWndR;
+	HWND					hWndG;
+	HWND					hWndB;
+	HWND					hWndColorShadows;
+	HWND					hWndColorShadowsRValue;
+	HWND					hWndColorShadowsRSpin;
+	HWND					hWndColorShadowsGValue;
+	HWND					hWndColorShadowsGSpin;
+	HWND					hWndColorShadowsBValue;
+	HWND					hWndColorShadowsBSpin;
+	HWND					hWndColorHighlights;
+	HWND					hWndColorHighlightsRValue;
+	HWND					hWndColorHighlightsRSpin;
+	HWND					hWndColorHighlightsGValue;
+	HWND					hWndColorHighlightsGSpin;
+	HWND					hWndColorHighlightsBValue;
+	HWND					hWndColorHighlightsBSpin;
+	HWND					hWndColorMidtones;
+	HWND					hWndColorMidtonesRValue;
+	HWND					hWndColorMidtonesRSpin;
+	HWND					hWndColorMidtonesGValue;
+	HWND					hWndColorMidtonesGSpin;
+	HWND					hWndColorMidtonesBValue;
+	HWND					hWndColorMidtonesBSpin;
+	HWND					hWndColorMinOutput;
+	HWND					hWndColorMinOutputRValue;
+	HWND					hWndColorMinOutputRSpin;
+	HWND					hWndColorMinOutputGValue;
+	HWND					hWndColorMinOutputGSpin;
+	HWND					hWndColorMinOutputBValue;
+	HWND					hWndColorMinOutputBSpin;
+	HWND					hWndColorMaxOutput;
+	HWND					hWndColorMaxOutputRValue;
+	HWND					hWndColorMaxOutputRSpin;
+	HWND					hWndColorMaxOutputGValue;
+	HWND					hWndColorMaxOutputGSpin;
+	HWND					hWndColorMaxOutputBValue;
+	HWND					hWndColorMaxOutputBSpin;
+	HWND					hWndColorSaturation;
+	HWND					hWndColorSaturationRValue;
+	HWND					hWndColorSaturationRSpin;
+	HWND					hWndColorSaturationGValue;
+	HWND					hWndColorSaturationGSpin;
+	HWND					hWndColorSaturationBValue;
+	HWND					hWndColorSaturationBSpin;
+	HWND					hWndColorTint;
+	HWND					hWndColorTintRValue;
+	HWND					hWndColorTintRSpin;
+	HWND					hWndColorTintGValue;
+	HWND					hWndColorTintGSpin;
+	HWND					hWndColorTintBValue;
+	HWND					hWndColorTintBSpin;
+	HWND					hWndColorTable;
+	HWND					hWndColorTableValue;
+	HWND					hWndApply;
+	HWND					hWndReset;
+	HWND					hWndDefaults;
+	HWND					hWndSave;
+
+	HFONT					hFont;
+} postProcessEditor_t;
+
+static postProcessEditor_t	win_postProcessEditor;
+
+
+/*
+ ==================
+ WIN_ApplyPostProcessParameters
+ ==================
+*/
+static void WIN_ApplyPostProcessParameters (bool all){
+
+	postProcessParms_t	parms;
+	char				string[64];
+	int					i;
+
+	if (!win_postProcessEditor.enabled)
+		return;
+
+	// Read the controls
+	if (GetWindowText(win_postProcessEditor.hWndBloomContrastValue, string, sizeof(string)))
+		parms.bloomContrast = Str_ToFloat(string);
+	else
+		parms.bloomContrast = win_postProcessEditor.editParms.bloomContrast;
+
+	if (GetWindowText(win_postProcessEditor.hWndBloomThresholdValue, string, sizeof(string)))
+		parms.bloomThreshold = Str_ToFloat(string);
+	else
+		parms.bloomThreshold = win_postProcessEditor.editParms.bloomThreshold;
+
+	if (GetWindowText(win_postProcessEditor.hWndBaseIntensityValue, string, sizeof(string)))
+		parms.baseIntensity = Str_ToFloat(string);
+	else
+		parms.baseIntensity = win_postProcessEditor.editParms.baseIntensity;
+
+	if (GetWindowText(win_postProcessEditor.hWndGlowIntensityValue, string, sizeof(string)))
+		parms.glowIntensity = Str_ToFloat(string);
+	else
+		parms.glowIntensity = win_postProcessEditor.editParms.glowIntensity;
+
+	if (GetWindowText(win_postProcessEditor.hWndColorShadowsRValue, string, sizeof(string)))
+		parms.colorShadows[0] = Str_ToFloat(string);
+	else
+		parms.colorShadows[0] = win_postProcessEditor.editParms.colorShadows[0];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorShadowsGValue, string, sizeof(string)))
+		parms.colorShadows[1] = Str_ToFloat(string);
+	else
+		parms.colorShadows[1] = win_postProcessEditor.editParms.colorShadows[1];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorShadowsBValue, string, sizeof(string)))
+		parms.colorShadows[2] = Str_ToFloat(string);
+	else
+		parms.colorShadows[2] = win_postProcessEditor.editParms.colorShadows[2];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorHighlightsRValue, string, sizeof(string)))
+		parms.colorHighlights[0] = Str_ToFloat(string);
+	else
+		parms.colorHighlights[0] = win_postProcessEditor.editParms.colorHighlights[0];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorHighlightsGValue, string, sizeof(string)))
+		parms.colorHighlights[1] = Str_ToFloat(string);
+	else
+		parms.colorHighlights[1] = win_postProcessEditor.editParms.colorHighlights[1];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorHighlightsBValue, string, sizeof(string)))
+		parms.colorHighlights[2] = Str_ToFloat(string);
+	else
+		parms.colorHighlights[2] = win_postProcessEditor.editParms.colorHighlights[2];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorMidtonesRValue, string, sizeof(string)))
+		parms.colorMidtones[0] = Str_ToFloat(string);
+	else
+		parms.colorMidtones[0] = win_postProcessEditor.editParms.colorMidtones[0];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorMidtonesGValue, string, sizeof(string)))
+		parms.colorMidtones[1] = Str_ToFloat(string);
+	else
+		parms.colorMidtones[1] = win_postProcessEditor.editParms.colorMidtones[1];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorMidtonesBValue, string, sizeof(string)))
+		parms.colorMidtones[2] = Str_ToFloat(string);
+	else
+		parms.colorMidtones[2] = win_postProcessEditor.editParms.colorMidtones[2];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorMinOutputRValue, string, sizeof(string)))
+		parms.colorMinOutput[0] = Str_ToFloat(string);
+	else
+		parms.colorMinOutput[0] = win_postProcessEditor.editParms.colorMinOutput[0];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorMinOutputGValue, string, sizeof(string)))
+		parms.colorMinOutput[1] = Str_ToFloat(string);
+	else
+		parms.colorMinOutput[1] = win_postProcessEditor.editParms.colorMinOutput[1];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorMinOutputBValue, string, sizeof(string)))
+		parms.colorMinOutput[2] = Str_ToFloat(string);
+	else
+		parms.colorMinOutput[2] = win_postProcessEditor.editParms.colorMinOutput[2];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorMaxOutputRValue, string, sizeof(string)))
+		parms.colorMaxOutput[0] = Str_ToFloat(string);
+	else
+		parms.colorMaxOutput[0] = win_postProcessEditor.editParms.colorMaxOutput[0];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorMaxOutputGValue, string, sizeof(string)))
+		parms.colorMaxOutput[1] = Str_ToFloat(string);
+	else
+		parms.colorMaxOutput[1] = win_postProcessEditor.editParms.colorMaxOutput[1];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorMaxOutputBValue, string, sizeof(string)))
+		parms.colorMaxOutput[2] = Str_ToFloat(string);
+	else
+		parms.colorMaxOutput[2] = win_postProcessEditor.editParms.colorMaxOutput[2];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorSaturationRValue, string, sizeof(string)))
+		parms.colorSaturation[0] = Str_ToFloat(string);
+	else
+		parms.colorSaturation[0] = win_postProcessEditor.editParms.colorSaturation[0];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorSaturationGValue, string, sizeof(string)))
+		parms.colorSaturation[1] = Str_ToFloat(string);
+	else
+		parms.colorSaturation[1] = win_postProcessEditor.editParms.colorSaturation[1];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorSaturationBValue, string, sizeof(string)))
+		parms.colorSaturation[2] = Str_ToFloat(string);
+	else
+		parms.colorSaturation[2] = win_postProcessEditor.editParms.colorSaturation[2];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorTintRValue, string, sizeof(string)))
+		parms.colorTint[0] = Str_ToFloat(string);
+	else
+		parms.colorTint[0] = win_postProcessEditor.editParms.colorTint[0];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorTintGValue, string, sizeof(string)))
+		parms.colorTint[1] = Str_ToFloat(string);
+	else
+		parms.colorTint[1] = win_postProcessEditor.editParms.colorTint[1];
+
+	if (GetWindowText(win_postProcessEditor.hWndColorTintBValue, string, sizeof(string)))
+		parms.colorTint[2] = Str_ToFloat(string);
+	else
+		parms.colorTint[2] = win_postProcessEditor.editParms.colorTint[2];
+
+	if (!GetWindowText(win_postProcessEditor.hWndColorTableValue, parms.colorTableName, sizeof(parms.colorTableName)))
+		Str_Copy(parms.colorTableName, "_default", sizeof(parms.colorTableName));
+
+	// Update the parameters
+	if (!all){
+		R_PostProcessEditorUpdateCallback(win_postProcessEditor.editIndex, &parms);
+		return;
+	}
+
+	for (i = 0; i < CM_NumAreas(); i++)
+		R_PostProcessEditorUpdateCallback(i, &parms);
+}
+
+/*
+ ==================
+ WIN_ResetPostProcessParameters
+ ==================
+*/
+static void WIN_ResetPostProcessParameters (postProcessParms_t *parms){
+
+	if (!win_postProcessEditor.enabled)
+		return;
+
+	// Update the controls
+	SetWindowText(win_postProcessEditor.hWndBloomContrastValue, Str_FromFloat(parms->bloomContrast, -1));
+	SetWindowText(win_postProcessEditor.hWndBloomThresholdValue, Str_FromFloat(parms->bloomThreshold, -1));
+	SetWindowText(win_postProcessEditor.hWndBaseIntensityValue, Str_FromFloat(parms->baseIntensity, -1));
+	SetWindowText(win_postProcessEditor.hWndGlowIntensityValue, Str_FromFloat(parms->glowIntensity, -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorShadowsRValue, Str_FromFloat(parms->colorShadows[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorShadowsGValue, Str_FromFloat(parms->colorShadows[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorShadowsBValue, Str_FromFloat(parms->colorShadows[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorHighlightsRValue, Str_FromFloat(parms->colorHighlights[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorHighlightsGValue, Str_FromFloat(parms->colorHighlights[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorHighlightsBValue, Str_FromFloat(parms->colorHighlights[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorMidtonesRValue, Str_FromFloat(parms->colorMidtones[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMidtonesGValue, Str_FromFloat(parms->colorMidtones[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMidtonesBValue, Str_FromFloat(parms->colorMidtones[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorMinOutputRValue, Str_FromFloat(parms->colorMinOutput[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMinOutputGValue, Str_FromFloat(parms->colorMinOutput[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMinOutputBValue, Str_FromFloat(parms->colorMinOutput[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorMaxOutputRValue, Str_FromFloat(parms->colorMaxOutput[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMaxOutputGValue, Str_FromFloat(parms->colorMaxOutput[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMaxOutputBValue, Str_FromFloat(parms->colorMaxOutput[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorSaturationRValue, Str_FromFloat(parms->colorSaturation[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorSaturationGValue, Str_FromFloat(parms->colorSaturation[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorSaturationBValue, Str_FromFloat(parms->colorSaturation[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorTintRValue, Str_FromFloat(parms->colorTint[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorTintGValue, Str_FromFloat(parms->colorTint[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorTintBValue, Str_FromFloat(parms->colorTint[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorTableValue, parms->colorTableName);
+
+	// Update the parameters
+	R_PostProcessEditorUpdateCallback(win_postProcessEditor.editIndex, parms);
+}
+
+/*
+ ==================
+ WIN_PostProcessEditorWindowProc
+ ==================
+*/
+static LRESULT CALLBACK WIN_PostProcessEditorWindowProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam){
+
+	char	string[64];
+	int		result;
+
+	switch (uMsg){
+	case WM_CLOSE:
+		WIN_ApplyPostProcessParameters(false);
+
+		R_PostProcessEditorCloseCallback();
+
+		break;
+	case WM_SYSCOMMAND:
+		if (wParam == SC_KEYMENU)
+			return 0;
+
+		break;
+	case WM_COMMAND:
+		if (HIWORD(wParam) == BN_CLICKED){
+			if ((HWND)lParam == win_postProcessEditor.hWndApplyToAll){
+				WIN_ApplyPostProcessParameters(true);
+				break;
+			}
+
+			if ((HWND)lParam == win_postProcessEditor.hWndApply){
+				WIN_ApplyPostProcessParameters(false);
+				break;
+			}
+
+			if ((HWND)lParam == win_postProcessEditor.hWndReset){
+				WIN_ResetPostProcessParameters(&win_postProcessEditor.editParms);
+				break;
+			}
+
+			if ((HWND)lParam == win_postProcessEditor.hWndDefaults){
+				WIN_ResetPostProcessParameters(&win_postProcessParms);
+				break;
+			}
+
+			if ((HWND)lParam == win_postProcessEditor.hWndSave){
+				WIN_ApplyPostProcessParameters(false);
+
+				R_PostProcessEditorSaveCallback();
+
+				break;
+			}
+		}
+
+		if (HIWORD(wParam) == CBN_SELCHANGE){
+			if ((HWND)lParam == win_postProcessEditor.hWndAreaValue){
+				result = SendMessage(win_postProcessEditor.hWndAreaValue, CB_GETCURSEL, 0, 0) - 1;
+
+				if (result < -1 || result >= CM_NumAreas())
+					break;
+
+				R_EditAreaPostProcess(result);
+
+				break;
+			}
+		}
+
+		break;
+	case WM_NOTIFY:
+		if (((LPNMHDR)lParam)->code == UDN_DELTAPOS){
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndBloomContrastSpin){
+				GetWindowText(win_postProcessEditor.hWndBloomContrastValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndBloomContrastValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 4.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndBloomContrastValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 4.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndBloomThresholdSpin){
+				GetWindowText(win_postProcessEditor.hWndBloomThresholdValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndBloomThresholdValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndBloomThresholdValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndBaseIntensitySpin){
+				GetWindowText(win_postProcessEditor.hWndBaseIntensityValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndBaseIntensityValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 4.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndBaseIntensityValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 4.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndGlowIntensitySpin){
+				GetWindowText(win_postProcessEditor.hWndGlowIntensityValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndGlowIntensityValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 4.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndGlowIntensityValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 4.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorShadowsRSpin){
+				GetWindowText(win_postProcessEditor.hWndColorShadowsRValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorShadowsRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorShadowsRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorShadowsGSpin){
+				GetWindowText(win_postProcessEditor.hWndColorShadowsGValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorShadowsGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorShadowsGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorShadowsBSpin){
+				GetWindowText(win_postProcessEditor.hWndColorShadowsBValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorShadowsBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorShadowsBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorHighlightsRSpin){
+				GetWindowText(win_postProcessEditor.hWndColorHighlightsRValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorHighlightsRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorHighlightsRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorHighlightsGSpin){
+				GetWindowText(win_postProcessEditor.hWndColorHighlightsGValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorHighlightsGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorHighlightsGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorHighlightsBSpin){
+				GetWindowText(win_postProcessEditor.hWndColorHighlightsBValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorHighlightsBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorHighlightsBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorMidtonesRSpin){
+				GetWindowText(win_postProcessEditor.hWndColorMidtonesRValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorMidtonesRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.1f, 9.99f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorMidtonesRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.1f, 9.99f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorMidtonesGSpin){
+				GetWindowText(win_postProcessEditor.hWndColorMidtonesGValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorMidtonesGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.1f, 9.99f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorMidtonesGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.1f, 9.99f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorMidtonesBSpin){
+				GetWindowText(win_postProcessEditor.hWndColorMidtonesBValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorMidtonesBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.1f, 9.99f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorMidtonesBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.1f, 9.99f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorMinOutputRSpin){
+				GetWindowText(win_postProcessEditor.hWndColorMinOutputRValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorMinOutputRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorMinOutputRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorMinOutputGSpin){
+				GetWindowText(win_postProcessEditor.hWndColorMinOutputGValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorMinOutputGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorMinOutputGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorMinOutputBSpin){
+				GetWindowText(win_postProcessEditor.hWndColorMinOutputBValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorMinOutputBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorMinOutputBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorMaxOutputRSpin){
+				GetWindowText(win_postProcessEditor.hWndColorMaxOutputRValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorMaxOutputRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorMaxOutputRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorMaxOutputGSpin){
+				GetWindowText(win_postProcessEditor.hWndColorMaxOutputGValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorMaxOutputGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorMaxOutputGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorMaxOutputBSpin){
+				GetWindowText(win_postProcessEditor.hWndColorMaxOutputBValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorMaxOutputBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorMaxOutputBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorSaturationRSpin){
+				GetWindowText(win_postProcessEditor.hWndColorSaturationRValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorSaturationRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 4.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorSaturationRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 4.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorSaturationGSpin){
+				GetWindowText(win_postProcessEditor.hWndColorSaturationGValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorSaturationGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 4.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorSaturationGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 4.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorSaturationBSpin){
+				GetWindowText(win_postProcessEditor.hWndColorSaturationBValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorSaturationBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 4.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorSaturationBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 4.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorTintRSpin){
+				GetWindowText(win_postProcessEditor.hWndColorTintRValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorTintRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorTintRValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorTintGSpin){
+				GetWindowText(win_postProcessEditor.hWndColorTintGValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorTintGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorTintGValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+
+			if (((LPNMHDR)lParam)->hwndFrom == win_postProcessEditor.hWndColorTintBSpin){
+				GetWindowText(win_postProcessEditor.hWndColorTintBValue, string, sizeof(string));
+
+				if (((LPNMUPDOWN)lParam)->iDelta < 0)
+					SetWindowText(win_postProcessEditor.hWndColorTintBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) + 0.01f, 0.0f, 1.0f), -1));
+				else
+					SetWindowText(win_postProcessEditor.hWndColorTintBValue, Str_FromFloat(ClampFloat(Str_ToFloat(string) - 0.01f, 0.0f, 1.0f), -1));
+
+				WIN_ApplyPostProcessParameters(false);
+
+				break;
+			}
+		}
+
+		break;
+	}
+
+	// Pass all unhandled messages to DefWindowProc
+	return DefWindowProc(hWnd, uMsg, wParam, lParam);
+}
+
+/*
+ ==================
+ WIN_CreatePostProcessEditorWindow
+ ==================
+*/
+void *WIN_CreatePostProcessEditorWindow (){
+
+	INITCOMMONCONTROLSEX	initCommonControls;
+	WNDCLASSEX				wndClass;
+	RECT					rect;
+	HDC						hDC;
+	char					name[MAX_PATH_LENGTH];
+	const char				**fileList;
+	int						numFiles;
+	int						screenWidth, screenHeight;
+	int						x, y, w, h;
+	int						size;
+	int						i;
+
+	// Get the instance handle
+	win_postProcessEditor.hInstance = (HINSTANCE)Sys_GetInstanceHandle();
+
+	// Initialize up-down control class
+	initCommonControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
+	initCommonControls.dwICC = ICC_UPDOWN_CLASS;
+
+	InitCommonControlsEx(&initCommonControls);
+
+	// Calculate window position and dimensions
+	screenWidth = GetSystemMetrics(SM_CXSCREEN);
+	screenHeight = GetSystemMetrics(SM_CYSCREEN);
+
+	rect.left = (screenWidth - 576) / 2;
+	rect.top = (screenHeight - 322) / 2;
+	rect.right = rect.left + 576;
+	rect.bottom = rect.top + 322;
+
+	AdjustWindowRectEx(&rect, POST_PROCESS_EDITOR_WINDOW_STYLE, FALSE, 0);
+
+	x = rect.left;
+	y = rect.top;
+	w = rect.right - rect.left;
+	h = rect.bottom - rect.top;
+
+	// Register the window class
+	wndClass.cbSize = sizeof(WNDCLASSEX);
+	wndClass.style = 0;
+	wndClass.lpfnWndProc = WIN_PostProcessEditorWindowProc;
+	wndClass.cbClsExtra = 0;
+	wndClass.cbWndExtra = 0;
+	wndClass.hInstance = (HINSTANCE)Sys_GetInstanceHandle();
+	wndClass.hIcon = (HICON)Sys_GetIconHandle();
+	wndClass.hIconSm = NULL;
+	wndClass.hCursor = LoadCursor(NULL, IDC_ARROW);
+	wndClass.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+	wndClass.lpszMenuName = NULL;
+	wndClass.lpszClassName = POST_PROCESS_EDITOR_WINDOW_CLASS;
+
+	if (!RegisterClassEx(&wndClass)){
+		Com_Printf(S_COLOR_RED "Could not register post-process editor window class\n");
+
+		return NULL;
+	}
+
+	// Create the window
+	win_postProcessEditor.hWnd = CreateWindowEx(0, POST_PROCESS_EDITOR_WINDOW_CLASS, POST_PROCESS_EDITOR_WINDOW_NAME, POST_PROCESS_EDITOR_WINDOW_STYLE, x, y, w, h, NULL, NULL, win_postProcessEditor.hInstance, NULL);
+	if (!win_postProcessEditor.hWnd){
+		UnregisterClass(POST_PROCESS_EDITOR_WINDOW_CLASS, win_postProcessEditor.hInstance);
+
+		Com_Printf(S_COLOR_RED "Could not create post-process editor window\n");
+
+		return NULL;
+	}
+
+	// Create the controls
+	win_postProcessEditor.hWndArea = CreateWindowEx(0, "STATIC", "Map area", WS_CHILD | WS_VISIBLE | SS_RIGHT, 12, 12, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndAreaValue = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWNLIST, 116, 8, 80, 200, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndApplyToAll = CreateWindowEx(0, "BUTTON", "Apply to all areas", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 328, 7, 120, 23, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndBloom = CreateWindowEx(0, "BUTTON", "Bloom", WS_CHILD | WS_VISIBLE | BS_GROUPBOX, 8, 48, 192, 220, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndBloomContrast = CreateWindowEx(0, "STATIC", "Bloom contrast", WS_CHILD | WS_VISIBLE | SS_RIGHT, 12, 79, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndBloomContrastValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 116, 76, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndBloomContrastSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 176, 76, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndBloomThreshold = CreateWindowEx(0, "STATIC", "Bloom threshold", WS_CHILD | WS_VISIBLE | SS_RIGHT, 12, 103, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndBloomThresholdValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 116, 100, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndBloomThresholdSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 176, 100, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndBaseIntensity = CreateWindowEx(0, "STATIC", "Base intensity", WS_CHILD | WS_VISIBLE | SS_RIGHT, 12, 127, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndBaseIntensityValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 116, 124, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndBaseIntensitySpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 176, 124, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndGlowIntensity = CreateWindowEx(0, "STATIC", "Glow intensity", WS_CHILD | WS_VISIBLE | SS_RIGHT, 12, 151, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndGlowIntensityValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 116, 148, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndGlowIntensitySpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 176, 148, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorCorrection = CreateWindowEx(0, "BUTTON", "Color Correction", WS_CHILD | WS_VISIBLE | BS_GROUPBOX, 208, 48, 360, 220, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndR = CreateWindowEx(0, "STATIC", "R", WS_CHILD | WS_VISIBLE | SS_CENTER, 316, 62, 80, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndG = CreateWindowEx(0, "STATIC", "G", WS_CHILD | WS_VISIBLE | SS_CENTER, 400, 62, 80, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndB = CreateWindowEx(0, "STATIC", "B", WS_CHILD | WS_VISIBLE | SS_CENTER, 484, 62, 80, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorShadows = CreateWindowEx(0, "STATIC", "Shadows", WS_CHILD | WS_VISIBLE | SS_RIGHT, 212, 79, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorShadowsRValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 316, 76, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorShadowsRSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 376, 76, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorShadowsGValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 400, 76, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorShadowsGSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 460, 76, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorShadowsBValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 484, 76, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorShadowsBSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 524, 76, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorHighlights = CreateWindowEx(0, "STATIC", "Highlights", WS_CHILD | WS_VISIBLE | SS_RIGHT, 212, 103, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorHighlightsRValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 316, 100, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorHighlightsRSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 376, 100, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorHighlightsGValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 400, 100, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorHighlightsGSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 460, 100, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorHighlightsBValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 484, 100, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorHighlightsBSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 524, 100, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMidtones = CreateWindowEx(0, "STATIC", "Midtones", WS_CHILD | WS_VISIBLE | SS_RIGHT, 212, 127, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMidtonesRValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 316, 124, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMidtonesRSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 376, 124, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMidtonesGValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 400, 124, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMidtonesGSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 460, 124, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMidtonesBValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 484, 124, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMidtonesBSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 524, 124, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMinOutput = CreateWindowEx(0, "STATIC", "Min output", WS_CHILD | WS_VISIBLE | SS_RIGHT, 212, 151, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMinOutputRValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 316, 148, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMinOutputRSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 376, 148, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMinOutputGValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 400, 148, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMinOutputGSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 460, 148, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMinOutputBValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 484, 148, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMinOutputBSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 524, 148, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMaxOutput = CreateWindowEx(0, "STATIC", "Max output", WS_CHILD | WS_VISIBLE | SS_RIGHT, 212, 175, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMaxOutputRValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 316, 172, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMaxOutputRSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 376, 172, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMaxOutputGValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 400, 172, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMaxOutputGSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 460, 172, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMaxOutputBValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 484, 172, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorMaxOutputBSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 524, 172, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorSaturation = CreateWindowEx(0, "STATIC", "Saturation", WS_CHILD | WS_VISIBLE | SS_RIGHT, 212, 199, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorSaturationRValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 316, 196, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorSaturationRSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 376, 196, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorSaturationGValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 400, 196, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorSaturationGSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 460, 196, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorSaturationBValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 484, 196, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorSaturationBSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 524, 196, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorTint = CreateWindowEx(0, "STATIC", "Tint", WS_CHILD | WS_VISIBLE | SS_RIGHT, 212, 223, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorTintRValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 316, 220, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorTintRSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 376, 220, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorTintGValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 400, 220, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorTintGSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 460, 220, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorTintBValue = CreateWindowEx(WS_EX_CLIENTEDGE, "EDIT", NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_RIGHT | ES_AUTOHSCROLL, 484, 220, 80, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorTintBSpin = CreateWindowEx(0, UPDOWN_CLASS, NULL, WS_CHILD | WS_VISIBLE | WS_TABSTOP | UDS_ALIGNRIGHT | UDS_ARROWKEYS | UDS_AUTOBUDDY, 524, 220, 20, 20, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorTable = CreateWindowEx(0, "STATIC", "Table", WS_CHILD | WS_VISIBLE | SS_RIGHT, 212, 247, 100, 14, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndColorTableValue = CreateWindowEx(WS_EX_CLIENTEDGE, "COMBOBOX", NULL, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | CBS_DROPDOWN | CBS_SORT | CBS_AUTOHSCROLL, 316, 244, 248, 200, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndApply = CreateWindowEx(0, "BUTTON", "Apply", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 8, 291, 75, 23, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndReset = CreateWindowEx(0, "BUTTON", "Reset", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 87, 291, 75, 23, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndDefaults = CreateWindowEx(0, "BUTTON", "Defaults", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 166, 291, 75, 23, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+	win_postProcessEditor.hWndSave = CreateWindowEx(0, "BUTTON", "Save", WS_CHILD | WS_VISIBLE | WS_TABSTOP | BS_PUSHBUTTON, 493, 291, 75, 23, win_postProcessEditor.hWnd, NULL, win_postProcessEditor.hInstance, NULL);
+
+	// Create and set the font
+	hDC = GetDC(win_postProcessEditor.hWnd);
+	size = -MulDiv(8, GetDeviceCaps(hDC, LOGPIXELSY), 72);
+	ReleaseDC(win_postProcessEditor.hWnd, hDC);
+
+	win_postProcessEditor.hFont = CreateFont(size, 0, 0, 0, FW_LIGHT, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, "Microsoft Sans Serif");
+
+	SendMessage(win_postProcessEditor.hWndArea, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndAreaValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndApplyToAll, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndBloom, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndBloomContrast, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndBloomContrastValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndBloomThreshold, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndBloomThresholdValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndBaseIntensity, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndBaseIntensityValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndGlowIntensity, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndGlowIntensityValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorCorrection, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndR, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndG, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndB, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorShadows, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorShadowsRValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorShadowsGValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorShadowsBValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorHighlights, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorHighlightsRValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorHighlightsGValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorHighlightsBValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMidtones, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMidtonesRValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMidtonesGValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMidtonesBValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMinOutput, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMinOutputRValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMinOutputGValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMinOutputBValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMaxOutput, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMaxOutputRValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMaxOutputGValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorMaxOutputBValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorSaturation, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorSaturationRValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorSaturationGValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorSaturationBValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorTint, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorTintRValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorTintGValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorTintBValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorTable, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndColorTableValue, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndApply, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndReset, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndDefaults, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+	SendMessage(win_postProcessEditor.hWndSave, WM_SETFONT, (WPARAM)win_postProcessEditor.hFont, FALSE);
+
+	// Fill area combo box
+	SendMessage(win_postProcessEditor.hWndAreaValue, CB_ADDSTRING, 0, (LPARAM)"None");
+
+	for (i = 0; i < CM_NumAreas(); i++)
+		SendMessage(win_postProcessEditor.hWndAreaValue, CB_ADDSTRING, 0, (LPARAM)Str_FromInteger(i));
+
+	// Fill color table combo box
+	SendMessage(win_postProcessEditor.hWndColorTableValue, CB_ADDSTRING, 0, (LPARAM)"_default");
+
+	fileList = FS_ListFiles("colors", ".tga", false, &numFiles);
+
+	for (i = 0; i < numFiles; i++){
+		Str_SPrintf(name, sizeof(name), "colors/%s", fileList[i]);
+
+		if (SendMessage(win_postProcessEditor.hWndColorTableValue, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)name) != CB_ERR)
+			continue;
+
+		SendMessage(win_postProcessEditor.hWndColorTableValue, CB_ADDSTRING, 0, (LPARAM)name);
+	}
+
+	FS_FreeFileList(fileList);
+
+	// Set text limit for color table combo box
+	SendMessage(win_postProcessEditor.hWndColorTableValue, CB_LIMITTEXT, (WPARAM)(MAX_PATH_LENGTH - 1), 0);
+
+	// Show the window
+	ShowWindow(win_postProcessEditor.hWnd, SW_SHOW);
+	UpdateWindow(win_postProcessEditor.hWnd);
+	SetForegroundWindow(win_postProcessEditor.hWnd);
+	SetFocus(win_postProcessEditor.hWnd);
+
+	win_postProcessEditor.initialized = true;
+
+	return win_postProcessEditor.hWnd;
+}
+
+/*
+ ==================
+ WIN_DestroyPostProcessEditorWindow
+ ==================
+*/
+void WIN_DestroyPostProcessEditorWindow (){
+
+	if (!win_postProcessEditor.initialized)
+		return;
+
+	if (win_postProcessEditor.hFont)
+		DeleteObject(win_postProcessEditor.hFont);
+
+	ShowWindow(win_postProcessEditor.hWnd, SW_HIDE);
+	DestroyWindow(win_postProcessEditor.hWnd);
+
+	UnregisterClass(POST_PROCESS_EDITOR_WINDOW_CLASS, win_postProcessEditor.hInstance);
+
+	Mem_Fill(&win_postProcessEditor, 0, sizeof(postProcessEditor_t));
+}
+
+/*
+ ==================
+ WIN_EditPostProcessParameters
+ ==================
+*/
+void WIN_EditPostProcessParameters (int index, postProcessParms_t *parms){
+
+	if (!win_postProcessEditor.initialized)
+		return;
+
+	// Apply current post-process parameters
+	WIN_ApplyPostProcessParameters(false);
+
+	// Set the current post-process parameters
+	if (parms){
+		win_postProcessEditor.enabled = true;
+
+		win_postProcessEditor.editIndex = index;
+		win_postProcessEditor.editParms = *parms;
+	}
+	else {
+		win_postProcessEditor.enabled = false;
+
+		parms = &win_postProcessParms;
+	}
+
+	// Update the controls
+	SendMessage(win_postProcessEditor.hWndAreaValue, CB_SETCURSEL, (WPARAM)(index + 1), 0);
+
+	SetWindowText(win_postProcessEditor.hWndBloomContrastValue, Str_FromFloat(parms->bloomContrast, -1));
+	SetWindowText(win_postProcessEditor.hWndBloomThresholdValue, Str_FromFloat(parms->bloomThreshold, -1));
+	SetWindowText(win_postProcessEditor.hWndBaseIntensityValue, Str_FromFloat(parms->baseIntensity, -1));
+	SetWindowText(win_postProcessEditor.hWndGlowIntensityValue, Str_FromFloat(parms->glowIntensity, -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorShadowsRValue, Str_FromFloat(parms->colorShadows[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorShadowsGValue, Str_FromFloat(parms->colorShadows[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorShadowsBValue, Str_FromFloat(parms->colorShadows[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorHighlightsRValue, Str_FromFloat(parms->colorHighlights[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorHighlightsGValue, Str_FromFloat(parms->colorHighlights[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorHighlightsBValue, Str_FromFloat(parms->colorHighlights[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorMidtonesRValue, Str_FromFloat(parms->colorMidtones[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMidtonesGValue, Str_FromFloat(parms->colorMidtones[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMidtonesBValue, Str_FromFloat(parms->colorMidtones[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorMinOutputRValue, Str_FromFloat(parms->colorMinOutput[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMinOutputGValue, Str_FromFloat(parms->colorMinOutput[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMinOutputBValue, Str_FromFloat(parms->colorMinOutput[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorMaxOutputRValue, Str_FromFloat(parms->colorMaxOutput[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMaxOutputGValue, Str_FromFloat(parms->colorMaxOutput[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorMaxOutputBValue, Str_FromFloat(parms->colorMaxOutput[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorSaturationRValue, Str_FromFloat(parms->colorSaturation[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorSaturationGValue, Str_FromFloat(parms->colorSaturation[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorSaturationBValue, Str_FromFloat(parms->colorSaturation[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorTintRValue, Str_FromFloat(parms->colorTint[0], -1));
+	SetWindowText(win_postProcessEditor.hWndColorTintGValue, Str_FromFloat(parms->colorTint[1], -1));
+	SetWindowText(win_postProcessEditor.hWndColorTintBValue, Str_FromFloat(parms->colorTint[2], -1));
+
+	SetWindowText(win_postProcessEditor.hWndColorTableValue, parms->colorTableName);
+
+	// Enable or disable the controls
+	EnableWindow(win_postProcessEditor.hWndApplyToAll, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndBloom, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndBloomContrast, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndBloomContrastValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndBloomContrastSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndBloomThreshold, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndBloomThresholdValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndBloomThresholdSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndBaseIntensity, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndBaseIntensityValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndBaseIntensitySpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndGlowIntensity, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndGlowIntensityValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndGlowIntensitySpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorCorrection, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndR, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndG, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndB, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorShadows, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorShadowsRValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorShadowsRSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorShadowsGValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorShadowsGSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorShadowsBValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorShadowsBSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorHighlights, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorHighlightsRValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorHighlightsRSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorHighlightsGValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorHighlightsGSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorHighlightsBValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorHighlightsBSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMidtones, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMidtonesRValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMidtonesRSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMidtonesGValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMidtonesGSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMidtonesBValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMidtonesBSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMinOutput, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMinOutputRValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMinOutputRSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMinOutputGValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMinOutputGSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMinOutputBValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMinOutputBSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMaxOutput, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMaxOutputRValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMaxOutputRSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMaxOutputGValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMaxOutputGSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMaxOutputBValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorMaxOutputBSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorSaturation, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorSaturationRValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorSaturationRSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorSaturationGValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorSaturationGSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorSaturationBValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorSaturationBSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorTint, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorTintRValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorTintRSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorTintGValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorTintGSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorTintBValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorTintBSpin, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorTable, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndColorTableValue, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndApply, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndReset, win_postProcessEditor.enabled);
+	EnableWindow(win_postProcessEditor.hWndDefaults, win_postProcessEditor.enabled);
+}
+
+#else
+
+/*
+ ==================
+ WIN_CreatePostProcessEditorWindow
+ ==================
+*/
+static void *WIN_CreatePostProcessEditorWindow (){
+
+	Com_Printf(S_COLOR_RED "The post-process editor is not currently supported on this platform");
+
+	return NULL;
+}
+
+/*
+ ==================
+ WIN_DestroyPostProcessEditorWindow
+ ==================
+*/
+static void WIN_DestroyPostProcessEditorWindow (){
+
+}
+
+/*
+ ==================
+ WIN_EditPostProcessParameters
+ ==================
+*/
+static void WIN_EditPostProcessParameters (int index, postProcessParms_t *parms){
+
+}
+
+#endif
+
+
+/*
+ ==============================================================================
+
  INTEGRATED LIGHT EDITOR
 
  ==============================================================================

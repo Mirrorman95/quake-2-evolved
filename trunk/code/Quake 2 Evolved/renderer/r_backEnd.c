@@ -321,6 +321,9 @@ static const void *RB_RenderView (const void *data){
 	// Ambient pass (post-process)
 	RB_RenderMaterialPasses(cmd->viewParms.numMeshes[3], cmd->viewParms.meshes[3], AP_POST_PROCESS);
 
+	// Bloom and color correction post-processing
+	RB_PostProcess(&cmd->postProcessParms);
+
 	// Debug tools visualization
 	RB_RenderDebugTools();
 
@@ -1032,6 +1035,120 @@ static void RB_SetupFogLightShaders (){
 	R_SetProgramSamplerExplicit(rg.fogLightProgram, "u_LightFalloffMap", 1, GL_SAMPLER_2D, TMU_LIGHTFALLOFF);
 }
 
+/*
+ ==================
+ RB_SetupBlurShaders
+ ==================
+*/
+static void RB_SetupBlurShaders (){
+
+	shader_t	*vertexShader, *fragmentShader;
+
+	if (!r_bloom->integerValue)
+		return;
+
+	// Load blur5x5
+	vertexShader = R_FindShader("blurFilters/blur5x5", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("blurFilters/blur5x5", GL_FRAGMENT_SHADER);
+
+	rg.blurPrograms[BLUR_5X5] = R_FindProgram("blurFilters/blur5x5", vertexShader, fragmentShader);
+	if (!rg.blurPrograms[BLUR_5X5])
+		Com_Error(ERR_FATAL, "RB_SetupBlurShaders: invalid program '%s'", "blurFilters/blur5x5");
+
+	backEnd.blurParms[BLUR_5X5].coordScale = R_GetProgramUniformExplicit(rg.blurPrograms[BLUR_5X5], "u_CoordScale", 1, GL_FLOAT_VEC2);
+
+	R_SetProgramSamplerExplicit(rg.blurPrograms[BLUR_5X5], "u_ColorMap", 1, GL_SAMPLER_2D, 0);
+
+	// Load blur9x9
+	vertexShader = R_FindShader("blurFilters/blur9x9", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("blurFilters/blur9x9", GL_FRAGMENT_SHADER);
+
+	rg.blurPrograms[BLUR_9X9] = R_FindProgram("blurFilters/blur9x9", vertexShader, fragmentShader);
+	if (!rg.blurPrograms[BLUR_9X9])
+		Com_Error(ERR_FATAL, "RB_SetupBlurShaders: invalid program '%s'", "blurFilters/blur9x9");
+
+	backEnd.blurParms[BLUR_9X9].coordScale = R_GetProgramUniformExplicit(rg.blurPrograms[BLUR_9X9], "u_CoordScale", 1, GL_FLOAT_VEC2);
+
+	R_SetProgramSamplerExplicit(rg.blurPrograms[BLUR_5X5], "u_ColorMap", 1, GL_SAMPLER_2D, 0);
+
+	// Load blur13x13
+	vertexShader = R_FindShader("blurFilters/blur13x13", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("blurFilters/blur13x13", GL_FRAGMENT_SHADER);
+
+	rg.blurPrograms[BLUR_13X13] = R_FindProgram("blurFilters/blur13x13", vertexShader, fragmentShader);
+	if (!rg.blurPrograms[BLUR_13X13])
+		Com_Error(ERR_FATAL, "RB_SetupBlurShaders: invalid program '%s'", "blurFilters/blur13x13");
+
+	backEnd.blurParms[BLUR_13X13].coordScale = R_GetProgramUniformExplicit(rg.blurPrograms[BLUR_13X13], "u_CoordScale", 1, GL_FLOAT_VEC2);
+
+	R_SetProgramSamplerExplicit(rg.blurPrograms[BLUR_13X13], "u_ColorMap", 1, GL_SAMPLER_2D, 0);
+
+	// Load blur17x17
+	vertexShader = R_FindShader("blurFilters/blur17x17", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("blurFilters/blur17x17", GL_FRAGMENT_SHADER);
+
+	rg.blurPrograms[BLUR_17X17] = R_FindProgram("blurFilters/blur17x17", vertexShader, fragmentShader);
+	if (!rg.blurPrograms[BLUR_17X17])
+		Com_Error(ERR_FATAL, "RB_SetupBlurShaders: invalid program '%s'", "blurFilters/blur17x17");
+
+	backEnd.blurParms[BLUR_17X17].coordScale = R_GetProgramUniformExplicit(rg.blurPrograms[BLUR_17X17], "u_CoordScale", 1, GL_FLOAT_VEC2);
+
+	R_SetProgramSamplerExplicit(rg.blurPrograms[BLUR_17X17], "u_ColorMap", 1, GL_SAMPLER_2D, 0);
+}
+
+/*
+ ==================
+ RB_SetupPostProcessShaders
+ ==================
+*/
+static void RB_SetupPostProcessShaders (){
+
+	shader_t	*vertexShader, *fragmentShader;
+
+	if (!r_postProcess->integerValue)
+		return;
+
+	// Load bloom
+	if (r_bloom->integerValue){
+		vertexShader = R_FindShader("postProcess", GL_VERTEX_SHADER);
+		fragmentShader = R_FindShader("bloom", GL_FRAGMENT_SHADER);
+
+		rg.bloomProgram = R_FindProgram("bloom", vertexShader, fragmentShader);
+		if (!rg.bloomProgram)
+			Com_Error(ERR_FATAL, "RB_SetupPostProcessShaders: invalid program '%s'", "bloom");
+
+		backEnd.bloomParms.stOffset1 = R_GetProgramUniformExplicit(rg.bloomProgram, "u_STOffset1", 1, GL_FLOAT_VEC2);
+		backEnd.bloomParms.stOffset2 = R_GetProgramUniformExplicit(rg.bloomProgram, "u_STOffset2", 1, GL_FLOAT_VEC2);
+		backEnd.bloomParms.stOffset3 = R_GetProgramUniformExplicit(rg.bloomProgram, "u_STOffset3", 1, GL_FLOAT_VEC2);
+		backEnd.bloomParms.bloomContrast = R_GetProgramUniformExplicit(rg.bloomProgram, "u_BloomContrast", 1, GL_FLOAT);
+		backEnd.bloomParms.bloomThreshold = R_GetProgramUniformExplicit(rg.bloomProgram, "u_BloomThreshold", 1, GL_FLOAT);
+
+		R_SetProgramSamplerExplicit(rg.bloomProgram, "u_ColorMap", 1, GL_SAMPLER_2D, 0);
+	}
+
+	// Load colorCorrection
+	vertexShader = R_FindShader("postProcess", GL_VERTEX_SHADER);
+	fragmentShader = R_FindShader("colorCorrection", GL_FRAGMENT_SHADER);
+
+	rg.colorCorrectionProgram = R_FindProgram("colorCorrection", vertexShader, fragmentShader);
+	if (!rg.colorCorrectionProgram)
+		Com_Error(ERR_FATAL, "RB_SetupPostProcessShaders: invalid program '%s'", "colorCorrection");
+
+	backEnd.colorCorrectionParms.baseIntensity = R_GetProgramUniformExplicit(rg.colorCorrectionProgram, "u_BaseIntensity", 1, GL_FLOAT);
+	backEnd.colorCorrectionParms.glowIntensity = R_GetProgramUniformExplicit(rg.colorCorrectionProgram, "u_GlowIntensity", 1, GL_FLOAT);
+	backEnd.colorCorrectionParms.colorShadows = R_GetProgramUniformExplicit(rg.colorCorrectionProgram, "u_ColorShadows", 1, GL_FLOAT_VEC3);
+	backEnd.colorCorrectionParms.colorHighlights = R_GetProgramUniformExplicit(rg.colorCorrectionProgram, "u_ColorHighlights", 1, GL_FLOAT_VEC3);
+	backEnd.colorCorrectionParms.colorMidtones = R_GetProgramUniformExplicit(rg.colorCorrectionProgram, "u_ColorMidtones", 1, GL_FLOAT_VEC3);
+	backEnd.colorCorrectionParms.colorMinOutput = R_GetProgramUniformExplicit(rg.colorCorrectionProgram, "u_ColorMinOutput", 1, GL_FLOAT_VEC3);
+	backEnd.colorCorrectionParms.colorMaxOutput = R_GetProgramUniformExplicit(rg.colorCorrectionProgram, "u_ColorMaxOutput", 1, GL_FLOAT_VEC3);
+	backEnd.colorCorrectionParms.colorSaturation = R_GetProgramUniformExplicit(rg.colorCorrectionProgram, "u_ColorSaturation", 1, GL_FLOAT_VEC3);
+	backEnd.colorCorrectionParms.colorTint = R_GetProgramUniformExplicit(rg.colorCorrectionProgram, "u_ColorTint", 1, GL_FLOAT_VEC3);
+
+	R_SetProgramSamplerExplicit(rg.colorCorrectionProgram, "u_BaseMap", 1, GL_SAMPLER_2D, 0);
+	R_SetProgramSamplerExplicit(rg.colorCorrectionProgram, "u_GlowMap", 1, GL_SAMPLER_2D, 1);
+	R_SetProgramSamplerExplicit(rg.colorCorrectionProgram, "u_ColorTable", 1, GL_SAMPLER_2D, 2);
+}
+
 
 /*
  ==============================================================================
@@ -1071,6 +1188,8 @@ void RB_InitBackEnd (){
 	RB_SetupAmbientLightShaders();
 	RB_SetupBlendLightShaders();
 	RB_SetupFogLightShaders();
+	RB_SetupBlurShaders();
+	RB_SetupPostProcessShaders();
 }
 
 /*

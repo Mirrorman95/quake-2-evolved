@@ -448,7 +448,7 @@ static void SV_GameMap (const char *map){
 	// Check for clearing the current savegame
 	if (map[0] == '*')
 		// Wipe all the *.sav files
-			SV_WipeSaveGame("current");
+		SV_WipeSaveGame("current");
 	else {
 		// Save the map just exited
 		if (sv.state == SS_GAME){
@@ -521,6 +521,7 @@ void SV_Map_f (){
 
 	// If not a demo or cinematic, check to make sure the level exists
 	Str_SPrintf(checkName, sizeof(checkName), "maps/%s.bsp", map);
+
 	if (!FS_FileExists(checkName)){
 		Com_Printf("Can't find %s\n", checkName);
 		return;
@@ -557,6 +558,7 @@ void SV_Demo_f (){
 
 	// Make sure it exists
 	Str_SPrintf(checkName, sizeof(checkName), "demos/%s", map);
+
 	if (!FS_FileExists(checkName)){
 		Com_Printf("Can't find %s\n", checkName);
 		return;

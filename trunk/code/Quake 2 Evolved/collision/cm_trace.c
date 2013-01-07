@@ -44,7 +44,6 @@ static int					cm_traceCheckCount;
 
 // TODO: just here for now
 extern int		cm_boxHeadNode;
-int CM_BoxLeafNumsHeadNode (const vec3_t mins, const vec3_t maxs, int *list, int listSize, int headNode, int *topNode);
 
 
 /*
@@ -432,7 +431,7 @@ trace_t CM_BoxTrace (const vec3_t start, const vec3_t end, const vec3_t mins, co
 			c2[i] = (start[i] + maxs[i]) + 1;
 		}
 
-		numLeafs = CM_BoxLeafNumsHeadNode(c1, c2, leafs, 1024, headNode, &topNode);
+		numLeafs = CM_BoundsInLeaves(c1, c2, leafs, 1024, headNode, &topNode);
 
 		for (i = 0; i < numLeafs; i++){
 			CM_TestInLeaf(leafs[i]);

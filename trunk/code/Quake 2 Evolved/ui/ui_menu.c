@@ -125,12 +125,22 @@ void UI_FillRect (float x, float y, float w, float h, const vec4_t color){
  UI_DrawString
  ==================
 */
-void UI_DrawString (float x, float y, float w, float h, const char *string, const vec4_t color, bool forceColor, float xShadow, float yShadow, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent){
+void UI_DrawString (float x, float y, float w, float h, const char *string, const vec4_t color, bool forceColor, bool shadow, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent){
 
 	material_t		*material;
+	float			xShadow, yShadow;
 
 	if (!string || !string[0])
 		return;
+
+	if (shadow){
+		xShadow = 1.5f;
+		yShadow = 2.25f;
+	}
+	else {
+		xShadow = 0.0f;
+		yShadow = 0.0f;
+	}
 
 	material = R_RegisterMaterialNoMip("charset");
 
@@ -521,7 +531,28 @@ const char *UI_DefaultKey (menuFramework_t *menu, int key){
 
 /*
  ==================
- 
+ UI_DefaultChar
+ ==================
+*/
+const char *UI_DefaultChar (menuFramework_t *menu, int ch){
+
+	menuCommon_t	*item;
+
+	if (!menu || !menu->numItems)
+		return 0;
+
+	item = (menuCommon_t *)UI_ItemAtCursor(menu);
+	if (item && !(item->flags & (QMF_GRAYED | QMF_INACTIVE | QMF_HIDDEN))){
+		if (item->type == QMTYPE_FIELD)
+			return UI_Field_Char((menuField_t *)item, ch);
+	}
+
+	return 0;
+}
+
+/*
+ ==================
+ UI_ActivateItem
  ==================
 */
 const char *UI_ActivateItem (menuFramework_t *menu, menuCommon_t *item){
@@ -541,7 +572,7 @@ const char *UI_ActivateItem (menuFramework_t *menu, menuCommon_t *item){
  
  ==================
 */
-void UI_RefreshServerList (void){
+void UI_RefreshServerList (){
 
 	int		i;
 
@@ -691,11 +722,26 @@ void UI_KeyEvent (int key, bool down){
 
 /*
  ==================
- 
+ UI_CharEvent
  ==================
 */
 void UI_CharEvent (int ch){
 
+	const char	*sound;
+
+	if (!uiStatic.initialized)
+		return;
+
+	if (!uiStatic.visible)
+		return;
+
+	if (!uiStatic.menuActive)
+		return;
+
+	sound = UI_DefaultChar(uiStatic.menuActive, ch);
+
+	if (sound && sound != uiSoundNull)
+		UI_StartSound(sound);
 }
 
 /*

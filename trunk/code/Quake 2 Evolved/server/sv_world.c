@@ -450,7 +450,7 @@ static int SV_HullForEntity (edict_t *ent){
 	}
 
 	// Create a temp hull from bounding box sizes
-	return CM_HeadNodeForBox(ent->mins, ent->maxs);
+	return CM_SetupBoxModel(ent->mins, ent->maxs);
 }
 
 /*
@@ -593,7 +593,9 @@ int SV_PointContents (vec3_t p){
 
 		// Might intersect, so do an exact clip
 		headNode = SV_HullForEntity(hit);
+
 		angles = hit->s.angles;
+
 		if (hit->solid != SOLID_BSP)
 			angles = vec3_origin;	// Boxes don't rotate
 
