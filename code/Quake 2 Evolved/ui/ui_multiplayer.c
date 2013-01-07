@@ -935,7 +935,7 @@ static void UI_StartServer_GetMapList (){
 		size = ftell(f);
 		fseek(f, 0, SEEK_SET);
 
-		buffer = (char *)Mem_ClearedAlloc(size+1, TAG_TEMPORARY);
+		buffer = (char *)Mem_Alloc(size+1, TAG_TEMPORARY);
 		fread(buffer, 1, size, f);
 		fclose(f);
 	}

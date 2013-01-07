@@ -84,7 +84,7 @@ typedef enum {
 
 typedef struct {
 	int						areaBytes;
-	byte					areaBits[MAX_MAP_AREAS/8];	// portalarea visibility bits
+	byte					areaBits[BSP_MAX_AREAS/8];	// portalarea visibility bits
 	player_state_t			ps;
 	int						numEntities;
 	int						firstEntity;		// Into the circular sv_packet_entities[]
@@ -214,9 +214,9 @@ extern cvar_t *				sv_publicServer;
 extern cvar_t *				sv_rconPassword;
 extern cvar_t *				sv_loadGame;
 
-int				SV_ModelIndex (const char *name);
-int				SV_SoundIndex (const char *name);
-int				SV_ImageIndex (const char *name);
+int				SV_ModelIndex (char *name);
+int				SV_SoundIndex (char *name);
+int				SV_ImageIndex (char *name);
 
 void			SV_DropClient (client_t *cl);
 void			SV_UserInfoChanged (client_t *cl);

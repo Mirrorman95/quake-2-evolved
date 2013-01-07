@@ -51,24 +51,20 @@ static int					r_numModels;
 leaf_t *R_PointInLeaf (const vec3_t point){
 
 	node_t		*node;
-	cplane_t	*plane;
-	float		d;
+	int			side;
 
 	if (!rg.worldModel || !rg.worldModel->nodes)
 		Com_Error(ERR_DROP, "R_PointInLeaf: NULL world model");
 
 	node = rg.worldModel->nodes;
+
 	while (1){
 		if (node->contents != -1)
 			return (leaf_t *)node;
 
-		plane = node->plane;
-		if (plane->type < 3)
-			d = point[plane->type] - plane->dist;
-		else
-			d = DotProduct(point, plane->normal) - plane->dist;
+		side = PointOnPlaneSide(point, 0.0f, node->plane);
 
-		if (d > 0)
+		if (side == PLANESIDE_FRONT)
 			node = node->children[0];
 		else
 			node = node->children[1];
@@ -150,7 +146,7 @@ static void R_LoadSky (const char *name, float rotate, const vec3_t axis){
 
 	sky_t	*sky;
 
-	rg.worldModel->sky = sky = (sky_t *)Mem_ClearedAlloc(sizeof(sky_t), TAG_RENDERER);
+	rg.worldModel->sky = sky = (sky_t *)Mem_Alloc(sizeof(sky_t), TAG_RENDERER);
 	rg.worldModel->size += sizeof(sky_t);
 
 	sky->material = R_FindMaterial(name, MT_GENERIC, SURFACEPARM_SKY);
@@ -175,7 +171,7 @@ static void R_LoadVertices (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "R_LoadMap: funny lump size (%s)'", rg.worldModel->name);
 
 	rg.worldModel->numVertices = lump->length / sizeof(bspVertex_t);
-	rg.worldModel->vertices = out = (vertex_t *)Mem_ClearedAlloc(rg.worldModel->numVertices * sizeof(vertex_t), TAG_RENDERER);
+	rg.worldModel->vertices = out = (vertex_t *)Mem_Alloc(rg.worldModel->numVertices * sizeof(vertex_t), TAG_RENDERER);
 	rg.worldModel->size += rg.worldModel->numVertices * sizeof(vertex_t);
 
 	for (i = 0; i < rg.worldModel->numVertices; i++, in++, out++){
@@ -201,7 +197,7 @@ static void R_LoadEdges (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "R_LoadMap: funny lump size (%s)", rg.worldModel->name);
 
 	rg.worldModel->numEdges = lump->length / sizeof(bspEdge_t);
-	rg.worldModel->edges = out = (edge_t *)Mem_ClearedAlloc(rg.worldModel->numEdges * sizeof(edge_t), TAG_RENDERER);
+	rg.worldModel->edges = out = (edge_t *)Mem_Alloc(rg.worldModel->numEdges * sizeof(edge_t), TAG_RENDERER);
 	rg.worldModel->size += rg.worldModel->numEdges * sizeof(edge_t);
 
 	for (i = 0; i < rg.worldModel->numEdges; i++, in++, out++){
@@ -225,7 +221,7 @@ static void R_LoadSurfEdges (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "R_LoadMap: funny lump size (%s)", rg.worldModel->name);
 
 	rg.worldModel->numSurfEdges = lump->length / sizeof(int);
-	rg.worldModel->surfEdges = out = (int *)Mem_ClearedAlloc(rg.worldModel->numSurfEdges * sizeof(int), TAG_RENDERER);
+	rg.worldModel->surfEdges = out = (int *)Mem_Alloc(rg.worldModel->numSurfEdges * sizeof(int), TAG_RENDERER);
 	rg.worldModel->size += rg.worldModel->numSurfEdges * sizeof(int);
 
 	for (i = 0; i < rg.worldModel->numSurfEdges; i++)
@@ -248,7 +244,7 @@ static void R_LoadPlanes (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "R_LoadMap: funny lump size in '%s'", rg.worldModel->name);
 
 	rg.worldModel->numPlanes = lump->length / sizeof(bspPlane_t);
-	rg.worldModel->planes = out = (cplane_t *)Mem_ClearedAlloc(rg.worldModel->numPlanes * sizeof(cplane_t), TAG_RENDERER);
+	rg.worldModel->planes = out = (cplane_t *)Mem_Alloc(rg.worldModel->numPlanes * sizeof(cplane_t), TAG_RENDERER);
 	rg.worldModel->size += rg.worldModel->numPlanes * sizeof(cplane_t);
 
 	for (i = 0; i < rg.worldModel->numPlanes; i++, in++, out++){
@@ -360,7 +356,7 @@ static void R_LoadTexInfo (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "R_LoadMap: funny lump size in '%s'", rg.worldModel->name);
 
 	rg.worldModel->numTexInfo = lump->length / sizeof(bspTexInfo_t);
-	rg.worldModel->texInfo = out = (texInfo_t *)Mem_ClearedAlloc(rg.worldModel->numTexInfo * sizeof(texInfo_t), TAG_RENDERER);
+	rg.worldModel->texInfo = out = (texInfo_t *)Mem_Alloc(rg.worldModel->numTexInfo * sizeof(texInfo_t), TAG_RENDERER);
 	rg.worldModel->size += rg.worldModel->numTexInfo * sizeof(texInfo_t);
 
 	for (i = 0; i < rg.worldModel->numTexInfo; i++, in++, out++){
@@ -568,7 +564,7 @@ static void R_BuildSurfacePolygon (surface_t *surface){
 
 	// Create triangles
 	surface->numTriangles = (surface->numEdges - 2);
-	surface->triangles = (surfTriangle_t *)Mem_ClearedAlloc(surface->numTriangles * sizeof(surfTriangle_t), TAG_RENDERER);
+	surface->triangles = (surfTriangle_t *)Mem_Alloc(surface->numTriangles * sizeof(surfTriangle_t), TAG_RENDERER);
 
 	rg.worldModel->size += surface->numTriangles * sizeof(surfTriangle_t);
 
@@ -578,13 +574,13 @@ static void R_BuildSurfacePolygon (surface_t *surface){
 		triangle->index[2] = i;
 	}
 
-	// FIXME
+	// FIXME!!!
 	surface->numIndices = surface->numTriangles;
-	surface->indices = (glIndex_t *)Mem_ClearedAlloc(surface->numIndices * sizeof(glIndex_t), TAG_RENDERER);
+	surface->indices = (glIndex_t *)Mem_Alloc(surface->numIndices * sizeof(glIndex_t), TAG_RENDERER);
 
 	// Create vertices
 	surface->numVertices = surface->numEdges;
-	surface->vertices = (glVertex_t *)Mem_ClearedAlloc(surface->numVertices * sizeof(glVertex_t), TAG_RENDERER);
+	surface->vertices = (glVertex_t *)Mem_Alloc(surface->numVertices * sizeof(glVertex_t), TAG_RENDERER);
 
 	rg.worldModel->size += surface->numVertices * sizeof(glVertex_t);
 
@@ -696,7 +692,7 @@ static void R_LoadFaces (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "R_LoadMap: funny lump size (%s)", rg.worldModel->name);
 
 	rg.worldModel->numSurfaces = lump->length / sizeof(bspFace_t);
-	rg.worldModel->surfaces = out = (surface_t *)Mem_ClearedAlloc(rg.worldModel->numSurfaces * sizeof(surface_t), TAG_RENDERER);
+	rg.worldModel->surfaces = out = (surface_t *)Mem_Alloc(rg.worldModel->numSurfaces * sizeof(surface_t), TAG_RENDERER);
 	rg.worldModel->size += rg.worldModel->numSurfaces * sizeof(surface_t);
 
 	for (i = 0; i < rg.worldModel->numSurfaces; i++, in++, out++){
@@ -750,7 +746,7 @@ static void R_LoadMarkSurfaces (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "R_LoadMap: funny lump size (%s)", rg.worldModel->name);
 
 	rg.worldModel->numMarkSurfaces = lump->length / sizeof(short);
-	rg.worldModel->markSurfaces = out = (surface_t **)Mem_ClearedAlloc(rg.worldModel->numMarkSurfaces * sizeof(surface_t *), TAG_RENDERER);
+	rg.worldModel->markSurfaces = out = (surface_t **)Mem_Alloc(rg.worldModel->numMarkSurfaces * sizeof(surface_t *), TAG_RENDERER);
 	rg.worldModel->size += rg.worldModel->numMarkSurfaces * sizeof(surface_t *);
 
 	for (i = 0; i < rg.worldModel->numMarkSurfaces; i++)
@@ -769,7 +765,7 @@ static void R_LoadVisibility (const byte *data, const bspLump_t *lump){
 	if (!lump->length)
 		return;
 
-	rg.worldModel->vis = (vis_t *)Mem_ClearedAlloc(lump->length, TAG_RENDERER);
+	rg.worldModel->vis = (vis_t *)Mem_Alloc(lump->length, TAG_RENDERER);
 	rg.worldModel->size += lump->length;
 
 	Mem_Copy(rg.worldModel->vis, data + lump->offset, lump->length);
@@ -784,6 +780,8 @@ static void R_LoadVisibility (const byte *data, const bspLump_t *lump){
 /*
  ==================
  R_LoadLeafs
+
+ FIXME: changed back to Mem_ClearedAlloc due to node crashes in R_MarkLeaves
  ==================
 */
 static void R_LoadLeafs (const byte *data, const bspLump_t *lump){
@@ -853,6 +851,8 @@ static void R_SetParent (node_t *node, node_t *parent){
 /*
  ==================
  R_LoadNodes
+
+ FIXME: changed back to Mem_ClearedAlloc due to node crashes in R_MarkLeaves
  ==================
 */
 static void R_LoadNodes (const byte *data, const bspLump_t *lump){
@@ -952,7 +952,7 @@ static void R_LoadInlineModels (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "R_LoadMap: funny lump size (%s)", rg.worldModel->name);
 
 	rg.worldModel->numInlineModels = lump->length / sizeof(bspInlineModel_t);
-	rg.worldModel->inlineModels = out = (inlineModel_t *)Mem_ClearedAlloc(rg.worldModel->numInlineModels * sizeof(inlineModel_t), TAG_RENDERER);
+	rg.worldModel->inlineModels = out = (inlineModel_t *)Mem_Alloc(rg.worldModel->numInlineModels * sizeof(inlineModel_t), TAG_RENDERER);
 	rg.worldModel->size += rg.worldModel->numInlineModels * sizeof(inlineModel_t);
 
 	for (i = 0; i < rg.worldModel->numInlineModels; i++, in++, out++){
@@ -1077,7 +1077,7 @@ void R_LoadMap (const char *name, const char *skyName, float skyRotate, const ve
 		Com_Error(ERR_DROP, "R_LoadMap: '%s' not found", name);
 
 	// Allocate the world
-	r_models[r_numModels++] = rg.worldModel = (model_t *)Mem_ClearedAlloc(sizeof(model_t), TAG_RENDERER);
+	r_models[r_numModels++] = rg.worldModel = (model_t *)Mem_Alloc(sizeof(model_t), TAG_RENDERER);
 
 	// Fill it in
 	Str_Copy(rg.worldModel->name, name, sizeof(rg.worldModel->name));
@@ -1220,7 +1220,7 @@ static void R_CalcTangentVectors (int numTriangles, mdlTriangle_t *triangles, in
 		}
 	}
 
-	// Renormalize
+	// Renormalize the tangent vectors
 	for (i = 0, xyzNormal = xyzNormals; i < numVertices; i++, xyzNormal++){
 		VectorNormalize(xyzNormal->tangents[0]);
 		VectorNormalize(xyzNormal->tangents[1]);
@@ -1332,6 +1332,16 @@ static void R_CalcModelBounds (model_t *model, mdl_t *outModel){
 }
 
 /*
+ ==================
+ 
+ ==================
+*/
+static void R_CacheAliasModelGeometry (mdl_t *model, const char *modelName){
+
+}
+
+
+/*
  ==============================================================================
 
  MD3 LOADING
@@ -1375,7 +1385,7 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 	if (!data)
 		return false;
 
-	*model = outModel = (mdl_t *)Mem_ClearedAlloc(sizeof(mdl_t), TAG_RENDERER);
+	*model = outModel = (mdl_t *)Mem_Alloc(sizeof(mdl_t), TAG_RENDERER);
 	*size = sizeof(mdl_t);
 
 	// Byte swap the header fields and sanity check
@@ -1406,7 +1416,7 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 
 	// Load the frames
 	inFrame = (md3Frame_t *)((byte *)inHeader + LittleLong(inHeader->ofsFrames));
-	outModel->frames = outFrame = (mdlFrame_t *)Mem_ClearedAlloc(outModel->numFrames * sizeof(mdlFrame_t), TAG_RENDERER);
+	outModel->frames = outFrame = (mdlFrame_t *)Mem_Alloc(outModel->numFrames * sizeof(mdlFrame_t), TAG_RENDERER);
 
 	*size += outModel->numFrames * sizeof(mdlFrame_t);
 
@@ -1423,7 +1433,7 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 
 	// Load the tags
 	inTag = (md3Tag_t *)((byte *)inHeader + LittleLong(inHeader->ofsTags));
-	outModel->tags = outTag = (mdlTag_t *)Mem_ClearedAlloc(outModel->numFrames * outModel->numTags * sizeof(mdlTag_t), TAG_RENDERER);
+	outModel->tags = outTag = (mdlTag_t *)Mem_Alloc(outModel->numFrames * outModel->numTags * sizeof(mdlTag_t), TAG_RENDERER);
 
 	*size += outModel->numFrames * outModel->numTags * sizeof(mdlTag_t);
 
@@ -1449,7 +1459,7 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 
 	// Load the surfaces
 	inSurface = (md3Surface_t *)((byte *)inHeader + LittleLong(inHeader->ofsSurfaces));
-	outModel->surfaces = outSurface = (mdlSurface_t *)Mem_ClearedAlloc(outModel->numSurfaces * sizeof(mdlSurface_t), TAG_RENDERER);
+	outModel->surfaces = outSurface = (mdlSurface_t *)Mem_Alloc(outModel->numSurfaces * sizeof(mdlSurface_t), TAG_RENDERER);
 
 	*size += outModel->numSurfaces * sizeof(mdlSurface_t);
 
@@ -1473,7 +1483,7 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 
 		// Load the materials
 		inMaterial = (md3Material_t *)((byte *)inSurface + LittleLong(inSurface->ofsShaders));
-		outSurface->materials = outMaterial = (mdlMaterial_t *)Mem_ClearedAlloc(outSurface->numMaterials * sizeof(mdlMaterial_t), TAG_RENDERER);
+		outSurface->materials = outMaterial = (mdlMaterial_t *)Mem_Alloc(outSurface->numMaterials * sizeof(mdlMaterial_t), TAG_RENDERER);
 
 		*size += outSurface->numMaterials * sizeof(mdlMaterial_t);
 
@@ -1486,7 +1496,7 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 
 		// Load the triangles
 		inTriangle = (md3Triangle_t *)((byte *)inSurface + LittleLong(inSurface->ofsTriangles));
-		outSurface->triangles = outTriangle = (mdlTriangle_t *)Mem_ClearedAlloc(outSurface->numTriangles * sizeof(mdlTriangle_t), TAG_RENDERER);
+		outSurface->triangles = outTriangle = (mdlTriangle_t *)Mem_Alloc(outSurface->numTriangles * sizeof(mdlTriangle_t), TAG_RENDERER);
 
 		*size += outSurface->numTriangles * sizeof(mdlTriangle_t);
 
@@ -1498,7 +1508,7 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 
 		// Load the vertices
 		inSt = (md3St_t *)((byte *)inSurface + LittleLong(inSurface->ofsSt));
-		outSurface->st = outSt = (mdlSt_t *)Mem_ClearedAlloc(outSurface->numVertices * sizeof(mdlSt_t), TAG_RENDERER);
+		outSurface->st = outSt = (mdlSt_t *)Mem_Alloc(outSurface->numVertices * sizeof(mdlSt_t), TAG_RENDERER);
 
 		*size += outSurface->numVertices * sizeof(mdlSt_t);
 
@@ -1508,12 +1518,12 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 		}
 
 		// Allocate space for face planes
-		outSurface->facePlanes = (mdlFacePlane_t *)Mem_ClearedAlloc(outModel->numFrames * outSurface->numTriangles * sizeof(mdlFacePlane_t), TAG_RENDERER);
+		outSurface->facePlanes = (mdlFacePlane_t *)Mem_Alloc(outModel->numFrames * outSurface->numTriangles * sizeof(mdlFacePlane_t), TAG_RENDERER);
 		*size += outModel->numFrames * outSurface->numTriangles * sizeof(mdlFacePlane_t);
 
 		// Load XYZ vertices
 		inXyzNormal = (md3XyzNormal_t *)((byte *)inSurface + LittleLong(inSurface->ofsXyzNormals));
-		outSurface->xyzNormals = outXyzNormal = (mdlXyzNormal_t *)Mem_ClearedAlloc(outModel->numFrames * outSurface->numVertices * sizeof(mdlXyzNormal_t), TAG_RENDERER);
+		outSurface->xyzNormals = outXyzNormal = (mdlXyzNormal_t *)Mem_Alloc(outModel->numFrames * outSurface->numVertices * sizeof(mdlXyzNormal_t), TAG_RENDERER);
 
 		*size += outModel->numFrames * outSurface->numVertices * sizeof(mdlXyzNormal_t);
 
@@ -1551,6 +1561,13 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 		// Build triangle neighbors
 		R_BuildTriangleNeighbors(outSurface->numTriangles, outSurface->triangles);
 
+		// Clear index and vertex buffers
+		outSurface->indexBuffer = NULL;
+		outSurface->indexOffset = 0;
+
+		outSurface->vertexBuffer = NULL;
+		outSurface->vertexOffset = 0;
+
 		// Skip to next surface
 		inSurface = (md3Surface_t *)((byte *)inSurface + LittleLong(inSurface->ofsEnd));
 	}
@@ -1560,6 +1577,9 @@ static bool R_LoadMD3Model (const char *name, mdl_t **model, int *size){
 
 	// Free file data
 	FS_FreeFile(data);
+
+	// Try to cache the geometry in static index and vertex buffers
+	R_CacheAliasModelGeometry(outModel, name);
 
 	return true;
 }
@@ -1608,7 +1628,7 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 	if (!data)
 		return false;
 
-	*model = outModel = (mdl_t *)Mem_ClearedAlloc(sizeof(mdl_t), TAG_RENDERER);
+	*model = outModel = (mdl_t *)Mem_Alloc(sizeof(mdl_t), TAG_RENDERER);
 	*size = sizeof(mdl_t);
 
 	// Byte swap the header fields and sanity check
@@ -1644,7 +1664,7 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 	skinHeight = 1.0f / skinHeight;
 
 	// Load the surfaces
-	outModel->surfaces = outSurface = (mdlSurface_t *)Mem_ClearedAlloc(sizeof(mdlSurface_t), TAG_RENDERER);
+	outModel->surfaces = outSurface = (mdlSurface_t *)Mem_Alloc(sizeof(mdlSurface_t), TAG_RENDERER);
 	*size += sizeof(mdlSurface_t);
 
 	// Check triangles
@@ -1699,7 +1719,7 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 	}
 
 	// Load the triangles
-	outSurface->triangles = outTriangle = (mdlTriangle_t *)Mem_ClearedAlloc(outSurface->numTriangles * sizeof(mdlTriangle_t), TAG_RENDERER);
+	outSurface->triangles = outTriangle = (mdlTriangle_t *)Mem_Alloc(outSurface->numTriangles * sizeof(mdlTriangle_t), TAG_RENDERER);
 	*size += outSurface->numTriangles * sizeof(mdlTriangle_t);
 
 	for (i = 0; i < numIndices; i += 3, outTriangle++){
@@ -1710,7 +1730,7 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 
 	// Load the vertices
 	inSt = (md2St_t *)((byte *)inHeader + LittleLong(inHeader->ofsSt));
-	outSurface->st = outSt = (mdlSt_t *)Mem_ClearedAlloc(outSurface->numVertices * sizeof(mdlSt_t), TAG_RENDERER);
+	outSurface->st = outSt = (mdlSt_t *)Mem_Alloc(outSurface->numVertices * sizeof(mdlSt_t), TAG_RENDERER);
 
 	*size += outSurface->numVertices * sizeof(mdlSt_t);
 
@@ -1723,14 +1743,14 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 	}
 
 	// Allocate space for face planes
-	outSurface->facePlanes = (mdlFacePlane_t *)Mem_ClearedAlloc(outModel->numFrames * outSurface->numTriangles * sizeof(mdlFacePlane_t), TAG_RENDERER);
+	outSurface->facePlanes = (mdlFacePlane_t *)Mem_Alloc(outModel->numFrames * outSurface->numTriangles * sizeof(mdlFacePlane_t), TAG_RENDERER);
 	*size += outModel->numFrames * outSurface->numTriangles * sizeof(mdlFacePlane_t);
 
 	// Load the frames
-	outModel->frames = outFrame = (mdlFrame_t *)Mem_ClearedAlloc(outModel->numFrames * sizeof(mdlFrame_t), TAG_RENDERER);
+	outModel->frames = outFrame = (mdlFrame_t *)Mem_Alloc(outModel->numFrames * sizeof(mdlFrame_t), TAG_RENDERER);
 	*size += outModel->numFrames * sizeof(mdlFrame_t);
 
-	outSurface->xyzNormals = outXyzNormal = (mdlXyzNormal_t *)Mem_ClearedAlloc(outModel->numFrames * outSurface->numVertices * sizeof(mdlXyzNormal_t), TAG_RENDERER);
+	outSurface->xyzNormals = outXyzNormal = (mdlXyzNormal_t *)Mem_Alloc(outModel->numFrames * outSurface->numVertices * sizeof(mdlXyzNormal_t), TAG_RENDERER);
 	*size += outModel->numFrames * outSurface->numVertices * sizeof(mdlXyzNormal_t);
 
 	for (i = 0; i < outModel->numFrames; i++, outFrame++, outXyzNormal += outSurface->numVertices){
@@ -1771,12 +1791,21 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 	// Build triangle neighbors
 	R_BuildTriangleNeighbors(outSurface->numTriangles, outSurface->triangles);
 
+	// FIXME: is this in the right place?
+
+	// Clear index and vertex buffers
+	outSurface->indexBuffer = NULL;
+	outSurface->indexOffset = 0;
+
+	outSurface->vertexBuffer = NULL;
+	outSurface->vertexOffset = 0;
+
 	// Load the skins
-	outSurface->materials = outMaterial = (mdlMaterial_t *)Mem_ClearedAlloc(outSurface->numMaterials * sizeof(mdlMaterial_t), TAG_RENDERER);
+	outSurface->materials = outMaterial = (mdlMaterial_t *)Mem_Alloc(outSurface->numMaterials * sizeof(mdlMaterial_t), TAG_RENDERER);
 	*size += outSurface->numMaterials * sizeof(mdlMaterial_t);
 
 	for (i = 0; i < outSurface->numMaterials; i++, outMaterial++){
-		Str_Copy(checkName, (char *)inHeader + LittleLong(inHeader->ofsSkins) + i*MAX_PATH_LENGTH, sizeof(checkName));
+		Str_Copy(checkName, (char *)inHeader + LittleLong(inHeader->ofsSkins) + i*64, sizeof(checkName));
 		Str_StripFileExtension(checkName);
 
 		outMaterial->material = R_FindMaterial(checkName, MT_GENERIC, SURFACEPARM_LIGHTING);
@@ -1787,6 +1816,9 @@ static bool R_LoadMD2Model (const char *name, mdl_t **model, int *size){
 
 	// Free file data
 	FS_FreeFile(data);
+
+	// Try to cache the geometry in static index and vertex buffers
+	R_CacheAliasModelGeometry(outModel, name);
 
 	return true;
 }
@@ -1823,7 +1855,7 @@ static bool R_LoadSP2Model (const char *name, spr_t **model, int *size){
 	if (!data)
 		return false;
 
-	*model = outModel = (spr_t *)Mem_ClearedAlloc(sizeof(spr_t), TAG_RENDERER);
+	*model = outModel = (spr_t *)Mem_Alloc(sizeof(spr_t), TAG_RENDERER);
 	*size = sizeof(spr_t);
 
 	// Byte swap the header fields and sanity check
@@ -1844,7 +1876,7 @@ static bool R_LoadSP2Model (const char *name, spr_t **model, int *size){
 
 	// Load the frames
 	inFrame = inModel->frames;
-	outModel->frames = outFrame = (sprFrame_t *)Mem_ClearedAlloc(outModel->numFrames * sizeof(sprFrame_t), TAG_RENDERER);
+	outModel->frames = outFrame = (sprFrame_t *)Mem_Alloc(outModel->numFrames * sizeof(sprFrame_t), TAG_RENDERER);
 
 	*size += outModel->numFrames * sizeof(sprFrame_t);
 
@@ -1892,7 +1924,7 @@ static model_t *R_LoadModel (const char *name, bool defaulted, modelType_t type,
 	if (r_numModels == MAX_MODELS)
 		Com_Error(ERR_DROP, "R_LoadModel: MAX_MODELS hit");
 
-	r_models[r_numModels++] = model = (model_t *)Mem_ClearedAlloc(sizeof(model_t), TAG_RENDERER);
+	r_models[r_numModels++] = model = (model_t *)Mem_Alloc(sizeof(model_t), TAG_RENDERER);
 
 	// Fill it in
 	Str_Copy(model->name, name, sizeof(model->name));

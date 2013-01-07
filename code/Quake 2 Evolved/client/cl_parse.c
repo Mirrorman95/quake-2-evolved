@@ -370,7 +370,7 @@ static void CL_ParseConfigString (){
 		cl.media.gameModels[index - CS_MODELS] = R_RegisterModel(cl.configStrings[index]);
 
 		if (cl.configStrings[index][0] == '*')
-			cl.media.gameCModels[index - CS_MODELS] = CM_InlineModel(cl.configStrings[index]);
+			cl.media.gameCModels[index - CS_MODELS] = CM_LoadInlineModel(cl.configStrings[index]);
 		else
 			cl.media.gameCModels[index - CS_MODELS] = NULL;
 	}

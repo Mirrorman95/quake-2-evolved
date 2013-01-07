@@ -88,6 +88,98 @@ void				S_ShutdownSounds ();
 /*
  ==============================================================================
 
+ SOUND SHADER MANAGER
+
+ ==============================================================================
+*/
+
+#define MAX_SOUND_SHADERS				1024
+#define MAX_SOUNDS_PER_SHADER			8
+
+typedef enum {
+	SSF_EXPLICIT			= BIT(0),
+	SSF_DEFAULTED			= BIT(1),
+	SSF_PRIVATE				= BIT(2),
+	SSF_ANTIPRIVATE			= BIT(3),
+	SSF_PLAYONCE			= BIT(4),
+	SSF_GLOBAL				= BIT(5),
+	SSF_OMNIDIRECTIONAL		= BIT(6),
+	SSF_VOLUMETRIC			= BIT(7),
+	SSF_LOOPING				= BIT(8),
+	SSF_RANDOMIZE			= BIT(9),
+	SSF_NORESTART			= BIT(10),
+	SSF_NOOVERRIDE			= BIT(11),
+	SSF_NODUPS				= BIT(12),
+	SSF_NOOFFSET			= BIT(13),
+	SSF_NOTIMEOFFSET		= BIT(14),
+	SSF_NOFLICKER			= BIT(15),
+	SSF_NOPORTALFLOW		= BIT(16),
+	SSF_NODYNAMICPARMS		= BIT(17),
+	SSF_NOREVERB			= BIT(18),
+	SSF_NOOBSTRUCTION		= BIT(19),
+	SSF_NOEXCLUSION			= BIT(20),
+	SSF_NOOCCLUSION			= BIT(21)
+} soundShaderFlags_t;
+
+typedef enum {
+	PRIORITY_BAD,
+	PRIORITY_LOWEST,
+	PRIORITY_LOW,
+	PRIORITY_NORMAL,
+	PRIORITY_HIGH,
+	PRIORITY_HIGHEST
+} priority_t;
+
+typedef struct soundShader_s {
+	char					name[MAX_PATH_LENGTH];
+
+	int						flags;
+
+	priority_t				priority;
+
+	float					shakes;
+
+	float					volume;
+	float					pitch;
+
+	float					dryFilter;
+	float					dryFilterHF;
+
+	float					wetFilter;
+	float					wetFilterHF;
+
+	float					minDistance;
+	float					maxDistance;
+
+	float					coneInnerAngle;
+	float					coneOuterAngle;
+	float					coneOuterVolume;
+
+	float					rolloffFactor;
+	float					roomRolloffFactor;
+	float					airAbsorptionFactor;
+
+	float					dopplerFactor;
+
+	int						minSamples;
+
+	int						numLeadIns;
+	sound_t *				leadIns[MAX_SOUNDS_PER_SHADER];
+
+	int						numEntries;
+	sound_t *				entries[MAX_SOUNDS_PER_SHADER];
+
+	struct soundShader_s *	nextHash;
+} soundShader_t;
+
+soundShader_t *		S_FindSoundShader (const char *name);
+
+void				S_InitSoundShaders ();
+void				S_ShutdownSoundShaders ();
+
+/*
+ ==============================================================================
+
  BACKGROUND MUSIC
 
  ==============================================================================
@@ -325,6 +417,8 @@ typedef struct {
 
 	// Internal assets
 	sound_t *				defaultSound;
+
+	soundShader_t *			defaultSoundShader;
 } sndGlobals_t;
 
 extern sndGlobals_t			snd;
@@ -335,6 +429,7 @@ extern bool					s_initialized;
 
 extern cvar_t *				s_logFile;
 extern cvar_t *				s_ignoreALErrors;
+extern cvar_t *				s_singleSoundShader;
 extern cvar_t *				s_showStreaming;
 extern cvar_t *				s_skipStreaming;
 extern cvar_t *				s_skipShakes;
@@ -346,6 +441,7 @@ extern cvar_t *				s_masterVolume;
 extern cvar_t *				s_voiceCapture;
 extern cvar_t *				s_maxChannels;
 extern cvar_t *				s_musicVolume;
+extern cvar_t *				s_maxSoundsPerShader;
 extern cvar_t *				s_soundQuality;
 extern cvar_t *				s_playDefaultSound;
 

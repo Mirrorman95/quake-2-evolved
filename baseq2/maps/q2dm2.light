@@ -1,0 +1,941 @@
+light 0
+{
+name                light_0
+origin              ( 123 -963 194 )
+radius              ( 4096 4096 4096 )
+material            lights/ambient
+color               ( 0.329412 0.109804 0 )
+}
+light 1
+{
+name                light_1
+origin              ( 479 -960 80 )
+radius              ( 98 138 98 )
+material            lights/square_uberbright
+color               ( 1 0.631373 0.458824 )
+}
+light 2
+{
+name                light_2
+origin              ( 384 -768 194 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 3
+{
+name                light_3
+origin              ( 512 -768 194 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 4
+{
+name                light_4
+origin              ( 128 -645 194 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 5
+{
+name                light_5
+origin              ( 256 -640 194 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 6
+{
+name                light_6
+origin              ( 384 -640 194 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 7
+{
+name                light_7
+origin              ( 0 -640 194 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 8
+{
+name                light_8
+origin              ( -128 -640 194 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 9
+{
+name                light_9
+origin              ( -128 -768 194 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 10
+{
+name                light_10
+origin              ( -64 -512 194 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 11
+{
+name                light_11
+origin              ( 128 -512 194 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 12
+{
+name                light_12
+origin              ( 416 -960 456 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square_bright
+color               ( 1 0.631373 0.458824 )
+}
+light 13
+{
+name                light_13
+origin              ( 384 -768 456 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 14
+{
+name                light_14
+origin              ( 384 -640 456 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 15
+{
+name                light_15
+origin              ( 256 -640 456 )
+radius              ( 64 64 128 )
+material            lights/default
+color               ( 1 0.631373 0.458824 )
+}
+light 16
+{
+name                light_16
+origin              ( 128 -1164 136 )
+radius              ( 128 58 16 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/round_uberbright
+color               ( 1 0.631373 0.458824 )
+}
+light 17
+{
+name                light_17
+origin              ( 128 -1164 202 )
+radius              ( 128 58 16 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/round_uberbright
+color               ( 1 0.631373 0.458824 )
+}
+light 18
+{
+name                light_18
+origin              ( 128 -1164 264 )
+radius              ( 128 58 18 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/round_uberbright
+color               ( 1 0.631373 0.458824 )
+}
+light 19
+{
+name                light_19
+origin              ( 128 -963 -90 )
+radius              ( 1024 1024 82 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/fog
+color               ( 0 0.501961 1 )
+alpha               0.66
+}
+light 20
+{
+name                light_20
+origin              ( 123 -963 1018 )
+radius              ( 326 326 2048 )
+material            lights/square_uberbright
+color               ( 0.729412 0.309804 0.184314 )
+}
+light 21
+{
+name                light_21
+origin              ( -128 -1152 718 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 22
+{
+name                light_22
+origin              ( -128 -1280 718 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 23
+{
+name                light_23
+origin              ( 0 -1280 718 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 24
+{
+name                light_24
+origin              ( 128 -1280 720 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 25
+{
+name                light_25
+origin              ( 256 -1280 720 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 26
+{
+name                light_26
+origin              ( 384 -1280 720 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 27
+{
+name                light_27
+origin              ( 384 -1152 720 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 28
+{
+name                light_28
+origin              ( 512 -1216 720 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 29
+{
+name                light_29
+origin              ( 640 -1216 720 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 30
+{
+name                light_30
+origin              ( 897 -1215 1018 )
+radius              ( 256 256 1024 )
+material            lights/square_uberbright
+color               ( 0.729412 0.309804 0.184314 )
+}
+light 31
+{
+name                light_31
+origin              ( 897 -575 1018 )
+radius              ( 272 272 2048 )
+material            lights/square_uberbright
+color               ( 0.729412 0.309804 0.184314 )
+}
+light 32
+{
+name                light_32
+origin              ( 896 -912 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 33
+{
+name                light_33
+origin              ( 576 -448 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 34
+{
+name                light_34
+origin              ( 576 -576 592 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 35
+{
+name                light_35
+origin              ( 576 -704 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 36
+{
+name                light_36
+origin              ( 576 -832 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 37
+{
+name                light_37
+origin              ( 512 -896 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 38
+{
+name                light_38
+origin              ( 896 -256 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 39
+{
+name                light_39
+origin              ( 832 -192 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 40
+{
+name                light_40
+origin              ( 832 -64 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 41
+{
+name                light_41
+origin              ( 704 -64 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 42
+{
+name                light_42
+origin              ( 640 -64 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 43
+{
+name                light_43
+origin              ( 512 -64 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 44
+{
+name                light_44
+origin              ( 512 -192 592 )
+radius              ( 64 64 128 )
+xMin                0
+xMax                0
+yMin                0
+yMax                0
+zNear               0
+zFar                0
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 45
+{
+name                light_45
+origin              ( 1216 -704 726 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 46
+{
+name                light_46
+origin              ( 1216 -576 726 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 47
+{
+name                light_47
+origin              ( 1216 -448 726 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 48
+{
+name                light_48
+origin              ( 1216 -319 726 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 49
+{
+name                light_49
+origin              ( 1152 -256 726 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 50
+{
+name                light_50
+origin              ( 1024 -256 728 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 51
+{
+name                light_51
+origin              ( 1120 -576 345 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 52
+{
+name                light_52
+origin              ( 896 -256 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 53
+{
+name                light_53
+origin              ( 1024 -256 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 54
+{
+name                light_54
+origin              ( 1152 -256 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 55
+{
+name                light_55
+origin              ( 1216 -320 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 56
+{
+name                light_56
+origin              ( 1216 -448 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 57
+{
+name                light_57
+origin              ( 1216 -576 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 58
+{
+name                light_58
+origin              ( 896 -896 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 59
+{
+name                light_59
+origin              ( 1024 -896 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 60
+{
+name                light_60
+origin              ( 1152 -896 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 61
+{
+name                light_61
+origin              ( 1216 -832 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 62
+{
+name                light_62
+origin              ( 1216 -704 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 63
+{
+name                light_63
+origin              ( 768 -896 214 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 64
+{
+name                light_64
+origin              ( 123 -197 1018 )
+radius              ( 326 326 2048 )
+material            lights/square_uberbright
+color               ( 0.729412 0.309804 0.184314 )
+}
+light 65
+{
+name                light_65
+origin              ( 448 -64 80 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 66
+{
+name                light_66
+origin              ( 256 128 80 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 67
+{
+name                light_67
+origin              ( 128 128 80 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 68
+{
+name                light_68
+origin              ( 0 128 80 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 69
+{
+name                light_69
+origin              ( -192 -64 80 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 70
+{
+name                light_70
+origin              ( -32 -32 194 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 71
+{
+name                light_71
+origin              ( 128 32 194 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 72
+{
+name                light_72
+origin              ( 288 -32 194 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 73
+{
+name                light_73
+origin              ( 352 -192 194 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 74
+{
+name                light_74
+origin              ( -96 -192 194 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 75
+{
+name                light_75
+origin              ( 130 123 260 )
+radius              ( 512 128 100 )
+material            lights/square_uberbright
+color               ( 1 0.631373 0.458824 )
+}
+light 76
+{
+name                light_76
+origin              ( 192 128 456 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 77
+{
+name                light_77
+origin              ( 64 128 456 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 78
+{
+name                light_78
+origin              ( -64 128 456 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 79
+{
+name                light_79
+origin              ( 448 128 720 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 80
+{
+name                light_80
+origin              ( 320 128 720 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 81
+{
+name                light_81
+origin              ( 192 128 720 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 82
+{
+name                light_82
+origin              ( 64 128 720 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 83
+{
+name                light_83
+origin              ( -63 128 720 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 84
+{
+name                light_84
+origin              ( -192 128 720 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 85
+{
+name                light_85
+origin              ( -192 -64 456 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 86
+{
+name                light_86
+origin              ( -192 -192 456 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 87
+{
+name                light_87
+origin              ( -192 -320 456 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 88
+{
+name                light_88
+origin              ( -128 -448 456 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 89
+{
+name                light_89
+origin              ( -128 -576 456 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 90
+{
+name                light_90
+origin              ( 0 -576 456 )
+radius              ( 64 640 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}
+light 91
+{
+name                light_91
+origin              ( 128 -576 456 )
+radius              ( 64 64 128 )
+material            lights/square
+color               ( 1 0.631373 0.458824 )
+}

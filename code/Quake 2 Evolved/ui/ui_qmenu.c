@@ -260,25 +260,20 @@ const char *UI_ScrollList_Key (menuScrollList_t *sl, int key){
 
 /*
  ==================
- 
- TODO: string drawing
+ UI_ScrollList_Draw
+
+ TODO: add flags for the right/center/left?
+ TODO: figure how if we need to use w/h
  ==================
 */
 void UI_ScrollList_Draw (menuScrollList_t *sl){
 
-	int		justify;
 	bool	shadow;
-	int		x, y, w, h;
-	int		arrowWidth, arrowHeight, xUp, yUp, xDown, yDown;
+	int		arrowWidth, arrowHeight;
+	int		xUp, yUp, xDown, yDown;
 	bool	upFocus, downFocus;
+	int		x, y, w, h;
 	int		i;
-
-	if (sl->generic.flags & QMF_LEFT_JUSTIFY)
-		justify = 0;
-	else if (sl->generic.flags & QMF_CENTER_JUSTIFY)
-		justify = 1;
-	else if (sl->generic.flags & QMF_RIGHT_JUSTIFY)
-		justify = 2;
 
 	shadow = (sl->generic.flags & QMF_DROPSHADOW);
 
@@ -363,40 +358,41 @@ void UI_ScrollList_Draw (menuScrollList_t *sl){
 	// Draw the list
 	h = sl->generic.charHeight;
 	y = sl->generic.y2 + sl->generic.charHeight;
+
 	for (i = sl->topItem; i < sl->topItem + sl->numRows; i++, y += sl->generic.charHeight){
 		if (!sl->itemNames[i])
 			break;		// Done
 
 		if (sl->generic.flags & QMF_GRAYED){
-			UI_DrawStringOLD(x, y, w, h, sl->itemNames[i], colorWhite, true, sl->generic.charWidth, sl->generic.charHeight, justify, shadow);
+			UI_DrawString(x, y, sl->generic.charWidth, sl->generic.charHeight, sl->itemNames[i], uiColorDarkGray, true, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 			continue;	// Grayed
 		}
 
 		if (i != sl->curItem){
-			UI_DrawStringOLD(x, y, w, h, sl->itemNames[i], sl->generic.color, false, sl->generic.charWidth, sl->generic.charHeight, justify, shadow);
+			UI_DrawString(x, y, sl->generic.charWidth, sl->generic.charHeight, sl->itemNames[i], sl->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 			continue;	// No focus
 		}
 
 		if (!(sl->generic.flags & QMF_FOCUSBEHIND))
-			UI_DrawStringOLD(x, y, w, h, sl->itemNames[i], sl->generic.color, false, sl->generic.charWidth, sl->generic.charHeight, justify, shadow);
+			UI_DrawString(x, y, sl->generic.charWidth, sl->generic.charHeight, sl->itemNames[i], sl->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 
 		if (sl->generic.flags & QMF_HIGHLIGHTIFFOCUS)
-			UI_DrawStringOLD(x, y, w, h, sl->itemNames[i], sl->generic.focusColor, false, sl->generic.charWidth, sl->generic.charHeight, justify, shadow);
+			UI_DrawString(x, y, sl->generic.charWidth, sl->generic.charHeight, sl->itemNames[i], sl->generic.focusColor, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		else if (sl->generic.flags & QMF_PULSEIFFOCUS){
 			vec4_t	color;
 
 			VectorCopy(sl->generic.color, color);
 			color[3] = 1.0f * (0.5f + 0.5f * sin(uiStatic.realTime / UI_PULSE_DIVISOR));
 
-			UI_DrawStringOLD(x, y, w, h, sl->itemNames[i], color, false, sl->generic.charWidth, sl->generic.charHeight, justify, shadow);
+			UI_DrawString(x, y, sl->generic.charWidth, sl->generic.charHeight, sl->itemNames[i], color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		}
 		else if (sl->generic.flags & QMF_BLINKIFFOCUS){
 			if ((uiStatic.realTime & UI_BLINK_MASK) < UI_BLINK_TIME)
-				UI_DrawStringOLD(x, y, w, h, sl->itemNames[i], sl->generic.focusColor, false, sl->generic.charWidth, sl->generic.charHeight, justify, shadow);
+				UI_DrawString(x, y, sl->generic.charWidth, sl->generic.charHeight, sl->itemNames[i], sl->generic.focusColor, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		}
 
 		if (sl->generic.flags & QMF_FOCUSBEHIND)
-			UI_DrawStringOLD(x, y, w, h, sl->itemNames[i], sl->generic.color, false, sl->generic.charWidth, sl->generic.charHeight, justify, shadow);
+			UI_DrawString(x, y, sl->generic.charWidth, sl->generic.charHeight, sl->itemNames[i], sl->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 	}
 }
 
@@ -475,13 +471,14 @@ void UI_SpinControl_Init (menuSpinControl_t *sc){
 
 /*
  ==================
- 
+ UI_SpinControl_Key
  ==================
 */
 const char *UI_SpinControl_Key (menuSpinControl_t *sc, int key){
 
 	const char	*sound = 0;
-	int			arrowWidth, arrowHeight, leftX, leftY, rightX, rightY;
+	int			arrowWidth, arrowHeight;
+	int			leftX, leftY, rightX, rightY;
 
 	switch (key){
 	case K_MOUSE1:
@@ -570,24 +567,18 @@ const char *UI_SpinControl_Key (menuSpinControl_t *sc, int key){
 
 /*
  ==================
- 
- TODO: string drawing
+ UI_SpinControl_Draw
+
+ TODO: add flags for the right/center/left?
+ TODO: figure how if we need to use w/h
  ==================
 */
 void UI_SpinControl_Draw (menuSpinControl_t *sc){
 
-	int		justify;
 	bool	shadow;
-	int		x, y, w, h;
-	int		arrowWidth, arrowHeight, leftX, leftY, rightX, rightY;
 	bool	leftFocus, rightFocus;
-	
-	if (sc->generic.flags & QMF_LEFT_JUSTIFY)
-		justify = 0;
-	else if (sc->generic.flags & QMF_CENTER_JUSTIFY)
-		justify = 1;
-	else if (sc->generic.flags & QMF_RIGHT_JUSTIFY)
-		justify = 2;
+	int		arrowWidth, arrowHeight, leftX, leftY, rightX, rightY;
+	int		x, y, w, h;
 
 	shadow = (sc->generic.flags & QMF_DROPSHADOW);
 
@@ -606,19 +597,22 @@ void UI_SpinControl_Draw (menuSpinControl_t *sc){
 	x = sc->generic.x2;
 	y = sc->generic.y2;
 
-	UI_DrawPicOLD(x, y, w, h, colorWhite, sc->background);
+	// Draw it
+	UI_DrawPic(x, y, w, h, colorWhite, sc->background);
 
 	if (sc->generic.flags & QMF_GRAYED){
-		UI_DrawStringOLD(x, y, w, h, sc->generic.name, colorWhite, true, sc->generic.charWidth, sc->generic.charHeight, justify, shadow);
+		UI_DrawString(x, y, sc->generic.charWidth, sc->generic.charHeight, sc->generic.name, uiColorDarkGray, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		UI_DrawPic(leftX, leftY, arrowWidth, arrowHeight, colorWhite, sc->leftArrow);
 		UI_DrawPic(rightX, rightY, arrowWidth, arrowHeight, colorWhite, sc->rightArrow);
+
 		return;		// Grayed
 	}
 
 	if ((menuCommon_t *)sc != (menuCommon_t *)UI_ItemAtCursor(sc->generic.parent)){
-		UI_DrawStringOLD(x, y, w, h, sc->generic.name, sc->generic.color, false, sc->generic.charWidth, sc->generic.charHeight, justify, shadow);
+		UI_DrawString(x, y, sc->generic.charWidth, sc->generic.charHeight, sc->generic.name, sc->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		UI_DrawPic(leftX, leftY, arrowWidth, arrowHeight, sc->generic.color, sc->leftArrow);
 		UI_DrawPic(rightX, rightY, arrowWidth, arrowHeight, sc->generic.color, sc->rightArrow);
+
 		return;		// No focus
 	}
 
@@ -626,14 +620,15 @@ void UI_SpinControl_Draw (menuSpinControl_t *sc){
 	leftFocus = UI_CursorInRect(leftX, leftY, arrowWidth, arrowHeight);
 	rightFocus = UI_CursorInRect(rightX, rightY, arrowWidth, arrowHeight);
 
+	// Draw it
 	if (!(sc->generic.flags & QMF_FOCUSBEHIND)){
-		UI_DrawStringOLD(x, y, w, h, sc->generic.name, sc->generic.color, false, sc->generic.charWidth, sc->generic.charHeight, justify, shadow);
+		UI_DrawString(x, y, sc->generic.charWidth, sc->generic.charHeight, sc->generic.name, sc->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		UI_DrawPic(leftX, leftY, arrowWidth, arrowHeight, sc->generic.color, sc->leftArrow);
 		UI_DrawPic(rightX, rightY, arrowWidth, arrowHeight, sc->generic.color, sc->rightArrow);
 	}
 
 	if (sc->generic.flags & QMF_HIGHLIGHTIFFOCUS){
-		UI_DrawStringOLD(x, y, w, h, sc->generic.name, sc->generic.focusColor, false, sc->generic.charWidth, sc->generic.charHeight, justify, shadow);
+		UI_DrawString((x+w)*0.5, (y+h)*0.5, sc->generic.charWidth, sc->generic.charHeight, sc->generic.name, sc->generic.focusColor, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		UI_DrawPic(leftX, leftY, arrowWidth, arrowHeight, (leftFocus) ? sc->generic.focusColor : sc->generic.color, (leftFocus) ? sc->leftArrowFocus : sc->leftArrow);
 		UI_DrawPic(rightX, rightY, arrowWidth, arrowHeight, (rightFocus) ? sc->generic.focusColor : sc->generic.color, (rightFocus) ? sc->rightArrowFocus : sc->rightArrow);
 	}
@@ -643,20 +638,20 @@ void UI_SpinControl_Draw (menuSpinControl_t *sc){
 		VectorCopy(sc->generic.color, color);
 		color[3] = 1.0f * (0.5f + 0.5f * sin(uiStatic.realTime / UI_PULSE_DIVISOR));
 
-		UI_DrawStringOLD(x, y, w, h, sc->generic.name, color, false, sc->generic.charWidth, sc->generic.charHeight, justify, shadow);
+		UI_DrawString(x, y, sc->generic.charWidth, sc->generic.charHeight, sc->generic.name, color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		UI_DrawPic(leftX, leftY, arrowWidth, arrowHeight, (leftFocus) ? color : sc->generic.color, (leftFocus) ? sc->leftArrowFocus : sc->leftArrow);
 		UI_DrawPic(rightX, rightY, arrowWidth, arrowHeight, (rightFocus) ? color : sc->generic.color, (rightFocus) ? sc->rightArrowFocus : sc->rightArrow);
 	}
 	else if (sc->generic.flags & QMF_BLINKIFFOCUS){
 		if ((uiStatic.realTime & UI_BLINK_MASK) < UI_BLINK_TIME){
-			UI_DrawStringOLD(x, y, w, h, sc->generic.name, sc->generic.focusColor, false, sc->generic.charWidth, sc->generic.charHeight, justify, shadow);
+			UI_DrawString(x, y, sc->generic.charWidth, sc->generic.charHeight, sc->generic.name, sc->generic.focusColor, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 			UI_DrawPic(leftX, leftY, arrowWidth, arrowHeight, (leftFocus) ? sc->generic.focusColor : sc->generic.color, (leftFocus) ? sc->leftArrowFocus : sc->leftArrow);
 			UI_DrawPic(rightX, rightY, arrowWidth, arrowHeight, (rightFocus) ? sc->generic.focusColor : sc->generic.color, (rightFocus) ? sc->rightArrowFocus : sc->rightArrow);
 		}
 	}
 
 	if (sc->generic.flags & QMF_FOCUSBEHIND){
-		UI_DrawStringOLD(x, y, w, h, sc->generic.name, sc->generic.color, false, sc->generic.charWidth, sc->generic.charHeight, justify, shadow);
+		UI_DrawString(x, y, sc->generic.charWidth, sc->generic.charHeight, sc->generic.name, sc->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		UI_DrawPic(leftX, leftY, arrowWidth, arrowHeight, sc->generic.color, sc->leftArrow);
 		UI_DrawPic(rightX, rightY, arrowWidth, arrowHeight, sc->generic.color, sc->rightArrow);
 	}
@@ -725,112 +720,303 @@ void UI_Field_Init (menuField_t *f){
 
 /*
  ==================
- 
+ UI_Field_Key
+
+ TODO: replace tolower and toupper
  ==================
 */
 const char *UI_Field_Key (menuField_t *f, int key){
-	
+
+	const char	*text, *t;
+	int			i;
+
+	// Move cursor to first character
+	if (key == K_HOME){
+		f->cursor = 0;
+
+		return 0;
+	}
+
+	// Move cursor to last character
+	if (key == K_END){
+		f->cursor = f->length;
+
+		return 0;
+	}
+
+	// Move cursor to previous character
+	if (key == K_LEFTARROW){
+		if (f->cursor)
+			f->cursor--;
+
+		return 0;
+	}
+
+	// Move cursor to next character
+	if (key == K_RIGHTARROW){
+		if (f->cursor < f->length)
+			f->cursor++;
+
+		return 0;
+	}
+
+	// Delete previous character
+	if (key == K_BACKSPACE){
+		if (!f->cursor)
+			return 0;
+
+		f->cursor--;
+
+		for (i = f->cursor; i <= f->length; i++)
+			f->buffer[i] = f->buffer[i+1];
+
+		f->buffer[f->length--] = 0;
+	}
+
+	// Delete next character
+	if (key == K_DELETE){
+		if (f->cursor == f->length)
+			return 0;
+
+		for (i = f->cursor; i <= f->length; i++)
+			f->buffer[i] = f->buffer[i+1];
+
+		f->buffer[f->length--] = 0;
+	}
+
+	// Clipboard paste
+	if (key == K_INSERT && (Key_IsDown(K_LSHIFT) || Key_IsDown(K_RSHIFT))){
+		text = Sys_GetClipboardText();
+		if (!text)
+			return 0;
+
+		t = text;
+		while (*t){
+			if (f->length + 1 == f->maxLenght)
+				break;
+
+			if (*t < 32){
+				t++;
+				continue;
+			}
+
+			if (f->generic.flags & QMF_NUMBERSONLY){
+				if (*t < '0' || *t > '9'){
+					t++;
+					continue;
+				}
+			}
+
+			for (i = f->length + 1; i > f->cursor; i--)
+				f->buffer[i] = f->buffer[i-1];
+
+			if (f->generic.flags & QMF_LOWERCASE)
+				f->buffer[f->cursor++] = tolower(*t++);
+			else if (f->generic.flags & QMF_UPPERCASE)
+				f->buffer[f->cursor++] = toupper(*t++);
+			else
+				f->buffer[f->cursor++] = *t++;
+
+			f->length++;
+		}
+
+		Mem_Free(text);
+
+		if (f->generic.callback)
+			f->generic.callback(f, QM_CHANGED);
+
+		return 0;
+	}
+
+	// Update changes
+	if (f->generic.callback)
+		f->generic.callback(f, QM_CHANGED);
+
 	return 0;
 }
 
 /*
  ==================
- 
- TODO: string drawing
+ UI_Field_Char
+
+ TODO: replace tolower and toupper
+ ==================
+*/
+const char *UI_Field_Char (menuField_t *f, int ch){
+
+	const char	*text, *t;
+	int			i;
+
+	// Copy selected text to clipboard
+	if (ch == 'c' - 'a' + 1){
+		f->buffer[0] = 0;
+		f->cursor = 0;
+		f->length = 0;
+
+		if (f->generic.callback)
+			f->generic.callback(f, QM_CHANGED);
+
+		return 0;
+	}
+
+	// Paste text from clipboard
+	if (ch == 'v' - 'a' + 1){
+		text = Sys_GetClipboardText();
+		if (!text)
+			return 0;
+
+		t = text;
+		while (*t){
+			if (f->length + 1 == f->maxLenght)
+				break;
+
+			if (*t < 32){
+				t++;
+				continue;
+			}
+
+			if (f->generic.flags & QMF_NUMBERSONLY){
+				if (*t < '0' || *t > '9'){
+					t++;
+					continue;
+				}
+			}
+
+			for (i = f->length + 1; i > f->cursor; i--)
+				f->buffer[i] = f->buffer[i-1];
+
+			if (f->generic.flags & QMF_LOWERCASE)
+				f->buffer[f->cursor++] = tolower(*t++);
+			else if (f->generic.flags & QMF_UPPERCASE)
+				f->buffer[f->cursor++] = toupper(*t++);
+			else
+				f->buffer[f->cursor++] = *t++;
+
+			f->length++;
+		}
+
+		Mem_Free(text);
+
+		if (f->generic.callback)
+			f->generic.callback(f, QM_CHANGED);
+
+		return 0;
+	}
+
+	// Insert or append new character
+	if (!Str_CharIsPrintable(ch))
+		return 0;
+
+	if (f->length + 1 == f->maxLenght)
+		return 0;
+
+	if (f->generic.flags & QMF_NUMBERSONLY){
+		if (ch < '0' || ch > '9')
+			return 0;
+	}
+
+	if (f->generic.flags & QMF_LOWERCASE)
+		ch = tolower(ch);
+	else if (f->generic.flags & QMF_UPPERCASE)
+		ch = toupper(ch);
+
+	for (i = f->length + 1; i < f->cursor; i--)
+		f->buffer[i] = f->buffer[i-1];
+
+	f->buffer[f->cursor++] = ch;
+	f->length++;
+
+	// Update changes
+	if (f->generic.callback)
+		f->generic.callback(f, QM_CHANGED);
+
+	return 0;
+}
+
+/*
+ ==================
+ UI_Field_Draw
+
+ TODO: make sure the cursor scrolling is right
+ TODO: add flags for the right/center/left?
+ TODO: figure how if we need to use w/h
  ==================
 */
 void UI_Field_Draw (menuField_t *f){
 
-	int		justify;
 	bool	shadow;
 	char	*text = f->buffer;
 	int		scroll = 0, width = f->visibleLength - 2;
-	int		cursor, x;
-
-	if (f->generic.flags & QMF_LEFT_JUSTIFY)
-		justify = 0;
-	else if (f->generic.flags & QMF_CENTER_JUSTIFY)
-		justify = 1;
-	else if (f->generic.flags & QMF_RIGHT_JUSTIFY)
-		justify = 2;
+	int		cursor;
 
 	shadow = (f->generic.flags & QMF_DROPSHADOW);
 
 	// Prestep if horizontally scrolling
-	while (Q_PrintStrlen(text+scroll) + 2 > f->visibleLength)
+	while (Str_LengthWithoutColors(text+scroll) + 2 > f->visibleLength)
 		scroll++;
 	
 	text += scroll;
 
 	// Find cursor position
 	if (scroll)
-		cursor = width - (Q_PrintStrlen(f->buffer) - f->cursor);
+		cursor = width - (Str_LengthWithoutColors(f->buffer) - f->cursor);
 	else
 		cursor = f->cursor;
 
-	cursor -= (Str_Length(f->buffer) - Q_PrintStrlen(f->buffer));
+	cursor -= (Str_Length(f->buffer) - Str_LengthWithoutColors(f->buffer));
 	if (cursor > width)
 		cursor = width;
 	if (cursor < 0)
 		cursor = 0;
 
-	if (justify == 0)
-		x = f->generic.x;
-	else if (justify == 1)
-		x = f->generic.x + ((f->generic.width - (Q_PrintStrlen(text) * f->generic.charWidth)) / 2);
-	else if (justify == 2)
-		x = f->generic.x + (f->generic.width - (Q_PrintStrlen(text) * f->generic.charWidth));
-
-	UI_DrawPicOLD(f->generic.x, f->generic.y, f->generic.width, f->generic.height, colorWhite, f->background);
+	// Draw it
+	UI_DrawPic(f->generic.x, f->generic.y, f->generic.width, f->generic.height, colorWhite, f->background);
 
 	if (f->generic.flags & QMF_GRAYED){
-		UI_DrawStringOLD(f->generic.x, f->generic.y, f->generic.width, f->generic.height, text, colorWhite, true, f->generic.charWidth, f->generic.charHeight, justify, shadow);
+		UI_DrawString(f->generic.x, f->generic.y, f->generic.charWidth, f->generic.charHeight, text, uiColorDarkGray, true, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		return;		// Grayed
 	}
 
 	if ((menuCommon_t *)f != (menuCommon_t *)UI_ItemAtCursor(f->generic.parent)){
-		UI_DrawStringOLD(f->generic.x, f->generic.y, f->generic.width, f->generic.height, text, f->generic.color, false, f->generic.charWidth, f->generic.charHeight, justify, shadow);
+		UI_DrawString(f->generic.x, f->generic.y, f->generic.charWidth, f->generic.charHeight, text, f->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		return;		// No focus
 	}
 
 	if (!(f->generic.flags & QMF_FOCUSBEHIND)){
-		UI_DrawStringOLD(f->generic.x, f->generic.y, f->generic.width, f->generic.height, text, f->generic.color, false, f->generic.charWidth, f->generic.charHeight, justify, shadow);
+		UI_DrawString(f->generic.x, f->generic.y, f->generic.charWidth, f->generic.charHeight, text, f->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 
-		if ((uiStatic.realTime & 499) < 250)
-			UI_DrawStringOLD(x + (cursor*f->generic.charWidth), f->generic.y, f->generic.charWidth, f->generic.height, "_", f->generic.color, true, f->generic.charWidth, f->generic.charHeight, 0, shadow);
+//		if ((uiStatic.realTime & 499) < 250)
+//			UI_DrawString();
 	}
 
 	if (f->generic.flags & QMF_HIGHLIGHTIFFOCUS){
-		UI_DrawStringOLD(f->generic.x, f->generic.y, f->generic.width, f->generic.height, text, f->generic.focusColor, false, f->generic.charWidth, f->generic.charHeight, justify, shadow);
-
-		if ((uiStatic.realTime & 499) < 250)
-			UI_DrawStringOLD(x + (cursor*f->generic.charWidth), f->generic.y, f->generic.charWidth, f->generic.height, "_", f->generic.focusColor, true, f->generic.charWidth, f->generic.charHeight, 0, shadow);
+		UI_DrawString(f->generic.x, f->generic.y, f->generic.charWidth, f->generic.charHeight, text, f->generic.focusColor, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 	}
 	else if (f->generic.flags & QMF_PULSEIFFOCUS){
-		color_t	color;
+		vec4_t color;
 
-		*(unsigned *)color = *(unsigned *)f->generic.color;
-		color[3] = 255 * (0.5f + 0.5f * sin(uiStatic.realTime / UI_PULSE_DIVISOR));
+		VectorCopy(f->generic.color, color);
+		color[3] = 1.0f * (0.5f + 0.5f * sin(uiStatic.realTime / UI_PULSE_DIVISOR));
 
-		UI_DrawStringOLD(f->generic.x, f->generic.y, f->generic.width, f->generic.height, text, color, false, f->generic.charWidth, f->generic.charHeight, justify, shadow);
+		UI_DrawString(f->generic.x, f->generic.y, f->generic.charWidth, f->generic.charHeight, text, color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 
-		if ((uiStatic.realTime & 499) < 250)
-			UI_DrawStringOLD(x + (cursor*f->generic.charWidth), f->generic.y, f->generic.charWidth, f->generic.height, "_", color, true, f->generic.charWidth, f->generic.charHeight, 0, shadow);
+//		if ((uiStatic.realTime & 499) < 250)
+//			UI_DrawString();
 	}
 	else if (f->generic.flags & QMF_BLINKIFFOCUS){
 		if ((uiStatic.realTime & UI_BLINK_MASK) < UI_BLINK_TIME){
-			UI_DrawStringOLD(f->generic.x, f->generic.y, f->generic.width, f->generic.height, text, f->generic.focusColor, false, f->generic.charWidth, f->generic.charHeight, justify, shadow);
+			UI_DrawString(f->generic.x, f->generic.y, f->generic.charWidth, f->generic.charHeight, text, f->generic.focusColor, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 
-			if ((uiStatic.realTime & 499) < 250)
-				UI_DrawStringOLD(x + (cursor*f->generic.charWidth), f->generic.y, f->generic.charWidth, f->generic.height, "_", f->generic.focusColor, true, f->generic.charWidth, f->generic.charHeight, 0, shadow);
+//			if ((uiStatic.realTime & 499) < 250)
+//				UI_DrawString();
 		}
 	}
 
 	if (f->generic.flags & QMF_FOCUSBEHIND){
-		UI_DrawStringOLD(f->generic.x, f->generic.y, f->generic.width, f->generic.height, text, f->generic.color, false, f->generic.charWidth, f->generic.charHeight, justify, shadow);
+		UI_DrawString(f->generic.x, f->generic.y, f->generic.charWidth, f->generic.charHeight, text, f->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 
-		if ((uiStatic.realTime & 499) < 250)
-			UI_DrawStringOLD(x + (cursor*f->generic.charWidth), f->generic.y, f->generic.charWidth, f->generic.height, "_", f->generic.color, true, f->generic.charWidth, f->generic.charHeight, 0, shadow);
+//		if ((uiStatic.realTime & 499) < 250)
+//			UI_DrawString();
 	}
 }
 
@@ -923,55 +1109,51 @@ const char *UI_Action_Key (menuAction_t *a, int key){
 
 /*
  ==================
- 
- TODO: string drawing
+ UI_Action_Draw
+
+ TODO: add flags for the right/center/left?
+ TODO: figure how if we need to use w/h
  ==================
 */
 void UI_Action_Draw (menuAction_t *a){
 
-	vec4_t	color;
-	int		justify;
 	bool	shadow;
-
-	if (a->generic.flags & QMF_LEFT_JUSTIFY)
-		justify = 0;
-	else if (a->generic.flags & QMF_CENTER_JUSTIFY)
-		justify = 1;
-	else if (a->generic.flags & QMF_RIGHT_JUSTIFY)
-		justify = 2;
 
 	shadow = (a->generic.flags & QMF_DROPSHADOW);
 
+	// Draw it
 	UI_DrawPic(a->generic.x, a->generic.y, a->generic.width, a->generic.height, colorWhite, a->background);
 
 	if (a->generic.flags & QMF_GRAYED){
-		UI_DrawStringOLD(a->generic.x, a->generic.y, a->generic.width, a->generic.height, a->generic.name, colorWhite, true, a->generic.charWidth, a->generic.charHeight, justify, shadow);
+		UI_DrawString(a->generic.x, a->generic.y, a->generic.charWidth, a->generic.charHeight, a->generic.name, uiColorDarkGray, true, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		return;		// Grayed
 	}
 
 	if ((menuCommon_t *)a != (menuCommon_t *)UI_ItemAtCursor(a->generic.parent)){
-		UI_DrawStringOLD(a->generic.x, a->generic.y, a->generic.width, a->generic.height, a->generic.name, a->generic.color, false, a->generic.charWidth, a->generic.charHeight, justify, shadow);
+		UI_DrawString(a->generic.x, a->generic.y, a->generic.charWidth, a->generic.charHeight, a->generic.name, a->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 		return;		// No focus
 	}
 
 	if (!(a->generic.flags & QMF_FOCUSBEHIND))
-		UI_DrawStringOLD(a->generic.x, a->generic.y, a->generic.width, a->generic.height, a->generic.name, a->generic.color, false, a->generic.charWidth, a->generic.charHeight, justify, shadow);
+		UI_DrawString(a->generic.x, a->generic.y, a->generic.charWidth, a->generic.charHeight, a->generic.name, a->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 
 	if (a->generic.flags & QMF_HIGHLIGHTIFFOCUS)
-		UI_DrawStringOLD(a->generic.x, a->generic.y, a->generic.width, a->generic.height, a->generic.name, a->generic.focusColor, false, a->generic.charWidth, a->generic.charHeight, justify, shadow);
+		UI_DrawString(a->generic.x, a->generic.y, a->generic.charWidth, a->generic.charHeight, a->generic.name, a->generic.focusColor, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 	else if (a->generic.flags & QMF_PULSEIFFOCUS){
+		vec4_t	color;
+		
 		VectorCopy(a->generic.color, color);
 		color[3] = 1.0f * (0.5f + 0.5f * sin(uiStatic.realTime / UI_PULSE_DIVISOR));
 
-		UI_DrawStringOLD(a->generic.x, a->generic.y, a->generic.width, a->generic.height, a->generic.name, color, false, a->generic.charWidth, a->generic.charHeight, justify, shadow);
+		UI_DrawString(a->generic.x, a->generic.y, a->generic.charWidth, a->generic.charHeight, a->generic.name, color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 	}
 	else if (a->generic.flags & QMF_BLINKIFFOCUS){
 		if ((uiStatic.realTime & UI_BLINK_MASK) < UI_BLINK_TIME)
-			UI_DrawStringOLD(a->generic.x, a->generic.y, a->generic.width, a->generic.height, a->generic.name, a->generic.focusColor, false, a->generic.charWidth, a->generic.charHeight, justify, shadow);
+			UI_DrawString(a->generic.x, a->generic.y, a->generic.charWidth, a->generic.charHeight, a->generic.name, a->generic.focusColor, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 	}
 
 	if (a->generic.flags & QMF_FOCUSBEHIND)
-		UI_DrawStringOLD(a->generic.x, a->generic.y, a->generic.width, a->generic.height, a->generic.name, a->generic.color, false, a->generic.charWidth, a->generic.charHeight, justify, shadow);
+		UI_DrawString(a->generic.x, a->generic.y, a->generic.charWidth, a->generic.charHeight, a->generic.name, a->generic.color, false, shadow, H_NONE, 1.0f, V_NONE, 1.0f);
 }
 
 
@@ -1048,8 +1230,6 @@ const char *UI_Bitmap_Key (menuBitmap_t *b, int key){
 */
 void UI_Bitmap_Draw (menuBitmap_t *b){
 
-	vec4_t color;
-
 	if (b->generic.flags & QMF_GRAYED){
 		UI_DrawPic(b->generic.x, b->generic.y, b->generic.width, b->generic.height, uiColorDarkGray, b->pic);
 		return;		// Grayed
@@ -1066,6 +1246,8 @@ void UI_Bitmap_Draw (menuBitmap_t *b){
 	if (b->generic.flags & QMF_HIGHLIGHTIFFOCUS)
 		UI_DrawPic(b->generic.x, b->generic.y, b->generic.width, b->generic.height, b->generic.focusColor, b->focusPic);
 	else if (b->generic.flags & QMF_PULSEIFFOCUS){
+		vec4_t color;
+		
 		VectorCopy(b->generic.color, color);
 		color[3] = 1.0f * (0.5f + 0.5f * sin(uiStatic.realTime / UI_PULSE_DIVISOR));
 

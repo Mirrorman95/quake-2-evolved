@@ -306,72 +306,6 @@ void R_LoadLights (const char *name){
 }
 
 
-/*
- ==============================================================================
-
- LIGHT FRUSTUM CULLING
-
- ==============================================================================
-*/
-
-
-/*
- ==================
- 
- ==================
-*/
-int R_LightCullBounds (lightData_t *lightData, const vec3_t mins, const vec3_t maxs, int planeBits){
-
-	cplane_t	*plane;
-	int			side, cullBits;
-	int			i;
-
-	cullBits = CULL_IN;
-
-	// Check against frustum planes
-	for (i = 0, plane = lightData->frustum; i < 6; i++, plane++){
-		if (!(planeBits & BIT(i)))
-			continue;
-
-		// TODO: check the bounds
-	}
-
-	if (cullBits != CULL_IN)
-		rg.pc.cullBoundsClip++;
-	else
-		rg.pc.cullBoundsIn++;
-
-	return cullBits;
-}
-
-/*
- ==================
- 
- ==================
-*/
-void R_LightCullLocalBounds (){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-void R_LightCullSphere (){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-void R_LightCullLocalSphere (){
-
-}
-
-
 // ============================================================================
 
 
@@ -532,7 +466,7 @@ static void R_SetupStaticLightData (lightData_t *lightData, bool inWorld){
 		}
 
 		// Compute the bounding box
-		BoundsFromPoints(lightData->bounds[0], lightData->bounds[1], lightData->corners);
+		BoundsFromPoints(lightData->mins, lightData->maxs, lightData->corners);
 
 		// Compute the frustum planes
 		R_SetStaticLightFrustum(lightData, axis);
@@ -553,7 +487,7 @@ static void R_SetupStaticLightData (lightData_t *lightData, bool inWorld){
 		// TODO: corners
 
 		// Compute the bounding box
-		BoundsFromPoints(lightData->bounds[0], lightData->bounds[1], lightData->corners);
+		BoundsFromPoints(lightData->mins, lightData->maxs, lightData->corners);
 
 		// Compute the frustum planes
 	}
@@ -784,7 +718,7 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 		}
 
 		// Compute the bounding box
-		BoundsFromPoints(lightData->bounds[0], lightData->bounds[1], lightData->corners);
+		BoundsFromPoints(lightData->mins, lightData->maxs, lightData->corners);
 
 		// Compute the frustum planes
 		R_SetDynamicLightFrustum(renderLight, lightData);
@@ -805,7 +739,7 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
 		// TODO: corners
 
 		// Compute the bounding box
-		BoundsFromPoints(lightData->bounds[0], lightData->bounds[1], lightData->corners);
+		BoundsFromPoints(lightData->mins, lightData->maxs, lightData->corners);
 
 		// Compute the frustum planes
 	}
@@ -955,24 +889,6 @@ static void R_SetupDynamicLightData (const renderLight_t *renderLight, lightData
  
  ==================
 */
-static int R_CullLightBounds (lightData_t *lightData, int planeBits){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
-static int R_CullLightVolume (lightData_t *lightData, int planeBits){
-
-}
-
-/*
- ==================
- 
- ==================
-*/
 static bool R_ViewInLightVolume (){
 
 	return true;
@@ -1024,8 +940,8 @@ static void R_ClipLightPlane (int stage, int numVertices, vec3_t vertices, const
 			out[0] /= out[3];
 			out[1] /= out[3];
 
-			x = rg.renderView.x + (0.5 + 0.5 * out[0]) * rg.renderView.width;
-			y = rg.renderView.y + (0.5 + 0.5 * out[1]) * rg.renderView.height;
+			x = rg.viewParms.viewport.x + (0.5 + 0.5 * out[0]) * rg.viewParms.viewport.width;
+			y = rg.viewParms.viewport.y + (0.5 + 0.5 * out[1]) * rg.viewParms.viewport.height;
 
 			mins[0] = min(mins[0], x);
 			mins[1] = min(mins[1], y);
@@ -1128,16 +1044,16 @@ static void R_SetupScissor (light_t *light){
 	}
 
 	// Set the scissor rectangle
-	xMin = max(floor(mins[0]), rg.renderView.x);
-	yMin = max(floor(mins[1]), rg.renderView.y);
-	xMax = min(ceil(maxs[0]), rg.renderView.x + rg.renderView.width);
-	yMax = min(ceil(maxs[1]), rg.renderView.y + rg.renderView.height);
+	xMin = max(floor(mins[0]), rg.viewParms.scissor.x);
+	yMin = max(floor(mins[1]), rg.viewParms.scissor.y);
+	xMax = min(ceil(maxs[0]), rg.viewParms.scissor.x + rg.viewParms.scissor.width);
+	yMax = min(ceil(maxs[1]), rg.viewParms.scissor.y + rg.viewParms.scissor.height);
 
 	if (xMax <= xMin || yMax <= yMin){
-		light->scissor.x = rg.renderView.x;
-		light->scissor.y = rg.renderView.y;
-		light->scissor.width = rg.renderView.width;
-		light->scissor.height = rg.renderView.height;
+		light->scissor.x = rg.viewParms.scissor.x;
+		light->scissor.y = rg.viewParms.scissor.y;
+		light->scissor.width = rg.viewParms.scissor.width;
+		light->scissor.height = rg.viewParms.scissor.height;
 
 		return;
 	}
@@ -1236,7 +1152,7 @@ static void R_SetupNearClipVolume (light_t *light){
  ==================
  R_AddLight
 
- TODO: make sure the plane sides are correct for the fog plane
+ FIXME: make sure the plane sides are correct for the fog plane
  ==================
 */
 static void R_AddLight (lightData_t *lightData, material_t *material, bool viewInLight){

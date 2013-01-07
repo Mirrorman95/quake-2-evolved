@@ -97,7 +97,7 @@ static void LUT_LoadTable (const char *name, bool snap, bool clamp, int size, fl
 	if (lut_numTables == MAX_TABLES)
 		Com_Error(ERR_DROP, "LUT_LoadTable: MAX_TABLES hit");
 
-	lut_tables[lut_numTables++] = table = (table_t *)Mem_ClearedAlloc(sizeof(table_t), TAG_COMMON);
+	lut_tables[lut_numTables++] = table = (table_t *)Mem_Alloc(sizeof(table_t), TAG_COMMON);
 
 	// Fill it in
 	Str_Copy(table->name, name, sizeof(table->name));

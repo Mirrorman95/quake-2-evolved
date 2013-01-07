@@ -113,133 +113,6 @@ void R_SetFarClip (){
 /*
  ==============================================================================
 
- VIEW FRUSTUM CULLING
-
- ==============================================================================
-*/
-
-
-/*
- ==================
- R_CullBox
-
- Returns true if the box is completely outside the frustum
- ==================
-*/
-bool R_CullBox (const vec3_t mins, const vec3_t maxs, int clipFlags){
-
-	cplane_t	*plane;
-	int			i;
-
-	if (r_skipCulling->integerValue)
-		return false;
-
-	for (i = 0, plane = rg.viewParms.frustum; i < NUM_FRUSTUM_PLANES; i++, plane++){
-		if (!(clipFlags & BIT(i)))
-			continue;
-
-		switch (plane->signbits){
-		case 0:
-			if (plane->normal[0] * maxs[0] + plane->normal[1] * maxs[1] + plane->normal[2] * maxs[2] < plane->dist){
-				rg.pc.cullBoundsOut++;
-				return true;
-			}
-
-			break;
-		case 1:
-			if (plane->normal[0] * mins[0] + plane->normal[1] * maxs[1] + plane->normal[2] * maxs[2] < plane->dist){
-				rg.pc.cullBoundsOut++;
-				return true;
-			}
-
-			break;
-		case 2:
-			if (plane->normal[0] * maxs[0] + plane->normal[1] * mins[1] + plane->normal[2] * maxs[2] < plane->dist){
-				rg.pc.cullBoundsOut++;
-				return true;
-			}
-
-			break;
-		case 3:
-			if (plane->normal[0] * mins[0] + plane->normal[1] * mins[1] + plane->normal[2] * maxs[2] < plane->dist){
-				rg.pc.cullBoundsOut++;
-				return true;
-			}
-
-			break;
-		case 4:
-			if (plane->normal[0] * maxs[0] + plane->normal[1] * maxs[1] + plane->normal[2] * mins[2] < plane->dist){
-				rg.pc.cullBoundsOut++;
-				return true;
-			}
-
-			break;
-		case 5:
-			if (plane->normal[0] * mins[0] + plane->normal[1] * maxs[1] + plane->normal[2] * mins[2] < plane->dist){
-				rg.pc.cullBoundsOut++;
-				return true;
-			}
-
-			break;
-		case 6:
-			if (plane->normal[0] * maxs[0] + plane->normal[1] * mins[1] + plane->normal[2] * mins[2] < plane->dist){
-				rg.pc.cullBoundsOut++;
-				return true;
-			}
-
-			break;
-		case 7:
-			if (plane->normal[0] * mins[0] + plane->normal[1] * mins[1] + plane->normal[2] * mins[2] < plane->dist){
-				rg.pc.cullBoundsOut++;
-				return true;
-			}
-
-			break;
-		default:
-			rg.pc.cullBoundsIn++;
-			return false;
-		}
-	}
-
-	rg.pc.cullBoundsIn++;
-
-	return false;
-}
-
-/*
- ==================
- R_CullSphere
-
- Returns true if the sphere is completely outside the frustum
- ==================
-*/
-bool R_CullSphere (const vec3_t origin, float radius, int clipFlags){
-
-	cplane_t	*plane;
-	int			i;
-
-	if (r_skipCulling->integerValue)
-		return false;
-
-	for (i = 0, plane = rg.viewParms.frustum; i < NUM_FRUSTUM_PLANES; i++, plane++){
-		if (!(clipFlags & BIT(i)))
-			continue;
-
-		if (DotProduct(origin, plane->normal) - plane->dist <= -radius){
-			rg.pc.cullSphereOut++;
-			return true;
-		}
-	}
-
-	rg.pc.cullSphereIn++;
-
-	return false;
-}
-
-
-/*
- ==============================================================================
-
  COORDINATE SCALING AND ASPECT RATIO CORRECTION
 
  ==============================================================================
@@ -771,6 +644,9 @@ void R_RenderView (bool primaryView, int viewType){
 	// Generate mesh and light lists
 	R_GenerateMeshes();
 	R_GenerateLights();
+
+	// Update post-process parameters if needed
+	R_UpdatePostProcess();
 
 	// Render a subview if needed
 	if (R_RenderSubview()){

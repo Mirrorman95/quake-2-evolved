@@ -35,6 +35,19 @@ static int					cm_floodValid;
 
 /*
  ==================
+ CM_NumAreas
+ ==================
+*/
+int CM_NumAreas (){
+
+	if (!cm.loaded)
+		Com_Error(ERR_DROP, "CM_NumAreas: map not loaded");
+
+	return cm.numAreas;
+}
+
+/*
+ ==================
  
  ==================
 */
@@ -196,4 +209,39 @@ void CM_ReadPortalState (fileHandle_t f){
 	FS_Read(f, cm_areaPortalOpen, sizeof(cm_areaPortalOpen));
 
 	CM_FloodAreaConnections(false);
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+bool CM_HeadNodeVisible (int headNode, const byte *visBits){
+
+	clipNode_t	*node;
+	int			leafNum;
+	int			cluster;
+
+	if (!cm.loaded)
+		return false;		// Map not loaded
+
+	if (headNode < 0){
+		leafNum = -1 - headNode;
+
+		cluster = cm.leafs[leafNum].cluster;
+		if (cluster == -1)
+			return false;
+
+		if (visBits[cluster >> 3] & (1 << (cluster & 7)))
+			return true;
+
+		return false;
+	}
+
+	node = &cm.nodes[headNode];
+
+	if (CM_HeadNodeVisible(node->children[0], visBits))
+		return true;
+
+	return CM_HeadNodeVisible(node->children[1], visBits);
 }

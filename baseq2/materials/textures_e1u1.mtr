@@ -9,7 +9,7 @@ textures/e1u1/bluwter
 
 		shaderParm	u_BumpScale		0.2, 0.5, 0.2, 0.2
 		shaderParm	u_BumpScroll		time * -.025, 0, time * .05, 0
-		shaderParm	u_DistortionScale	0.2, 0.2
+		shaderParm	u_DistortionScale	0.0005, 0.0005
 		shaderParm	u_FadeDepth		300.0
 		shaderParm	u_ColorTint		0.1, 0.1, 0.1
 		shaderParm	u_FresnelParms		0, 0, 0

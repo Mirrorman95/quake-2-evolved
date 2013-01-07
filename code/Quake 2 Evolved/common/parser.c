@@ -1529,7 +1529,7 @@ script_t *PS_LoadScriptFile (const char *name){
 		return NULL;	// Let the caller handle this error
 
 	// Allocate the script
-	script = (script_t *)Mem_ClearedAlloc(sizeof(script_t), TAG_TEMPORARY);
+	script = (script_t *)Mem_Alloc(sizeof(script_t), TAG_TEMPORARY);
 
 	// Fill it in
 	Str_Copy(script->name, name, sizeof(script->name));
@@ -1562,7 +1562,7 @@ script_t *PS_LoadScriptMemory (const char *name, const char *buffer, int size, i
 		return NULL;	// Let the caller handle this error
 
 	// Allocate the script
-	script = (script_t *)Mem_ClearedAlloc(sizeof(script_t), TAG_TEMPORARY);
+	script = (script_t *)Mem_Alloc(sizeof(script_t), TAG_TEMPORARY);
 
 	// Fill it in
 	Str_Copy(script->name, name, sizeof(script->name));

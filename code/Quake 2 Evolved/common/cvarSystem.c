@@ -174,7 +174,7 @@ cvar_t *CVar_Register (const char *name, const char *value, cvarType_t type, int
 	value = CVar_ValidateValue(value, type, min, max);
 
 	// Allocate a new variable
-	cvar = (cvar_t *)Mem_ClearedAlloc(sizeof(cvar_t), TAG_COMMON);
+	cvar = (cvar_t *)Mem_Alloc(sizeof(cvar_t), TAG_COMMON);
 
 	cvar->name = Mem_DupString(name, TAG_COMMON);
 	cvar->value = Mem_DupString(value, TAG_COMMON);
@@ -1413,7 +1413,7 @@ gamecvar_t *CVar_GameUpdateOrCreate (cvar_t *cvar){
 		return gameVar;
 	}
 
-	gameVar = (gamecvar_t *)Mem_ClearedAlloc(sizeof(gamecvar_t), TAG_COMMON);
+	gameVar = (gamecvar_t *)Mem_Alloc(sizeof(gamecvar_t), TAG_COMMON);
 
 	gameVar->name = Mem_DupString(cvar->name, TAG_COMMON);
 	gameVar->string = Mem_DupString(cvar->value, TAG_COMMON);

@@ -82,7 +82,7 @@ static int SV_FindIndex (const char *name, int start, int max){
  SV_ModelIndex
  ==================
 */
-int SV_ModelIndex (const char *name){
+int SV_ModelIndex (char *name){
 
 	return SV_FindIndex(name, CS_MODELS, MAX_MODELS);
 }
@@ -92,7 +92,7 @@ int SV_ModelIndex (const char *name){
  SV_SoundIndex
  ==================
 */
-int SV_SoundIndex (const char *name){
+int SV_SoundIndex (char *name){
 
 	return SV_FindIndex(name, CS_SOUNDS, MAX_SOUNDS);
 }
@@ -102,7 +102,7 @@ int SV_SoundIndex (const char *name){
  SV_ImageIndex
  ==================
 */
-int SV_ImageIndex (const char *name){
+int SV_ImageIndex (char *name){
 
 	return SV_FindIndex(name, CS_IMAGES, MAX_IMAGES);
 }
@@ -270,7 +270,7 @@ static void SV_SpawnServer (const char *levelName, const char *spawnPoint, bool 
 
 	for (i = 1; i < CM_NumInlineModels(); i++){
 		Str_SPrintf(sv.configStrings[CS_MODELS + 1 + i], sizeof(sv.configStrings[CS_MODELS + 1 + i]), "*%i", i);
-		sv.models[i+1] = CM_InlineModel(sv.configStrings[CS_MODELS + 1 + i]);
+		sv.models[i+1] = CM_LoadInlineModel(sv.configStrings[CS_MODELS + 1 + i]);
 	}
 
 	// Spawn the rest of the entities on the map
@@ -281,7 +281,7 @@ static void SV_SpawnServer (const char *levelName, const char *spawnPoint, bool 
 	Com_SetServerState(sv.state);
 
 	// Load and spawn all other entities
-	ge->SpawnEntities(sv.name, CM_EntityString(), (char *)spawnPoint);
+	ge->SpawnEntities(sv.name, CM_GetEntityString(), (char *)spawnPoint);
 
 	// Run two frames to allow everything to settle
 	ge->RunFrame();

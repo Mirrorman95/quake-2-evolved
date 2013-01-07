@@ -1,0 +1,31 @@
+light 0
+{
+name                light_0
+origin              ( 384 -384 265 )
+material            lights/square_uberbright
+}
+light 1
+{
+name                light_1
+origin              ( 0 -384 265 )
+material            lights/square_uberbright
+}
+light 2
+{
+name                light_2
+origin              ( 191 319 310 )
+radius              ( 140 140 170 )
+material            lights/round_uberbright
+}
+light 3
+{
+name                light_3
+origin              ( 544 -48 265 )
+material            lights/square_uberbright
+}
+light 4
+{
+name                light_5
+origin              ( -160 -48 265 )
+material            lights/square_uberbright
+}

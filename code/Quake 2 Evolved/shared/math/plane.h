@@ -33,8 +33,8 @@
 #define ON_EPSILON					0.1f
 
 // Plane sides
-#define	PLANESIDE_FRONT				0
-#define	PLANESIDE_BACK				1
+#define	PLANESIDE_FRONT				1
+#define	PLANESIDE_BACK				2
 #define PLANESIDE_CROSS				3
 #define	PLANESIDE_ON				3
 
@@ -56,7 +56,7 @@ bool			PlaneFromPoints (cplane_t *plane, const vec3_t a, const vec3_t b, const v
 void			SetPlaneSignbits (cplane_t *plane);
 int				PlaneTypeForNormal (const vec3_t normal);
 float			PlaneDistance (const vec3_t normal, const float dist, const vec3_t point);
-int				BoxOnPlaneSide (const vec3_t mins, const vec3_t maxs, cplane_t *p);
+int				BoxOnPlaneSide (const vec3_t mins, const vec3_t maxs, const cplane_t *plane);
 int				SphereOnPlaneSide (const vec3_t center, float radius, const cplane_t *plane);
 int				PointOnPlaneSide (const vec3_t point, float epsilon, const cplane_t *plane);
 

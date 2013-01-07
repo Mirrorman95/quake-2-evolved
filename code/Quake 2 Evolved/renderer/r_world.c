@@ -29,52 +29,41 @@
 #include "r_local.h"
 
 
-#define BACKFACE_EPSILON			0.01f
-
-
 /*
  ==================
  R_CullSurface
+
+ FIXME: make sure SURF_PLANEBACK is valid
  ==================
 */
-static bool R_CullSurface (surface_t *surface, const vec3_t origin, int clipFlags){
-
-	material_t	*material = surface->texInfo->material;
-	int			side;
-
-	if (r_skipCulling->integerValue)
-		return false;
+static bool R_CullSurface (surface_t *surface, material_t *material, renderEntity_t *entity, const vec3_t viewOrigin, int cullBits){
 
 	// Cull face
-	if (material->cullType != CT_TWO_SIDED){
-		side = PointOnPlaneSide(origin, 0.0f, surface->plane);
-
-		if (material->cullType == CT_BACK_SIDED){
+	if (!r_skipFaceCulling->integerValue && surface->plane && material->deform == DFRM_NONE){
+		if (material->cullType == CT_FRONT_SIDED){
 			if (!(surface->flags & SURF_PLANEBACK)){
-				if (side != PLANESIDE_BACK)
-					return true;
-			}
-			else {
-				if (side != PLANESIDE_FRONT)
+				if (PointOnPlaneSide(viewOrigin, 0.0f, surface->plane) != PLANESIDE_FRONT)
 					return true;
 			}
 		}
-		else {
+		else if (material->cullType == CT_BACK_SIDED){
 			if (!(surface->flags & SURF_PLANEBACK)){
-				if (side != PLANESIDE_FRONT)
-					return true;
-			}
-			else {
-				if (side != PLANESIDE_BACK)
+				if (PointOnPlaneSide(viewOrigin, 0.0f, surface->plane) != PLANESIDE_BACK)
 					return true;
 			}
 		}
 	}
 
 	// Cull bounds
-	if (clipFlags){
-		if (R_CullBox(surface->mins, surface->maxs, clipFlags))
-			return true;
+	if (cullBits != CULL_IN){
+		if (entity == rg.worldEntity){
+			if (R_CullBounds(surface->mins, surface->maxs, cullBits) == CULL_OUT)
+				return true;
+		}
+		else {
+			if (R_CullLocalBounds(surface->mins, surface->maxs, entity->origin, entity->axis, cullBits) == CULL_OUT)
+				return true;
+		}
 	}
 
 	return false;
@@ -140,40 +129,42 @@ static void R_AddSurface (surface_t *surface, renderEntity_t *entity){
 /*
  ==================
  R_AddInlineModel
+
+ TODO: rewrite culling
  ==================
 */
 void R_AddInlineModel (renderEntity_t *entity){
 
 	model_t		*model = entity->model;
 	surface_t	*surface;
-	vec3_t		origin, tmp;
+	vec3_t		viewOrigin, tmp;
 	vec3_t		mins, maxs;
 	int			i;
 
 	if (!model->numModelSurfaces)
 		return;
 
-	// Cull bounds
+	// Cull
 	if (!Matrix3_Compare(entity->axis, mat3_identity)){
 		for (i = 0; i < 3; i++){
 			mins[i] = entity->origin[i] - model->radius;
 			maxs[i] = entity->origin[i] + model->radius;
 		}
 
-		if (R_CullSphere(entity->origin, model->radius, 31))
+		if (R_CullSphere(entity->origin, model->radius, rg.viewParms.planeBits))
 			return;
 
 		VectorSubtract(rg.renderView.origin, entity->origin, tmp);
-		VectorRotate(tmp, entity->axis, origin);
+		VectorRotate(tmp, entity->axis, viewOrigin);
 	}
 	else {
 		VectorAdd(entity->origin, model->mins, mins);
 		VectorAdd(entity->origin, model->maxs, maxs);
 
-		if (R_CullBox(mins, maxs, 31))
+		if (R_CullBox(mins, maxs, rg.viewParms.planeBits))
 			return;
 
-		VectorSubtract(rg.renderView.origin, entity->origin, origin);
+		VectorSubtract(rg.renderView.origin, entity->origin, viewOrigin);
 	}
 
 	// Mark as visible for this view
@@ -190,8 +181,8 @@ void R_AddInlineModel (renderEntity_t *entity){
 		if (!surface->texInfo->material->numStages)
 			continue;		// Don't bother drawing
 
-		// Cull surface bounds
-		if (R_CullSurface(surface, origin, 0))
+		// Cull
+		if (R_CullSurface(surface, surface->texInfo->material, entity, viewOrigin, CULL_IN))
 			continue;
 
 		// Add the surface
@@ -222,11 +213,26 @@ static void R_MarkLeaves (){
 	vec3_t	viewOrigin;
 	int		i, c;
 
-	// Current view cluster
+	if (!rg.worldModel)
+		Com_Error(ERR_DROP, "R_MarkLeaves: NULL world");
+
+	// Development tool
+	if (r_lockVisibility->integerValue)
+		return;
+
+	// Get the current view leaf
 	rg.oldViewCluster = rg.viewCluster;
 	rg.oldViewCluster2 = rg.viewCluster2;
 
 	leaf = R_PointInLeaf(rg.renderView.origin);
+
+	// If the current view area has changed, edit the post-process parameters
+	if (rg.viewParms.viewType == VIEW_MAIN){
+		if (rg.viewArea != leaf->area)
+			R_EditAreaPostProcess(leaf->area);
+
+		rg.viewArea = leaf->area;
+	}
 
 	// Development tool
 	if (r_showCluster->integerValue)
@@ -257,11 +263,6 @@ static void R_MarkLeaves (){
 	}
 
 	if (rg.viewCluster == rg.oldViewCluster && rg.viewCluster2 == rg.oldViewCluster2 && !r_skipVisibility->integerValue && rg.viewCluster != -1)
-		return;
-
-	// Development aid to let you run around and see exactly where the
-	// PVS ends
-	if (r_lockVisibility->integerValue)
 		return;
 
 	rg.visCount++;
@@ -314,12 +315,10 @@ static void R_MarkLeaves (){
  R_RecursiveWorldNode
  ==================
 */
-static void R_RecursiveWorldNode (node_t *node, int clipFlags){
+static void R_RecursiveWorldNode (node_t *node, int cullBits){
 
 	leaf_t		*leaf;
 	surface_t	*surface, **mark;
-	cplane_t	*plane;
-	int			side;
 	int			i;
 
 	// Check for solid content
@@ -331,19 +330,11 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 		return;
 
 	// Cull
-	if (clipFlags){
-		for (i = 0, plane = rg.viewParms.frustum; i < NUM_FRUSTUM_PLANES; i++, plane++){
-			if (!(clipFlags & BIT(i)))
-				continue;
+	if (cullBits != CULL_IN){
+		cullBits = R_CullBounds(node->mins, node->maxs, cullBits);
 
-			side = BoxOnPlaneSide(node->mins, node->maxs, plane);
-
-			if (side == PLANESIDE_BACK)
-				return;
-
-			if (side == PLANESIDE_FRONT)
-				clipFlags &= ~BIT(i);
-		}
+		if (cullBits == CULL_OUT)
+			return;
 	}
 
 	// Mark as visible for this view
@@ -351,8 +342,8 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 
 	// Recurse down the children
 	if (node->contents == -1){
-		R_RecursiveWorldNode(node->children[0], clipFlags);
-		R_RecursiveWorldNode(node->children[1], clipFlags);
+		R_RecursiveWorldNode(node->children[0], cullBits);
+		R_RecursiveWorldNode(node->children[1], cullBits);
 		return;
 	}
 
@@ -378,6 +369,10 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 
 	rg.pc.leafs++;
 
+	// If it has a single surface, no need to cull again
+	if (leaf->numMarkSurfaces == 1)
+		cullBits = CULL_IN;
+
 	// Add all the surfaces
 	for (i = 0, mark = leaf->firstMarkSurface; i < leaf->numMarkSurfaces; i++, mark++){
 		surface = *mark;
@@ -390,7 +385,7 @@ static void R_RecursiveWorldNode (node_t *node, int clipFlags){
 			continue;		// Don't bother drawing
 
 		// Cull
-		if (R_CullSurface(surface, rg.renderView.origin, clipFlags))
+		if (R_CullSurface(surface, surface->texInfo->material, rg.worldEntity, rg.renderView.origin, cullBits))
 			continue;
 
 		// Add the surface

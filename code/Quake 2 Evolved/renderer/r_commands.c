@@ -36,7 +36,7 @@
 */
 static void R_PerformanceCounters (){
 
-	if (r_showCull->integerValue)
+	if (r_showCull->integerValue || r_showCull->integerValue == 3)
 		Com_Printf("in: %i (b: %i, s: %i, l: %i), clip: %i (b: %i, s: %i, l: %i), out: %i (b: %i, s: %i, l: %i)\n", rg.pc.cullBoundsIn + rg.pc.cullSphereIn + rg.pc.cullLineIn, rg.pc.cullBoundsIn, rg.pc.cullSphereIn, rg.pc.cullLineIn, rg.pc.cullBoundsClip + rg.pc.cullSphereClip + rg.pc.cullLineClip, rg.pc.cullBoundsClip, rg.pc.cullSphereClip, rg.pc.cullLineClip, rg.pc.cullBoundsOut + rg.pc.cullSphereOut + rg.pc.cullLineOut, rg.pc.cullBoundsOut, rg.pc.cullSphereOut, rg.pc.cullLineOut);
 
 	if (r_showScene->integerValue)
@@ -181,6 +181,9 @@ void R_AddRenderViewCommand (){
 	cmd->viewParms.lights[1] = rg.viewParms.lights[1];
 	cmd->viewParms.lights[2] = rg.viewParms.lights[2];
 	cmd->viewParms.lights[3] = rg.viewParms.lights[3];
+
+	// Post-process parms
+	Mem_Copy(&cmd->postProcessParms, &rg.postProcess.postProcessParms, sizeof(postProcessParms_t));
 }
 
 /*

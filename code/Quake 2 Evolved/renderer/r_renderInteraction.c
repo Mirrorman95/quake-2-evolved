@@ -61,7 +61,7 @@ static void RB_DrawInteraction_Generic (const interaction_t *i){
 		R_UniformVector3(parms->lightDirection, backEnd.localParms.lightDirection);
 
 	if (backEnd.light->data.type == RL_CUBIC)
-		R_UniformMatrix3(parms->lightAxis, GL_TRUE, backEnd.localParms.lightAxis);
+		R_UniformMatrix3(parms->lightAxis, GL_TRUE, (const float *)backEnd.localParms.lightAxis);
 
 	R_UniformMatrix4(parms->bumpMatrix, GL_TRUE, i->bumpMatrix);
 	R_UniformMatrix4(parms->diffuseMatrix, GL_TRUE, i->diffuseMatrix);

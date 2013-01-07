@@ -62,6 +62,15 @@ pause
 	}
 }
 
+logo
+{
+	{
+		linear
+		map		gfx/logo.tga
+		blend 		GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA
+	}
+}
+
 console
 {
 	{

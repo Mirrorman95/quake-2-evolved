@@ -25,9 +25,6 @@
 // r_image.c - Image loading
 //
 
-// TODO:
-// - make sure we load PCX and WAL images where it is needed
-
 
 #include "r_local.h"
 
@@ -136,7 +133,7 @@ static bool R_LoadPCX (const char *name, byte **image, byte **palette, int *widt
 		Com_Error(ERR_DROP, "R_LoadPCX: bad image size (%i x %i) (%s)\n", header->xMax, header->yMax, name);
 
 	if (palette){
-		*palette = (byte *)Mem_ClearedAlloc(768, TAG_TEMPORARY);
+		*palette = (byte *)Mem_Alloc(768, TAG_TEMPORARY);
 		Mem_Copy(*palette, (byte *)data + length - 768, 768);
 	}
 
@@ -148,7 +145,7 @@ static bool R_LoadPCX (const char *name, byte **image, byte **palette, int *widt
 	*width = header->xMax+1;
 	*height = header->yMax+1;
 
-	*image = out = (byte *)Mem_ClearedAlloc((header->xMax+1) * (header->yMax+1) * 4, TAG_TEMPORARY);
+	*image = out = (byte *)Mem_Alloc((header->xMax+1) * (header->yMax+1) * 4, TAG_TEMPORARY);
 
 	for (y = 0; y <= header->yMax; y++){
 		for (x = 0; x <= header->xMax; ){
@@ -226,7 +223,7 @@ static bool R_LoadWAL (const char *name, byte **image, int *width, int *height){
 	// Read the image pixels
 	in = data + header->offsets[0];
 
-	*image = out = (byte *)Mem_ClearedAlloc(header->width * header->height * 4, TAG_TEMPORARY);
+	*image = out = (byte *)Mem_Alloc(header->width * header->height * 4, TAG_TEMPORARY);
 
 	*width = header->width;
 	*height = header->height;
@@ -1685,7 +1682,7 @@ static void R_WriteImageProgram (const char *imageProgram, const byte *image, in
 
 	// Allocate the buffer
 	size = 18 + (width * height * samples);
-	buffer = (byte *)Mem_ClearedAlloc(size, TAG_TEMPORARY);
+	buffer = (byte *)Mem_Alloc(size, TAG_TEMPORARY);
 
 	// Set up the header
 	Mem_Fill(buffer, 0, 18);
@@ -1910,7 +1907,7 @@ static byte *R_FlipAndRotateImage (const byte *image, int width, int height, boo
 	else
 		samples = 4;
 
-	buffer = ptr = (byte *)Mem_ClearedAlloc(width * height * samples, TAG_TEMPORARY);
+	buffer = ptr = (byte *)Mem_Alloc(width * height * samples, TAG_TEMPORARY);
 
 	if (flipX){
 		xStride = -samples;
@@ -2399,7 +2396,7 @@ bool R_TakeScreenshot (const char *name, bool gammaCorrect){
 
 	// Allocate the buffer
 	size = 18 + (glConfig.videoWidth * glConfig.videoHeight * 3);
-	buffer = (byte *)Mem_ClearedAlloc(size, TAG_TEMPORARY);
+	buffer = (byte *)Mem_Alloc(size, TAG_TEMPORARY);
 
 	// Set up the header
 	Mem_Fill(buffer, 0, 18);
@@ -2517,8 +2514,8 @@ static void R_EnvShot_f (){
 	}
 
 	// Allocate the buffers
-	pixels = (byte *)Mem_ClearedAlloc(size * size * 3, TAG_TEMPORARY);
-	buffer = (byte *)Mem_ClearedAlloc(18 + (size * size * 3), TAG_TEMPORARY);
+	pixels = (byte *)Mem_Alloc(size * size * 3, TAG_TEMPORARY);
+	buffer = (byte *)Mem_Alloc(18 + (size * size * 3), TAG_TEMPORARY);
 
 	// Set up the header
 	Mem_Fill(buffer, 0, 18);

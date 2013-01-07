@@ -69,6 +69,7 @@ float			Floor (float x);
 float			Frac (float x);
 float			Pow (float x, float y);
 float			FMod (float x, float y);
+float			FAbs (float f);
 bool			IsPowerOfTwo (int i);
 int				FloorPowerOfTwo (int i);
 int				CeilPowerOfTwo (int i);

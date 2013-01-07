@@ -161,7 +161,7 @@ void CL_DrawText (){
  
  ==================
 */
-void CL_DrawStringSheared (float x, float y, float w, float h, float shearX, float shearY, float width, const char *string, const color_t color, material_t *fontMaterial, int flags){
+void CL_DrawStringFixed (float x, float y, float w, float h, float width, const char *string, const color_t color, material_t *fontMaterial, int flags){
 
 }
 
@@ -170,7 +170,7 @@ void CL_DrawStringSheared (float x, float y, float w, float h, float shearX, flo
  
  ==================
 */
-void CL_DrawStringFixed (float x, float y, float w, float h, float width, const char *string, const color_t color, material_t *fontMaterial, int flags){
+void CL_DrawStringSheared (float x, float y, float w, float h, float shearX, float shearY, float width, const char *string, const color_t color, material_t *fontMaterial, int flags){
 
 }
 
@@ -207,20 +207,24 @@ void CL_DrawPicST (float x, float y, float w, float h, float s1, float t1, float
 
 /*
  ==================
- 
+ CL_DrawPicSheared
  ==================
 */
-void CL_DrawPicSheared (float x, float y, float w, float h, float shearX, float shearY, const color_t color, material_t *material){
+void CL_DrawPicSheared (float x, float y, float w, float h, float xShear, float yShear, float rotate, const vec4_t color, material_t *material){
 
+	R_SetColor(color);
+	R_DrawStretchPicEx(x, y, w, h, 0.0f, 0.0f, 1.0f, 1.0f, xShear, yShear, rotate, H_NONE, 1.0f, V_NONE, 1.0f, material);
 }
 
 /*
  ==================
- 
+ CL_DrawPicShearedST
  ==================
 */
-void CL_DrawPicShearedST (float x, float y, float w, float h, float s1, float t1, float s2, float t2, float shearX, float shearY, const color_t color, material_t *material){
+void CL_DrawPicShearedST (float x, float y, float w, float h, float s1, float t1, float s2, float t2, float xShear, float yShear, float rotate, const vec4_t color, material_t *material){
 
+	R_SetColor(color);
+	R_DrawStretchPicEx(x, y, w, h, s1, t1, s2, t2, xShear, yShear, rotate, H_NONE, 1.0f, V_NONE, 1.0f, material);
 }
 
 /*
@@ -458,6 +462,8 @@ static void CL_DrawConnected (){
 /*
  ==================
  CL_DrawLoadingData
+
+ FIXME: the offets needs to be adjusted as the original
  ==================
 */
 static void CL_DrawLoadingData (){
@@ -479,9 +485,9 @@ static void CL_DrawLoadingData (){
 		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
 		ofs += 16.0f;
 
-		length = Str_SPrintf(string, sizeof(string), "%s", cls.loadingInfo.name);
+		length = Str_SPrintf(string, sizeof(string), "\"%s\"", cls.loadingInfo.name);
 		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
-		ofs += 16.0f;
+		ofs += 48.0f;
 
 		length = Str_SPrintf(string, sizeof(string), "Loading... %s", cls.loadingInfo.string);
 		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
@@ -492,9 +498,9 @@ static void CL_DrawLoadingData (){
 		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
 		ofs += 16.0f;
 
-		length = Str_SPrintf(string, sizeof(string), "%s", cls.loadingInfo.name);
+		length = Str_SPrintf(string, sizeof(string), "\"%s\"", cls.loadingInfo.name);
 		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
-		ofs += 16.0f;
+		ofs += 48.0f;
 
 		length = Str_SPrintf(string, sizeof(string), "Connecting to %s", cls.serverName);
 		R_DrawString((SCREEN_WIDTH - length * 16.0f) * 0.5f, ofs, 16.0f, 16.0f, string, colorWhite, true, 1.0f, 1.0f, H_ALIGN_CENTER, 1.0f, V_ALIGN_BOTTOM, 1.0f, cls.media.charsetMaterial);
@@ -1405,6 +1411,21 @@ static void CL_DrawPause (){
 
 /*
  ==================
+ CL_DrawLogo
+ ==================
+*/
+static void CL_DrawLogo (){
+
+	if (!cl_drawLogo->integerValue)
+		return;
+
+	// Draw it
+	R_SetColor(colorWhite);
+	R_DrawStretchPic(2.0f, 412.0f, 264.0f, 66.0f, 0.0f, 0.0f, 1.0f, 1.0f, H_ALIGN_LEFT, 1.0f, V_ALIGN_BOTTOM, 1.0f, cl.media.logoMaterial);
+}
+
+/*
+ ==================
  CL_DrawMaterial
 
  TODO: would be nice if we could trace for monsters, objects materials
@@ -1632,6 +1653,9 @@ void CL_Draw2D (){
 
 	// Draw the pause icon
 	CL_DrawPause();
+
+	// Draw the promotion logo
+	CL_DrawLogo();
 
 	// Draw the material under the crosshair
 	CL_DrawMaterial();

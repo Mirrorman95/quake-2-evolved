@@ -110,7 +110,7 @@ trace_t CL_Trace (const vec3_t start, const vec3_t mins, const vec3_t maxs, cons
 			bmins[2] = -zd;
 			bmaxs[2] = zu;
 
-			headNode = CM_HeadNodeForBox(bmins, bmaxs);
+			headNode = CM_SetupBoxModel(bmins, bmaxs);
 			tmp = CM_TransformedBoxTrace(start, end, mins, maxs, headNode, brushMask, entity->origin, vec3_origin);
 		}
 

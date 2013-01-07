@@ -37,7 +37,7 @@ static const char *			uiCreditsId[] = {
 	"",
 	"+PROGRAMMING",
 	"Nicolas \"^4BE^3RSE^4RK^7\" Flekenstein",
-	"Kevin \"Paradox\" Jonasson",
+	"Kevin \"^1Buzz^7\" Jonasson",
 	"",
 	"+ART",
 	"Gavin \"o'dium\" Stevens",
@@ -186,7 +186,7 @@ static const char *			uiCreditsXatrix[] = {
 	"",
 	"+PROGRAMMING",
 	"Nicolas \"^4BE^3RSE^4RK^7\" Flekenstein",
-	"Kevin \"Paradox\" Jonasson",
+	"Kevin \"^1Buzz^7\" Jonasson",
 	"",
 	"+ART",
 	"Gavin \"o'dium\" Stevens",
@@ -385,7 +385,7 @@ static const char *			uiCreditsRogue[] = {
 	"",
 	"+PROGRAMMING",
 	"Nicolas \"^4BE^3RSE^4RK^7\" Flekenstein",
-	"Kevin \"^Paradox\" Jonasson",
+	"Kevin \"^1Buzz^7\" Jonasson",
 	"",
 	"+ART",
 	"Gavin \"o'dium\" Stevens",
@@ -563,21 +563,24 @@ static uiCredits_t			uiCredits;
 
 /*
  ==================
- 
- TODO: string rewrite
+ UI_Credits_DrawFunc
+
+ TODO: color needs to be fixed
+ TODO: text should be centered
+ TODO: text is not in the right position
  ==================
 */
 static void UI_Credits_DrawFunc (){
 
-//	vec4_t		color = {0, 76, 127, 255};
+	vec4_t		color = {1.00f, 0.25f, 0.50f, 1.00f};
 	const char	*string;
-	int			w = 8, h = 16;
-	int			i, y;
+	int			y, w = 8, h = 16;
+	int			i;
 
-	// Draw the background first
-	UI_DrawPic(0.0f, 0.0f, 1024.0f*uiStatic.scaleX, 768.0f*uiStatic.scaleY, colorWhite, ART_BACKGROUND);
+	// Draw the background
+	UI_DrawPic(0.0f, 0.0f, 1024.0f * uiStatic.scaleX, 768.0f * uiStatic.scaleY, colorWhite, ART_BACKGROUND);
 
-	// Now draw the credits
+	// Draw the credits
 	UI_ScaleCoords(NULL, NULL, &w, &h);
 
 	for (i = 0, y = uiStatic.glConfig.videoHeight - ((uiStatic.realTime - uiCredits.startTime) / 40.0); uiCredits.credits[i] != 0 && y < uiStatic.glConfig.videoHeight; i++, y += h){
@@ -586,9 +589,9 @@ static void UI_Credits_DrawFunc (){
 
 		string = uiCredits.credits[i];
 		if (string[0] == '+')
-			UI_DrawString(0, y, 1024*uiStatic.scaleX, h, string+1, colorRed, false, w, h, H_NONE, 1.0f, V_NONE, 1.0f);
+			UI_DrawString((SCREEN_WIDTH - w) * 0.5f, y, w, h, string+1, color, false, true, H_ALIGN_CENTER, 1.0f, V_ALIGN_CENTER, 1.0f);
 		else
-			UI_DrawString(0, y, 1024*uiStatic.scaleX, h, string, colorWhite, false, w, h, H_NONE, 1.0f, V_NONE, 1.0f);
+			UI_DrawString((SCREEN_WIDTH - w) * 0.5f, y, w, h, string, colorWhite, false, true, H_ALIGN_CENTER, 1.0f, V_ALIGN_CENTER, 1.0f);
 	}
 
 	if (y < 0)

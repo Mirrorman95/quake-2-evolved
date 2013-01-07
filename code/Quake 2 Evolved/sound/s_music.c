@@ -123,7 +123,7 @@ static void S_QueueMusicTrack (const char *introTrack, const char *loopTrack, in
 
 	musicQueue_t	*queue, *last;
 
-	queue = (musicQueue_t *)Mem_ClearedAlloc(sizeof(musicQueue_t), TAG_SOUND);
+	queue = (musicQueue_t *)Mem_Alloc(sizeof(musicQueue_t), TAG_SOUND);
 
 	Str_Copy(queue->introTrack, introTrack, sizeof(queue->introTrack));
 	Str_Copy(queue->loopTrack, loopTrack, sizeof(queue->loopTrack));
@@ -193,7 +193,7 @@ static bool S_OpenMusicTrack (const char *name){
 	snd.music.oggOffset = 0;
 
 	// Allocate and open the Ogg Vorbis bitstream
-	snd.music.oggVorbisBitstream = (OggVorbis_File *)Mem_ClearedAlloc(sizeof(OggVorbis_File), TAG_SOUND);
+	snd.music.oggVorbisBitstream = (OggVorbis_File *)Mem_Alloc(sizeof(OggVorbis_File), TAG_SOUND);
 
 	if (ov_open_callbacks(&snd.music, snd.music.oggVorbisBitstream, NULL, 0, callbacks) < 0){
 		Com_DPrintf(S_COLOR_RED "Couldn't open Ogg Vorbis bitstream '%s'\n", name);

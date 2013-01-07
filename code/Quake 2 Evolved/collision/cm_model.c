@@ -29,6 +29,12 @@
 #include "cm_local.h"
 
 
+static clipBrush_t *		cm_boxBrush;
+static clipLeaf_t *			cm_boxLeaf;
+static cplane_t *			cm_boxPlanes;
+int							cm_boxHeadNode;
+
+
 /*
  ==================
  CM_LoadPlanes
@@ -51,7 +57,7 @@ static void CM_LoadPlanes (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "CM_LoadMap: too many planes (%s)", cm.name);
 
 	// Extra for box hull
-	cm.planes = out = (cplane_t *)Mem_ClearedAlloc((cm.numPlanes + 12) * sizeof(cplane_t), TAG_COLLISION);
+	cm.planes = out = (cplane_t *)Mem_Alloc((cm.numPlanes + 12) * sizeof(cplane_t), TAG_COLLISION);
 	cm.size += cm.numPlanes * sizeof(cplane_t);
 
 	for (i = 0; i < cm.numPlanes; i++, in++, out++){
@@ -86,7 +92,7 @@ static void CM_LoadSurfaces (const byte *data, const bspLump_t *lump){
 	if (cm.numSurfaces > MAX_MAP_TEXINFO)
 		Com_Error(ERR_DROP, "CM_LoadMap: too many surfaces (%s)", cm.name);
 
-	cm.surfaces = out = (clipSurface_t *)Mem_ClearedAlloc(cm.numSurfaces * sizeof(clipSurface_t), TAG_COLLISION);
+	cm.surfaces = out = (clipSurface_t *)Mem_Alloc(cm.numSurfaces * sizeof(clipSurface_t), TAG_COLLISION);
 	cm.size += cm.numPlanes * sizeof(clipSurface_t);
 
 	for (i = 0; i < cm.numSurfaces; i++, in++, out++){
@@ -112,7 +118,7 @@ static void CM_LoadVisibility (const byte *data, const bspLump_t *lump){
 	if (cm.numVisibility > MAX_MAP_VISIBILITY)
 		Com_Error(ERR_DROP, "CM_LoadMap: too large visibility lump (%s)", cm.name);
 
-	cm.visibility = (clipVis_t *)Mem_ClearedAlloc(cm.numVisibility, TAG_COLLISION);
+	cm.visibility = (clipVis_t *)Mem_Alloc(cm.numVisibility, TAG_COLLISION);
 	Mem_Copy(cm.visibility, data + lump->offset, cm.numVisibility);
 	cm.size += cm.numVisibility * sizeof(clipVis_t);
 
@@ -145,7 +151,7 @@ static void CM_LoadLeafs (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "CM_LoadMap: too many leafs (%s)", cm.name);
 
 	// Extra for box hull
-	cm.leafs = out = (clipLeaf_t *)Mem_ClearedAlloc((cm.numLeafs + 1) * sizeof(clipLeaf_t), TAG_COLLISION);
+	cm.leafs = out = (clipLeaf_t *)Mem_Alloc((cm.numLeafs + 1) * sizeof(clipLeaf_t), TAG_COLLISION);
 	cm.size += cm.numLeafs * sizeof(clipLeaf_t);
 
 	cm.numClusters = 0;
@@ -186,7 +192,7 @@ static void CM_LoadLeafBrushes (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "CM_LoadMap: too many leaf brushes (%s)", cm.name);
 
 	// Extra for box hull
-	cm.leafBrushes = out = (ushort *)Mem_ClearedAlloc((cm.numLeafBrushes + 1) * sizeof(ushort), TAG_COLLISION);
+	cm.leafBrushes = out = (ushort *)Mem_Alloc((cm.numLeafBrushes + 1) * sizeof(ushort), TAG_COLLISION);
 	cm.size += cm.numLeafBrushes * sizeof(ushort);
 
 	for (i = 0; i < cm.numLeafBrushes; i++, in++, out++)
@@ -215,7 +221,7 @@ static void CM_LoadBrushes (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "CM_LoadMap: too many brushes (%s)", cm.name);
 
 	// Extra for box hull
-	cm.brushes = out = (clipBrush_t *)Mem_ClearedAlloc((cm.numBrushes + 1) * sizeof(clipBrush_t), TAG_COLLISION);
+	cm.brushes = out = (clipBrush_t *)Mem_Alloc((cm.numBrushes + 1) * sizeof(clipBrush_t), TAG_COLLISION);
 	cm.size += cm.numBrushes * sizeof(clipBrush_t);
 
 	for (i = 0; i < cm.numBrushes; i++, out++, in++){
@@ -247,7 +253,7 @@ static void CM_LoadBrushSides (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "CM_LoadMap: too many brush sides (%s)", cm.name);
 
 	// Extra for box hull
-	cm.brushSides = out = (clipBrushSide_t *)Mem_ClearedAlloc((cm.numBrushSides + 6) * sizeof(clipBrushSide_t), TAG_COLLISION);
+	cm.brushSides = out = (clipBrushSide_t *)Mem_Alloc((cm.numBrushSides + 6) * sizeof(clipBrushSide_t), TAG_COLLISION);
 	cm.size += cm.numBrushSides * sizeof(clipBrushSide_t);
 
 	for (i = 0; i < cm.numBrushSides; i++, in++, out++){
@@ -278,7 +284,7 @@ static void CM_LoadNodes (const byte *data, const bspLump_t *lump){
 		Com_Error(ERR_DROP, "CM_LoadMap: too many nodes (%s)", cm.name);
 
 	// Extra for box hull
-	cm.nodes = out = (clipNode_t *)Mem_ClearedAlloc((cm.numNodes + 6) * sizeof(clipNode_t), TAG_COLLISION);
+	cm.nodes = out = (clipNode_t *)Mem_Alloc((cm.numNodes + 6) * sizeof(clipNode_t), TAG_COLLISION);
 	cm.size += cm.numNodes * sizeof(clipNode_t);
 
 	for (i = 0; i < cm.numNodes; i++, out++, in++){
@@ -310,7 +316,7 @@ static void CM_LoadInlineModels (const byte *data, const bspLump_t *lump){
 	if (cm.numModels > MAX_MAP_MODELS)
 		Com_Error(ERR_DROP, "CM_LoadMap: too many inline models (%s)", cm.name);
 
-	cm.models = out = (clipInlineModel_t *)Mem_ClearedAlloc(cm.numModels * sizeof(clipInlineModel_t), TAG_COLLISION);
+	cm.models = out = (clipInlineModel_t *)Mem_Alloc(cm.numModels * sizeof(clipInlineModel_t), TAG_COLLISION);
 	cm.size += cm.numModels * sizeof(clipInlineModel_t);
 
 	for (i = 0; i < cm.numModels; i++, in++, out++){
@@ -344,10 +350,10 @@ static void CM_LoadAreas (const byte *data, const bspLump_t *lump){
 	cm.numAreas = lump->length / sizeof(bspArea_t);
 	if (cm.numAreas < 1)
 		return;
-	if (cm.numAreas > MAX_MAP_AREAS)
+	if (cm.numAreas > BSP_MAX_AREAS)
 		Com_Error(ERR_DROP, "CM_LoadMap: too many areas (%s)", cm.name);
 
-	cm.areas = out = (clipArea_t *)Mem_ClearedAlloc(cm.numAreas * sizeof(clipArea_t), TAG_COLLISION);
+	cm.areas = out = (clipArea_t *)Mem_Alloc(cm.numAreas * sizeof(clipArea_t), TAG_COLLISION);
 	cm.size += cm.numAreas * sizeof(clipArea_t);
 
 	for (i = 0; i < cm.numAreas; i++, in++, out++){
@@ -379,7 +385,7 @@ static void CM_LoadAreaPortals (const byte *data, const bspLump_t *lump){
 	if (cm.numAreaPortals > MAX_MAP_AREAPORTALS)
 		Com_Error(ERR_DROP, "CM_LoadMap: too many area portals (%s)", cm.name);
 
-	cm.areaPortals = out = (clipAreaPortal_t *)Mem_ClearedAlloc(cm.numAreaPortals * sizeof(clipAreaPortal_t), TAG_COLLISION);
+	cm.areaPortals = out = (clipAreaPortal_t *)Mem_Alloc(cm.numAreaPortals * sizeof(clipAreaPortal_t), TAG_COLLISION);
 	cm.size += cm.numAreaPortals * sizeof(clipAreaPortal_t);
 
 	for (i = 0; i < cm.numAreaPortals; i++, in++, out++){
@@ -401,14 +407,14 @@ static void CM_LoadEntityString (const byte *data, const bspLump_t *lump){
 	if (cm.numEntityChars > MAX_MAP_ENTSTRING)
 		Com_Error(ERR_DROP, "CM_LoadMap: too large entity lump (%s)", cm.name);
 
-	cm.entityString = (char *)Mem_ClearedAlloc(cm.numEntityChars + 1, TAG_COLLISION);
+	cm.entityString = (char *)Mem_Alloc(cm.numEntityChars + 1, TAG_COLLISION);
 	Mem_Copy(cm.entityString, data + lump->offset, cm.numEntityChars);
 	cm.size += cm.numEntityChars * sizeof(char);
 }
 
 /*
  ==================
- 
+ CM_LoadMap
  ==================
 */
 clipInlineModel_t *CM_LoadMap (const char *name, bool clientLoad, uint *checkCount){
@@ -478,11 +484,15 @@ clipInlineModel_t *CM_LoadMap (const char *name, bool clientLoad, uint *checkCou
 	// Free file data
 	FS_FreeFile(data);
 
-	// Set up some needed things
-	CM_InitBoxHull();
+	// Create the box model
+	CM_CreateBoxModel();
+
+	// All floods are initially invalid
 	CM_FloodAreaConnections(true);
 
+	// Clear counter
 	*checkCount = cm.checkCount;
+
 	return &cm.models[0];
 }
 
@@ -510,7 +520,211 @@ void CM_FreeMap (){
 	cm.name[0] = 0;
 	cm.loaded = false;
 	cm.checkCount = 0;
+}
 
-//	cm_pointContents = 0;
-//	cm_traces = 0;
+
+// ============================================================================
+
+
+/*
+ ==================
+ CM_LoadInlineModel
+ ==================
+*/
+clipInlineModel_t *CM_LoadInlineModel (const char *name){
+
+	int		index;
+
+	if (!cm.loaded)	
+		Com_Error(ERR_DROP, "CM_LoadInlineModel: map not loaded");
+
+	if (!name || name[0] != '*')
+		Com_Error(ERR_DROP, "CM_LoadInlineModel: NULL inline model name");
+
+	index = Str_ToInteger(name+1);
+	if (index < 1 || index >= cm.numModels)
+		Com_Error(ERR_DROP, "CM_LoadInlineModel: bad index");
+
+	return &cm.models[index];
+}
+
+/*
+ ==================
+ CM_NumInlineModels
+ ==================
+*/
+int	CM_NumInlineModels (){
+
+	if (!cm.loaded)
+		Com_Error(ERR_DROP, "CM_NumInlineModels: map not loaded");
+
+	return cm.numModels;
+}
+
+/*
+ ==================
+ CM_GetEntityString
+ ==================
+*/
+char *CM_GetEntityString (){
+
+	if (!cm.loaded)
+		Com_Error(ERR_DROP, "CM_GetEntityString: map not loaded");
+
+	if (!cm.numEntityChars)
+		return "";
+
+	return cm.entityString;
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+void CM_CreateBoxModel (){
+
+	int				side;
+	clipBrushSide_t	*s;
+	clipNode_t		*n;
+	cplane_t		*p;
+	int				i;
+
+	// Create the planes
+	cm_boxPlanes = &cm.planes[cm.numPlanes];
+	cm_boxHeadNode = cm.numNodes;
+
+	// Create the brush
+	cm_boxBrush = &cm.brushes[cm.numBrushes];
+	cm_boxBrush->numSides = 6;
+	cm_boxBrush->firstBrushSide = cm.numBrushSides;
+	cm_boxBrush->contents = CONTENTS_MONSTER;
+
+	cm_boxLeaf = &cm.leafs[cm.numLeafs];
+	cm_boxLeaf->numLeafBrushes = 1;
+	cm_boxLeaf->firstLeafBrush = cm.numLeafBrushes;
+	cm_boxLeaf->contents = CONTENTS_MONSTER;
+
+	cm.leafBrushes[cm.numLeafBrushes] = cm.numBrushes;
+
+	for (i = 0; i < 6; i++){
+		side = i & 1;
+
+		// Brush sides
+		s = &cm.brushSides[cm.numBrushSides+i];
+		s->plane = &cm.planes[cm.numPlanes+i*2+side];
+		s->surface = &cm.nullSurface;
+
+		// Nodes
+		n = &cm.nodes[cm.numNodes+i];
+		n->plane = &cm.planes[cm.numPlanes+i*2];
+		n->children[side] = -1 - cm.numLeafs;
+		if (i != 5)
+			n->children[side^1] = cm_boxHeadNode+i + 1;
+		else
+			n->children[side^1] = -1 - cm.numLeafs;
+
+		// Planes
+		p = &cm_boxPlanes[i*2+0];
+		VectorClear(p->normal);
+		p->normal[i>>1] = 1;
+		p->type = i>>1;
+		p->signbits = 0;
+
+		p = &cm_boxPlanes[i*2+1];
+		VectorClear(p->normal);
+		p->normal[i>>1] = -1;
+		p->type = 3;
+		p->signbits = 0;
+	}
+}
+
+/*
+ ==================
+ 
+ ==================
+*/
+int	CM_SetupBoxModel (const vec3_t mins, const vec3_t maxs){
+
+	if (!cm.loaded)
+		Com_Error(ERR_DROP, "CM_SetupBoxModel: map not loaded");
+
+	// Set up the planes
+	cm_boxPlanes[ 0].dist = maxs[0];
+	cm_boxPlanes[ 1].dist = -maxs[0];
+	cm_boxPlanes[ 2].dist = mins[0];
+	cm_boxPlanes[ 3].dist = -mins[0];
+	cm_boxPlanes[ 4].dist = maxs[1];
+	cm_boxPlanes[ 5].dist = -maxs[1];
+	cm_boxPlanes[ 6].dist = mins[1];
+	cm_boxPlanes[ 7].dist = -mins[1];
+	cm_boxPlanes[ 8].dist = maxs[2];
+	cm_boxPlanes[ 9].dist = -maxs[2];
+	cm_boxPlanes[10].dist = mins[2];
+	cm_boxPlanes[11].dist = -mins[2];
+
+	return cm_boxHeadNode;
+}
+
+
+/*
+ ==============================================================================
+
+ CONSOLE COMMANDS
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ 
+ ==================
+*/
+static void CM_ClipMapInfo_f (){
+
+	if (!cm.loaded){
+		Com_Printf("Clip map not loaded\n");
+		return;
+	}
+
+	Com_Printf("\n");
+	Com_Printf("%s\n", cm.name);
+	Com_Printf("----------------------------------------\n");
+
+	Com_Printf("----------------------------------------\n");
+	Com_Printf("%.2f MB of clip map data\n", cm.size * (1.0f / 1048576.0f));
+	Com_Printf("\n");
+}
+
+
+/*
+ ==============================================================================
+
+ INITIALIZATION AND SHUTDOWN
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ CM_InitModels
+ ==================
+*/
+void CM_InitModels (){
+
+	// Add commands
+	Cmd_AddCommand("clipMapInfo", CM_ClipMapInfo_f, "Shows clip map information", NULL);
+}
+
+/*
+ ==================
+ CM_ShutdownModels
+ ==================
+*/
+void CM_ShutdownModels (){
+
+	// Remove commands
+	Cmd_RemoveCommand("clipMapInfo");
 }

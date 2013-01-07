@@ -89,6 +89,7 @@ void			Cmd_ArgCompletion_SoundName (void (*callback)(const char *string));
 void			Cmd_ArgCompletion_MusicName (void (*callback)(const char *string));
 void			Cmd_ArgCompletion_VideoName (void (*callback)(const char *string));
 void			Cmd_ArgCompletion_MaterialName (void (*callback)(const char *string));
+void			Cmd_ArgCompletion_SoundShaderName (void (*callback)(const char *string));
 
 // The functions that execute commands get their parameters with these
 // functions. Cmd_Argv() will return an empty string, not a NULL if

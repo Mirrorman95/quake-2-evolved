@@ -96,6 +96,7 @@ cvar_t *					cl_centerTime;
 cvar_t *					cl_drawGodModeShell;
 cvar_t *					cl_drawCenterString;
 cvar_t *					cl_drawPause;
+cvar_t *					cl_drawLogo;
 cvar_t *					cl_drawFPS;
 cvar_t *					cl_drawLagometer;
 cvar_t *					cl_drawDisconnected;
@@ -105,7 +106,6 @@ cvar_t *					cl_drawIcons;
 cvar_t *					cl_drawStatus;
 cvar_t *					cl_drawInventory;
 cvar_t *					cl_drawLayout;
-cvar_t *					cl_newHUD;							// TODO: remove
 cvar_t *					cl_allowDownload;
 cvar_t *					cl_rconPassword;
 cvar_t *					cl_rconAddress;
@@ -1836,6 +1836,7 @@ static void CL_Register (){
 	cl_drawGodModeShell = CVar_Register("cl_drawGodModeShell", "1", CVAR_BOOL, CVAR_ARCHIVE, "Draw god mode shell on the view weapon", 0, 0);
 	cl_drawCenterString = CVar_Register("cl_drawCenterString", "1",  CVAR_BOOL, CVAR_ARCHIVE, "Draw center strings", 0, 0);
 	cl_drawPause = CVar_Register("cl_drawPause", "1", CVAR_BOOL, CVAR_ARCHIVE, "Draw the pause", 0, 0);
+	cl_drawLogo = CVar_Register("cl_drawLogo", "1", CVAR_BOOL, CVAR_ARCHIVE, "Draw the promotion logo", 0, 0);
 	cl_drawFPS = CVar_Register("cl_drawFPS", "0", CVAR_BOOL, CVAR_ARCHIVE, "Draw the frames per second counter", 0, 0);
 	cl_drawLagometer = CVar_Register("cl_drawLagometer", "0", CVAR_BOOL, CVAR_ARCHIVE, "Draw the lagometer icon", 0, 0);
 	cl_drawDisconnected = CVar_Register("cl_drawDisconnected", "1", CVAR_BOOL, CVAR_ARCHIVE, "Draw the disconnected icon", 0, 0);
@@ -1845,7 +1846,6 @@ static void CL_Register (){
 	cl_drawStatus = CVar_Register("cl_drawStatus", "1", CVAR_BOOL, CVAR_ARCHIVE, "Draw the status", 0, 0);
 	cl_drawInventory = CVar_Register("cl_drawInventory", "1", CVAR_BOOL, CVAR_ARCHIVE, "Draw the inventory", 0, 0);
 	cl_drawLayout = CVar_Register("cl_drawLayout", "1", CVAR_BOOL, CVAR_ARCHIVE, "Draw the layout", 0, 0);
-	cl_newHUD = CVar_Register("cl_newHUD", "1", CVAR_BOOL, CVAR_ARCHIVE, "Use the new HUD", 0, 0);
 	cl_allowDownload = CVar_Register("cl_allowDownload", "1", CVAR_BOOL, CVAR_ARCHIVE, "Allow file downloads from server", 0, 0);
 	cl_rconPassword = CVar_Register("rconPassword", "", CVAR_STRING, 0, NULL, 0, 0);
 	cl_rconAddress = CVar_Register("rconAddress", "", CVAR_STRING, 0, NULL, 0, 0);

@@ -411,7 +411,7 @@ static bool CIN_LoadPCX (cinematic_t *cin, const char *name, int flags){
 
 	Mem_Copy(palette, (byte *)data + length - 768, 768);
 
-	pcxData = out = (byte *)Mem_ClearedAlloc((header->xMax+1) * (header->yMax+1) * 4, TAG_TEMPORARY);
+	pcxData = out = (byte *)Mem_Alloc((header->xMax+1) * (header->yMax+1) * 4, TAG_TEMPORARY);
 
 	for (y = 0; y <= header->yMax; y++){
 		for (x = 0; x <= header->xMax; ){

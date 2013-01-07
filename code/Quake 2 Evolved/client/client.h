@@ -77,7 +77,7 @@ typedef struct {
 	int						serverFrame;
 	int						serverTime;		// Server time the message is valid for (in msec)
 	int						deltaFrame;
-	byte					areaBits[MAX_MAP_AREAS/8];	// Portalarea visibility bits
+	byte					areaBits[BSP_MAX_AREAS/8];	// Portalarea visibility bits
 	player_state_t			playerState;
 	int						numEntities;
 	int						parseEntitiesIndex;	// Non-masked index into cl.parseEntities array
@@ -115,6 +115,7 @@ typedef struct {
 	material_t *			disconnectedMaterial;
 	material_t *			backTileMaterial;
 	material_t *			pauseMaterial;
+	material_t *			logoMaterial;
 	material_t *			crosshairMaterials[NUM_CROSSHAIRS];
 	material_t *			hudNumberMaterials[2][11];
 	material_t *			bloodBlendMaterial;
@@ -484,6 +485,7 @@ extern cvar_t *				cl_centerTime;
 extern cvar_t *				cl_drawGodModeShell;
 extern cvar_t *				cl_drawCenterString;
 extern cvar_t *				cl_drawPause;
+extern cvar_t *				cl_drawLogo;
 extern cvar_t *				cl_drawFPS;
 extern cvar_t *				cl_drawLagometer;
 extern cvar_t *				cl_drawDisconnected;
@@ -493,7 +495,6 @@ extern cvar_t *				cl_drawIcons;
 extern cvar_t *				cl_drawStatus;
 extern cvar_t *				cl_drawInventory;
 extern cvar_t *				cl_drawLayout;
-extern cvar_t *				cl_newHUD;
 extern cvar_t *				cl_allowDownload;
 extern cvar_t *				cl_rconPassword;
 extern cvar_t *				l_rconAddress;
@@ -998,13 +999,13 @@ float *			CL_FadeColor (const vec4_t color, int startTime, int totalTime, int fa
 float *			CL_FadeAlpha (const vec4_t color, int startTime, int totalTime, int fadeTime);
 float *			CL_FadeColorAndAlpha (const vec4_t color, int startTime, int totalTime, int fadeTime);
 void			CL_FillRect (float x, float y, float w, float h, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent);
-void			CL_DrawStringSheared (float x, float y, float w, float h, float shearX, float shearY, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
 void			CL_DrawStringFixed (float x, float y, float w, float h, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
+void			CL_DrawStringSheared (float x, float y, float w, float h, float shearX, float shearY, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
 void			CL_DrawStringShearedFixed (float x, float y, float w, float h, float shearX, float shearY, float width, const char *string, const color_t color, material_t *fontMaterial, int flags);
 void			CL_DrawPic (float x, float y, float w, float h, const vec4_t color, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent, material_t *material);
 void			CL_DrawPicST (float x, float y, float w, float h, float s1, float t1, float s2, float t2, const vec4_t color, material_t *material);
-void			CL_DrawPicSheared (float x, float y, float w, float h, float shearX, float shearY, const color_t color, material_t *material);
-void			CL_DrawPicShearedST (float x, float y, float w, float h, float s1, float t1, float s2, float t2, float shearX, float shearY, const color_t color, material_t *material);
+void			CL_DrawPicSheared (float x, float y, float w, float h, float xShear, float yShear, float rotate, const vec4_t color, material_t *material);
+void			CL_DrawPicShearedST (float x, float y, float w, float h, float s1, float t1, float s2, float t2, float xShear, float yShear, float rotate, const vec4_t color, material_t *material);
 void			CL_DrawPicByName (float x, float y, float w, float h, const vec4_t color, horzAdjust_t horzAdjust, float horzPercent, vertAdjust_t vertAdjust, float vertPercent, const char *pic);
 void			CL_DrawPicFixed (float x, float y, material_t *material);
 void			CL_DrawPicFixedByName (float x, float y, const char *pic);
