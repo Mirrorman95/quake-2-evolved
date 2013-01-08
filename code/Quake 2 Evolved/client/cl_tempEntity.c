@@ -453,8 +453,8 @@ void CL_ParseTempEntity (){
 		R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 3.0f, cl.time, cl.media.bulletMarkMaterial);
 
 		i = rand() & 15;
-		if (i >= 1 && i <= 3)
-			S_PlaySound(pos, 0, 0, cl.media.richotecSounds[i - 1], 1.0f, ATTN_NORM, 0.0f);
+//		if (i >= 1 && i <= 3)
+//			S_PlaySound(pos, 0, 0, cl.media.richotecSounds[i - 1], 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case TE_SHOTGUN:		// Bullet hitting wall
@@ -474,8 +474,8 @@ void CL_ParseTempEntity (){
 
 		if (type == TE_BULLET_SPARKS){
 			i = rand() & 15;
-			if (i >= 1 && i <= 3)
-				S_PlaySound(pos, 0, 0, cl.media.richotecSounds[i - 1], 1.0f, ATTN_NORM, 0.0f);
+//			if (i >= 1 && i <= 3)
+//				S_PlaySound(pos, 0, 0, cl.media.richotecSounds[i - 1], 1.0f, ATTN_NORM, 0.0f);
 		}
 
 		break;
@@ -489,7 +489,7 @@ void CL_ParseTempEntity (){
 		else
 			CL_DamageSparkParticles(pos, dir, 40, 0xb0);
 
-		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case TE_LASER_SPARKS:
@@ -510,7 +510,7 @@ void CL_ParseTempEntity (){
 		switch (i){
 		case SPLASH_SPARKS:
 			CL_SparkParticles(pos, dir, count);
-			S_PlaySound(pos, 0, 0, cl.media.sparkSounds[rand() & 3], 1.0f, ATTN_STATIC, 0.0f);
+//			S_PlaySound(pos, 0, 0, cl.media.sparkSounds[rand() & 3], 1.0f, ATTN_STATIC, 0.0f);
 			break;
 		case SPLASH_BLUE_WATER:
 			CL_WaterSplash(pos, dir);
@@ -551,7 +551,7 @@ void CL_ParseTempEntity (){
 		CL_BlasterParticles(pos, dir, 0.97f, 0.46f, 0.14f);
 		R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 3.0f, cl.time, cl.media.energyMarkMaterial);
 		CL_DynamicLight(pos, 150.0f, 1.0f, 1.0f, 0.0f, true, 350);
-		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case TE_RAILTRAIL:		// Railgun effect
@@ -563,7 +563,7 @@ void CL_ParseTempEntity (){
 
 		CL_RailTrail(pos, pos2);
 		R_ProjectDecalOntoWorld(pos2, dir, rand() % 360, 3.0f, cl.time, cl.media.energyMarkMaterial);
-		S_PlaySound(pos2, 0, 0, cl.media.railgunSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(pos2, 0, 0, cl.media.railgunSound, 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case TE_GRENADE_EXPLOSION:
@@ -575,14 +575,14 @@ void CL_ParseTempEntity (){
 			CL_Explosion(pos, dir, 40.0f, rand() % 360, 350.0f, 1.0f, 0.5f, 0.5f, cl.media.grenadeExplosionMaterial);
 			CL_ExplosionParticles(pos);
 			R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 40.0f, cl.time, cl.media.burnMarkMaterial);
-			S_PlaySound(pos, 0, 0, cl.media.grenadeExplosionSound, 1.0f, ATTN_NORM, 0.0f);
+//			S_PlaySound(pos, 0, 0, cl.media.grenadeExplosionSound, 1.0f, ATTN_NORM, 0.0f);
 		}
 		else {
 			CL_Explosion(pos, dir, 40.0f, rand() % 360, 350.0f, 1.0f, 0.5f, 0.5f, cl.media.grenadeExplosionWaterMaterial);
 			CL_ExplosionWaterSplash(pos);
 			CL_BubbleParticles(pos, 384.0f, 30.0f);
 			R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 40.0f, cl.time, cl.media.burnMarkMaterial);
-			S_PlaySound(pos, 0, 0, cl.media.waterExplosionSound, 1.0f, ATTN_NORM, 0.0f);
+//			S_PlaySound(pos, 0, 0, cl.media.waterExplosionSound, 1.0f, ATTN_NORM, 0.0f);
 		}
 
 		break;
@@ -599,14 +599,14 @@ void CL_ParseTempEntity (){
 			CL_Explosion(pos, dir, 40.0f, rand() % 360, 350.0f, 1.0f, 0.5f, 0.5f, cl.media.rocketExplosionMaterial);
 			CL_ExplosionParticles(pos);
 			R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 40.0f, cl.time, cl.media.burnMarkMaterial);
-			S_PlaySound(pos, 0, 0, cl.media.rocketExplosionSound, 1.0f, ATTN_NORM, 0.0f);
+//			S_PlaySound(pos, 0, 0, cl.media.rocketExplosionSound, 1.0f, ATTN_NORM, 0.0f);
 		}
 		else {
 			CL_Explosion(pos, dir, 40.0f, rand() % 360, 350, 1.0, 0.5, 0.5, cl.media.rocketExplosionWaterMaterial);
 			CL_ExplosionWaterSplash(pos);
 			CL_BubbleParticles(pos, 384, 30);
 			R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 40.0f, cl.time, cl.media.burnMarkMaterial);
-			S_PlaySound(pos, 0, 0, cl.media.waterExplosionSound, 1, ATTN_NORM, 0);
+//			S_PlaySound(pos, 0, 0, cl.media.waterExplosionSound, 1, ATTN_NORM, 0);
 		}
 
 		break;
@@ -623,7 +623,7 @@ void CL_ParseTempEntity (){
 			CL_Explosion(pos, dir, 40, rand() % 360, 350, 1.0, 0.5, 0.5, cl.media.rocketExplosionMaterial);
 			CL_ExplosionParticles(pos);
 			R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 40.0f, cl.time, cl.media.burnMarkMaterial);
-			S_PlaySound(pos, 0, 0, cl.media.rocketExplosionSound, 1, ATTN_NORM, 0);
+//			S_PlaySound(pos, 0, 0, cl.media.rocketExplosionSound, 1, ATTN_NORM, 0);
 		}
 		else {
 			// HACK!!!
@@ -632,7 +632,7 @@ void CL_ParseTempEntity (){
 			CL_Explosion(pos, dir, 60, rand() % 360, 500, 1.0, 0.5, 0.5, cl.media.rocketExplosionMaterial);
 			CL_ExplosionParticles(pos);
 			R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 60.0f, cl.time, cl.media.burnMarkMaterial);
-			S_PlaySound(pos, 0, 0, cl.media.rocketExplosionSound, 1, ATTN_NORM, 0);
+//			S_PlaySound(pos, 0, 0, cl.media.rocketExplosionSound, 1, ATTN_NORM, 0);
 		}
 
 		break;
@@ -684,7 +684,7 @@ void CL_ParseTempEntity (){
 		MSG_ReadPos(&net_message, pos);
 
 		CL_BigTeleportParticles(pos);
-		S_PlaySound(pos, 0, 0, S_RegisterSound("misc/bigtele.wav", 0), 1.0f, ATTN_NONE, 0.0f);
+//		S_PlaySound(pos, 0, 0, S_RegisterSound("misc/bigtele.wav", 0), 1.0f, ATTN_NONE, 0.0f);
 
 		break;
 	case TE_WELDING_SPARKS:
@@ -727,7 +727,7 @@ void CL_ParseTempEntity (){
 		CL_BlasterParticles(pos, dir, 0.00f, 1.00f, 0.00f);
 		R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 3.0f, cl.time, cl.media.energyMarkMaterial);
 		CL_DynamicLight(pos, 150.0f, 0.0f, 1.0f, 0.0f, true, 350);
-		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case TE_FLECHETTE:
@@ -737,12 +737,12 @@ void CL_ParseTempEntity (){
 		CL_BulletParticles(pos, dir);
 		R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 3.0f, cl.time, cl.media.bulletMarkMaterial);
 		CL_DynamicLight(pos, 150.0f, 0.19f, 0.41f, 0.75f, true, 350);
-		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case TE_LIGHTNING:
 		ent = CL_ParseLightning();
-		S_PlaySound(NULL, ent, CHAN_WEAPON, cl.media.lightningSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, ent, CHAN_WEAPON, cl.media.lightningSound, 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case TE_FLASHLIGHT:
@@ -773,7 +773,7 @@ void CL_ParseTempEntity (){
 		MSG_ReadDir(&net_message, dir);
 
 		CL_BlasterParticles(pos, dir, 0.97f, 0.46f, 0.14f);
-		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
 		
 		break;
 	case TE_HEATBEAM_STEAM:
@@ -782,7 +782,7 @@ void CL_ParseTempEntity (){
 	
 		CL_BlasterParticles(pos, dir, 0.97f, 0.46f, 0.14f);
 		R_ProjectDecalOntoWorld(pos, dir, rand() % 360, 3.0f, cl.time, cl.media.energyMarkMaterial);
-		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
 		
 		break;
 	case TE_STEAM:
@@ -794,7 +794,7 @@ void CL_ParseTempEntity (){
 		MSG_ReadPos(&net_message, pos2);
 
 		CL_BubbleTrail(pos, pos2, 8.0f, 1.0f);
-		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
 		
 		break;
 	case TE_CHAINFIST_SMOKE:
@@ -808,7 +808,7 @@ void CL_ParseTempEntity (){
 		MSG_ReadDir(&net_message, dir);
 
 		CL_BulletParticles(pos, dir);
-		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(pos, 0, 0, cl.media.laserHitSound, 1.0f, ATTN_NORM, 0.0f);
 		
 		break;
 	case TE_TRACKER_EXPLOSION:
@@ -816,7 +816,7 @@ void CL_ParseTempEntity (){
 
 		CL_TrackerExplosionParticles(pos);
 		CL_DynamicLight(pos, 150.0f, -1.0f, -1.0f, -1.0f, false, 100);
-		S_PlaySound(pos, 0, 0, cl.media.disruptorExplosionSound, 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(pos, 0, 0, cl.media.disruptorExplosionSound, 1.0f, ATTN_NORM, 0.0f);
 		
 		break;
 	case TE_TELEPORT_EFFECT:

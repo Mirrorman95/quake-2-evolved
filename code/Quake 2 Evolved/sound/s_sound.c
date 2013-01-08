@@ -327,12 +327,13 @@ static sound_t *S_LoadSound (const char *name, short *wave, int rate, int sample
 /*
  ==================
  S_FindSound
+
+ TODO: sexed sounds?
  ==================
 */
 sound_t *S_FindSound (const char *name, int flags){
 
 	sound_t	*sound;
-	char	loadName[MAX_PATH_LENGTH];
 	short	*wave;
 	int		rate, samples;
 	uint	hashKey;
@@ -352,18 +353,12 @@ sound_t *S_FindSound (const char *name, int flags){
 		}
 	}
 
-	// Correct the path
-	if (name[0] == '#')
-		Str_SPrintf(loadName, sizeof(loadName), "%s", &name[1]);
-	else
-		Str_SPrintf(loadName, sizeof(loadName), "sound/%s", name);
-
 	// Load it from disk
-	if (!S_LoadWAV(loadName, &wave, &rate, &samples))
+	if (!S_LoadWAV(name, &wave, &rate, &samples))
 		return NULL;
 
 	// Load the sound
-	sound = S_LoadSound(loadName, wave, rate, samples, flags);
+	sound = S_LoadSound(name, wave, rate, samples, flags);
 
 	Mem_Free(wave);
 
@@ -408,6 +403,7 @@ sound_t *S_FindSexedSound (const char *name, entity_state_t *entity, int flags){
 
 	// See if the model specific sound exists
 	Str_SPrintf(sexedName, sizeof(sexedName), "#players/%s/%s", model, name+1);
+
 	if (FS_FileExists(&sexedName[1])){
 		// Yes, register it
 		sound = S_FindSound(sexedName, 0);

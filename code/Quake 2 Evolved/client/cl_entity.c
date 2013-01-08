@@ -29,6 +29,18 @@
 #include "client.h"
 
 
+static const char *	cl_eventNames[256] = {
+	"EV_NONE",
+	"EV_ITEM_RESPAWN",
+	"EV_FOOTSTEP",
+	"EV_FALLSHORT",
+	"EV_FALL",
+	"EV_FALLFAR",
+	"EV_PLAYER_TELEPORT",
+	"EV_OTHER_TELEPORT"
+};
+
+
 /*
  ==============================================================================
 
@@ -465,10 +477,10 @@ static void CL_FootStepEffect (entity_state_t *state){
 
 /*
  ==================
- CL_FireEntityEvents
+ CL_EntityEvent
  ==================
 */
-static void CL_FireEntityEvents (){
+static void CL_EntityEvent (){
 
 	entity_state_t  *state;
     int				i;
@@ -484,36 +496,51 @@ static void CL_FireEntityEvents (){
 		if (!state->event)
 			continue;
 
+		if (cl_showEvents->integerValue){
+			if (!cl_eventNames[state->event])
+				Com_Printf("%4i: BAD EVENT %i\n", state->number, state->event);
+			else
+				Com_Printf("%4i: %s\n", state->number, cl_eventNames[state->event]);
+		}
+
 		switch (state->event){
+		case EV_NONE:
+
+			break;
 		case EV_ITEM_RESPAWN:
-			S_PlaySound(NULL, state->number, CHAN_WEAPON, S_RegisterSound("items/respawn1.wav", 0), 1.0f, ATTN_IDLE, 0.0f);
+//			S_PlaySound(NULL, state->number, CHAN_WEAPON, S_RegisterSound("items/respawn1.wav", 0), 1.0f, ATTN_IDLE, 0.0f);
 			CL_ItemRespawnParticles(state->origin);
 
 			break;
-		case EV_PLAYER_TELEPORT:
-			S_PlaySound(NULL, state->number, CHAN_WEAPON, S_RegisterSound("misc/tele1.wav", 0), 1.0f, ATTN_IDLE, 0.0f);
-			CL_TeleportParticles(state->origin);
-
-			break;
 		case EV_FOOTSTEP:
-			if (cl_footSteps->integerValue)
-				S_PlaySound(NULL, state->number, CHAN_BODY, cl.media.footStepSounds[rand() & 3], 1.0f, ATTN_NORM, 0.0f);
+//			if (cl_footSteps->integerValue)
+//				S_PlayLocalSound(cl.media.footStepSoundShaders[rand() & 3]);
 
 			CL_FootStepEffect(state);
 
 			break;
 		case EV_FALLSHORT:
-			S_PlaySound(NULL, state->number, CHAN_AUTO, S_RegisterSound("player/land1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//			S_PlaySound(NULL, state->number, CHAN_AUTO, S_RegisterSound("player/land1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 			break;
 		case EV_FALL:
-			S_PlaySound(NULL, state->number, CHAN_AUTO, S_RegisterSound("*fall2.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//			S_PlaySound(NULL, state->number, CHAN_AUTO, S_RegisterSound("*fall2.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 			break;
 		case EV_FALLFAR:
-			S_PlaySound(NULL, state->number, CHAN_AUTO, S_RegisterSound("*fall1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//			S_PlaySound(NULL, state->number, CHAN_AUTO, S_RegisterSound("*fall1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 			break;
+		case EV_PLAYER_TELEPORT:
+//			S_PlaySound(NULL, state->number, CHAN_WEAPON, S_RegisterSound("misc/tele1.wav", 0), 1.0f, ATTN_IDLE, 0.0f);
+			CL_TeleportParticles(state->origin);
+
+			break;
+		case EV_OTHER_TELEPORT:
+
+			break;
+		default:
+			Com_Error(ERR_DROP, "CL_EntityEvent: bad event type (%i)", state->event);
 		}
 	}
 }
@@ -661,7 +688,7 @@ void CL_ParseFrame (){
 
 	CL_BuildSolidList();
 
-	CL_FireEntityEvents();
+	CL_EntityEvent();
 
 	CL_CheckPredictionError();
 }

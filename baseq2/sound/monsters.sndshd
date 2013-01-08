@@ -1,0 +1,177 @@
+
+//
+// Tank
+//
+
+tank/death1
+{
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/death.wav
+}
+
+tank/death2
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkdeth2.wav
+}
+
+tank/pain1
+{
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/pain.wav
+}
+
+tank/pain2
+{
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkpain2.wav
+}
+
+tank/idle
+{
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkidle1.wav
+}
+
+tank/sight1
+{
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/sight1.wav
+}
+
+tank/step
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/step.wav
+}
+
+tank/thud
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/thud.wav
+}
+
+tank/rocketAttack1
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/rocket.wav
+}
+
+tank/rocketAttack2
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkatck1.wav
+}
+
+tank/blasterAttack
+{
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkatck3.wav
+}
+
+tank/strikeAttack1
+{
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkatck4.wav
+}
+
+tank/strikeAttack2
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkatck5.wav
+}
+
+tank/machinegunAttack1
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkatk2a.wav
+}
+
+tank/machinegunAttack2
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkatk2b.wav
+}
+
+tank/machinegunAttack3
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkatk2c.wav
+}
+
+tank/machinegunAttack4
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkatk2d.wav
+}
+
+tank/machinegunAttack5
+{
+	shakes			1.0
+	volume 			1.0
+	minDistance 		80
+	maxDistance 		500
+
+	sound/tank/Tnkatk2e.wav
+}

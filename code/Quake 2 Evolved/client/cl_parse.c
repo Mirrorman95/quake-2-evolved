@@ -128,7 +128,7 @@ static void CL_ParsePrint (){
 	string = MSG_ReadString(&net_message);
 
 	if (i == PRINT_CHAT){
-		S_PlayLocalSound(S_RegisterSound("misc/talk.wav", 0));
+		S_PlayLocalSound(S_RegisterSoundShader("misc/talk.wav"));
 
 		ch = Str_FindChar(string, ':');
 		if (ch){
@@ -378,7 +378,7 @@ static void CL_ParseConfigString (){
 		if (cls.state <= CA_LOADING)
 			return;
 
-		cl.media.gameSounds[index - CS_SOUNDS] = S_RegisterSound(cl.configStrings[index], 0);
+		cl.media.gameSoundShaders[index - CS_SOUNDS] = S_RegisterSoundShader(cl.configStrings[index]);
 	}
 	else if (index >= CS_IMAGES && index < CS_IMAGES + MAX_IMAGES){
 		if (cls.state <= CA_LOADING)
@@ -479,10 +479,10 @@ static void CL_ParseStartSound (){
 	else	// Use entity number
 		origin = NULL;
 
-	if (!cl.media.gameSounds[sound])
+	if (!cl.media.gameSoundShaders[sound])
 		return;
 
-	S_PlaySound(origin, entNum, entChannel, cl.media.gameSounds[sound], volume, attenuation, timeOfs);
+//	S_PlaySound(origin, entNum, entChannel, cl.media.gameSounds[sound], volume, attenuation, timeOfs);
 }
 
 /*

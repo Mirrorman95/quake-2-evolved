@@ -39,10 +39,10 @@ static cvar_t *				ui_precache;
 static cvar_t *				ui_sensitivity;
 cvar_t *					ui_singlePlayerSkill;
 
-const char *				uiSoundIn		= "ui/menu1.wav";
-const char *				uiSoundMove		= "ui/menu2.wav";
-const char *				uiSoundOut		= "ui/menu3.wav";
-const char *				uiSoundBuzz		= "ui/menu4.wav";
+const char *				uiSoundIn		= "ui/menu1";
+const char *				uiSoundMove		= "ui/menu2";
+const char *				uiSoundOut		= "ui/menu3";
+const char *				uiSoundBuzz		= "ui/menu4";
 const char *				uiSoundNull		= "";
 
 vec4_t						uiColorLightGray = {0.80f, 0.80f, 0.80f, 1.00f};
@@ -203,9 +203,9 @@ void UI_DrawMouseCursor (){
 */
 void UI_StartSound (const char *name){
 
-	sound_t	*sound;
+	soundShader_t	*sound;
 
-	sound = S_RegisterSound(name, 0);
+	sound = S_RegisterSoundShader(name);
 	S_PlayLocalSound(sound);
 }
 

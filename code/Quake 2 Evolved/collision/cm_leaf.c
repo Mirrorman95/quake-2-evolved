@@ -91,10 +91,10 @@ int CM_PointInLeaf (const vec3_t point, int nodeNum){
 		side = PointOnPlaneSide(point, 0.0f, node->plane);
 
 		// Go down the appropriate side
-		if (side == PLANESIDE_BACK)
-			nodeNum = node->children[1];
-		else
+		if (side == PLANESIDE_FRONT)
 			nodeNum = node->children[0];
+		else
+			nodeNum = node->children[1];
 	}
 
 	return -1 - nodeNum;

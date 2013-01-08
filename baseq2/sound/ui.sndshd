@@ -1,0 +1,41 @@
+
+
+//
+// UI Menu Buttons
+//
+
+
+ui/menu1
+{
+	volume 			1.0
+
+	sound/ui/menu1.wav
+}
+
+ui/menu2
+{
+	volume 			1.0
+
+	sound/ui/menu2.wav
+}
+
+ui/menu3
+{
+	volume 			1.0
+
+	sound/ui/menu3.wav
+}
+
+ui/menu4
+{
+	volume 			1.0
+
+	sound/ui/menu4.wav
+}
+
+ui/moo
+{
+	volume 			1.0
+
+	sound/ui/moo.wav
+}

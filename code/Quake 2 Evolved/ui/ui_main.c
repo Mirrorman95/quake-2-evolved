@@ -384,7 +384,7 @@ void UI_Main_Menu (){
 
 #define ART_BANNER					"ui/assets/banners/aybabtu_t"
 #define ART_MOO						"ui/assets/misc/moo"
-#define SOUND_MOO					"sounds/misc/moo.wav"
+#define SOUND_MOO					"ui/moo"
 
 #define ID_BANNER					1
 #define ID_BACK						2

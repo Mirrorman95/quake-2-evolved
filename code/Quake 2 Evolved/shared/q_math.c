@@ -117,6 +117,17 @@ float Tan (float x){
 	return tanf(x);
 }
 
+float ACos (float x){
+
+	if (x <= -1.0f)
+		return M_PI;
+
+	if (x >= 1.0f)
+		return 0.0f;
+
+	return acosf(x);
+}
+
 float ATan (float y, float x){
 
 	return atan2f(y, x);

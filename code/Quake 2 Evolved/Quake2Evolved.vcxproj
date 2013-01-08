@@ -218,10 +218,13 @@
     <ClCompile Include="shared\q_shared.c" />
     <ClCompile Include="shared\string.c" />
     <ClCompile Include="sound\s_channel.c" />
+    <ClCompile Include="sound\s_emitter.c" />
     <ClCompile Include="sound\s_listener.c" />
     <ClCompile Include="sound\s_main.c" />
     <ClCompile Include="sound\s_music.c" />
     <ClCompile Include="sound\s_rawSamples.c" />
+    <ClCompile Include="sound\s_reverb.c" />
+    <ClCompile Include="sound\s_reverbEditor.c" />
     <ClCompile Include="sound\s_sound.c" />
     <ClCompile Include="sound\s_soundShader.c" />
     <ClCompile Include="ui\ui_advanced.c" />

@@ -1,0 +1,327 @@
+
+//
+// Ambience
+//
+
+world/ambience1
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb1.wav
+}
+
+world/ambience2
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb2.wav
+}
+
+world/ambience3
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb3.wav
+}
+
+world/ambience4
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb4.wav
+}
+
+world/ambience5
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb5.wav
+}
+
+world/ambience6
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb6.wav
+}
+
+world/ambience7
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb7.wav
+}
+
+world/ambience8
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb8.wav
+}
+
+world/ambience9
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb9.wav
+}
+
+world/ambience10
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb10.wav
+}
+
+world/ambience11
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb11.wav
+}
+
+world/ambience12
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb12.wav
+}
+
+world/ambience13
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb13.wav
+}
+
+world/ambience14
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb14.wav
+}
+
+world/ambience15
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb15.wav
+}
+
+world/ambience16
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb16.wav
+}
+
+world/ambience17
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb17.wav
+}
+
+world/ambience18
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb18.wav
+}
+
+world/ambience19
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb19.wav
+}
+
+world/ambience20
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb20.wav
+}
+
+world/ambience21
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb21.wav
+}
+
+world/ambience22
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb22.wav
+}
+
+world/ambience23
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb23.wav
+}
+
+world/ambience24
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/amb24.wav
+}
+
+//
+// Battle Ambience
+//
+
+world/battle1
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/battle1.wav
+}
+
+world/battle2
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/battle2.wav
+}
+
+world/battle3
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/battle3.wav
+}
+
+world/battle4
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/battle4.wav
+}
+
+world/battle5
+{
+	global
+	looping
+	volume 			1.0
+	minDistance		80
+	maxDistance		500
+
+	sound/world/battle5.wav
+}

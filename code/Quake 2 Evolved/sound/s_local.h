@@ -32,6 +32,7 @@
 
 #include "../client/client.h"
 #include "../windows/qal.h"
+#include "../common/editor.h"
 
 #include "../include/OggVorbis/vorbisfile.h"
 
@@ -93,8 +94,8 @@ void				S_ShutdownSounds ();
  ==============================================================================
 */
 
-#define MAX_SOUND_SHADERS				1024
-#define MAX_SOUNDS_PER_SHADER			8
+#define MAX_SOUND_SHADERS			1024
+#define MAX_SOUNDS_PER_SHADER		8
 
 typedef enum {
 	SSF_EXPLICIT			= BIT(0),
@@ -180,6 +181,78 @@ void				S_ShutdownSoundShaders ();
 /*
  ==============================================================================
 
+ REVERB EFFECTS
+
+ ==============================================================================
+*/
+
+#define MAX_REVERB_AREAS			BSP_MAX_AREAS
+
+typedef struct {
+	bool					enabled;
+
+	uint					effectId;
+	uint					effectSlotId;
+
+	bool					editing;
+	int						editingArea;
+
+	reverbParms_t			reverbGeneric;
+	reverbParms_t			reverbUnderwater;
+
+	char					reverbName[MAX_PATH_LENGTH];
+	reverbParms_t			reverbList[MAX_REVERB_AREAS];
+	
+	reverbParms_t			reverbParms;
+
+	// Interpolation parameters
+	int						time;
+
+	reverbParms_t			previous;
+	reverbParms_t *			current;
+} reverb_t;
+
+void				S_EditAreaReverb (int area);
+
+void				S_UpdateReverb ();
+
+void				S_InitReverbs ();
+void				S_ShutdownReverbs ();
+
+/*
+ ==============================================================================
+
+ LOW-PASS FILTERS
+
+ ==============================================================================
+*/
+
+#define MAX_FILTERS					256
+
+typedef struct {
+	float					gain;
+	float					gainHF;
+} filterParms_t;
+
+typedef struct {
+	bool					enabled;
+
+	uint					dryFilterId[MAX_FILTERS];
+	uint					wetFilterId[MAX_FILTERS];
+} filter_t;
+
+void				S_ObstructionFilter (const vec3_t srcOrigin, const vec3_t dstOrigin, float distance, float minDistance, float maxDistance, filterParms_t *dryFilter);
+void				S_ExclusionFilter (int portalsPassed, filterParms_t *wetFilter);
+void				S_OcclusionFilter (int portalsBlocked, filterParms_t *dryFilter, filterParms_t *wetFilter);
+
+void				S_UpdateFilters (int index, filterParms_t *dryFilter, filterParms_t *wetFilter);
+
+void				S_InitFilters ();
+void				S_ShutdownFilters ();
+
+/*
+ ==============================================================================
+
  BACKGROUND MUSIC
 
  ==============================================================================
@@ -192,8 +265,6 @@ void				S_ShutdownSoundShaders ();
 
 #define MUSIC_BUFFERS				8
 #define MUSIC_BUFFER_SAMPLES		(MUSIC_RATE / MUSIC_FRAMERATE)
-
-#define MAX_PLAYSOUNDS				128
 
 typedef enum {
 	MS_STOPPED,
@@ -270,68 +341,28 @@ void				S_ShutdownRawSamples ();
 /*
  ==============================================================================
 
- SOUND CHANNELS
+ SOUND EMITTERS
 
  ==============================================================================
 */
 
-#define MAX_SOUND_CHANNELS			256
+#define MAX_SOUND_EMITTERS			2048
 
-typedef enum {
-	CS_FREE,									// Free channel
-	CS_NORMAL,									// Playing normal sound
-	CS_LOOPED									// Playing looped sound
-} channelState_t;
+typedef struct emitter_s {
+	bool					active;
+	int						index;
 
-typedef struct {
-	bool					spatialized;
+	soundEmitter_t			e;
 
-	float					minDistance;
-	float					maxDistance;
+	sound_t *				lastLeadIn;
+	sound_t *				lastEntry;
 
-	vec3_t					dirToListener;
-	float					distToListener;
+	struct emitter_s *		prev;
+	struct emitter_s *		next;
+} emitter_t;
 
-	vec3_t					origin;
-} channelParms_t;
-
-typedef struct {
-	channelState_t			state;
-
-	bool					streaming;			// If true, we're streaming sound buffers into a queue
-
-	float					amplitude;			// Current sound amplitude for amplitude queries
-
-	int						emitter;			// To allow overriding a specific sound
-	int						channelId;			// To allow overriding a specific sound	
-	int						allocTime;			// To allow overriding oldest sounds
-	
-	int						loopNum;			// Looping entity number
-	int						loopFrame;			// For stopping looping sounds
-	
-	bool					fixedPosition;		// Use position instead of fetching entity's origin
-	vec3_t					position;			// Only use if fixedPosition is set
-	
-	float					volume;
-	
-	float					distanceMult;
-
-	sound_t *				sound;				// NULL if unused
-
-	channelParms_t			p;
-
-	uint					sourceId;			// OpenAL source
-} channel_t;
-
-channel_t *			S_PickChannel (int entNum, int entChannel);
-void				S_PlayChannel (channel_t *channel, sound_t *sound);
-void				S_StopChannel (channel_t *channel);
-void				S_UpdateChannel (channel_t *channel);
-
-void				S_UpdateLoopingSounds ();
-
-void				S_InitChannels ();
-void				S_ShutdownChannels ();
+void				S_InitEmitters ();
+void				S_ShutdownEmitters ();
 
 /*
  ==============================================================================
@@ -346,30 +377,90 @@ void				S_UpdateListener ();
 /*
  ==============================================================================
 
- GLOBALS
+ SOUND CHANNELS
 
  ==============================================================================
 */
 
-// A playSound will be generated by each call to S_PlaySound.
-// When the mixer reaches playSound->beginTime, the playSound will be
-// assigned to a channel.
-typedef struct playSound_s {
-	struct playSound_s *	prev, *next;
+#define MAX_SOUND_CHANNELS			256
 
-	sound_t *				sound;
+typedef enum {
+	CS_FREE,									// Free channel
+	CS_NORMAL,									// Playing normal sound
+	CS_LOOPED,									// Playing looped sound
+	CS_RANDOM,									// Playing random sounds continuously
+	CS_LEADIN_NORMAL,							// Playing lead-in + normal sound
+	CS_LEADIN_LOOPED,							// Playing lead-in + looped sound
+	CS_LEADIN_RANDOM							// Playing lead-in + random sounds continuously
+} channelState_t;
 
-	int						emitter;
-	int						channelId;
-	
-	bool					fixedPosition;	// Use position instead of fetching entity's origin
-	
-	vec3_t					position;		// Only use if fixedPosition is set
+typedef struct {
+	bool					spatialized;
+
+	bool					reachable;
+
+	float					minDistance;
+	float					maxDistance;
+
+	vec3_t					dirToListener;
+	float					distToListener;
+
+	int						portalsPassed;
+	int						portalsBlocked;
+
+	vec3_t					origin;
+	vec3_t					direction;
+
 	float					volume;
-	float					attenuation;
+	float					pitch;
 
-	int						beginTime;		// Begin at this time
-} playSound_t;
+	bool					feedReverb;
+
+	filterParms_t			dryFilter;
+	filterParms_t			wetFilter;
+} channelParms_t;
+
+typedef struct {
+	channelState_t			state;
+	int						index;
+
+	bool					streaming;			// If true, we're streaming sound buffers into a queue
+
+	sound_t *				lastSound;			// Last sound selected for playing
+
+	float					amplitude;			// Current sound amplitude for amplitude queries
+
+	int						emitterId;			// To allow overriding a specific sound
+	int						channelId;			// To allow overriding a specific sound
+	int						allocTime;			// To allow overriding oldest sounds
+
+	struct emitter_s *		emitter;
+	soundShader_t *			soundShader;
+
+	soundEmitter_t			e;
+	channelParms_t			p;
+
+	uint					sourceId;
+} channel_t;
+
+channel_t *			S_PickChannel (emitter_t *emitter, int emitterId, int channelId, soundShader_t *soundShader);
+
+void				S_PlayChannel (channel_t *channel, bool allowLeadIn);
+void				S_StopChannel (channel_t *channel);
+void				S_UpdateChannel (channel_t *channel);
+
+void				S_UpdateLoopingSounds ();
+
+void				S_InitChannels ();
+void				S_ShutdownChannels ();
+
+/*
+ ==============================================================================
+
+ GLOBALS
+
+ ==============================================================================
+*/
 
 typedef struct {
 	int						emitterUpdates;
@@ -379,7 +470,7 @@ typedef struct {
 	int						worldChannels;
 
 	int						portals;
-} performanceCounters_t;
+} sndPerformanceCounters_t;
 
 typedef struct {
 	int						time;
@@ -393,8 +484,15 @@ typedef struct {
 	uint					musicSource;
 	uint					rawSamplesSource;
 
+	// Reverb effects and low-pass filters
+	reverb_t				reverb;
+	filter_t				filter;
+
 	// Background music
 	music_t					music;
+
+	// Local emitter for non-spatialized local sounds
+	emitter_t *				localEmitter;
 
 	// Listener
 	soundListener_t			listener;
@@ -407,13 +505,8 @@ typedef struct {
 	entity_state_t *		soundEntities[MAX_PARSE_ENTITIES];
 	int						numSoundEntities;
 
-	// Play sound
-	playSound_t				playSounds[MAX_PLAYSOUNDS];
-	playSound_t				freePlaySounds;
-	playSound_t				pendingPlaySounds;
-
 	// Performance counters
-	performanceCounters_t	pc;
+	sndPerformanceCounters_t	pc;
 
 	// Internal assets
 	sound_t *				defaultSound;
@@ -429,38 +522,54 @@ extern bool					s_initialized;
 
 extern cvar_t *				s_logFile;
 extern cvar_t *				s_ignoreALErrors;
+extern cvar_t *				s_speedOfSound;
+extern cvar_t *				s_reverbTime;
+extern cvar_t *				s_obstructionScale;
+extern cvar_t *				s_exclusionScale;
+extern cvar_t *				s_occlusionScale;
 extern cvar_t *				s_singleSoundShader;
+extern cvar_t *				s_singleEmitter;
+extern cvar_t *				s_showUpdates;
+extern cvar_t *				s_showEmitters;
 extern cvar_t *				s_showStreaming;
+extern cvar_t *				s_showChannels;
+extern cvar_t *				s_showPortals;
+extern cvar_t *				s_showSounds;
+extern cvar_t *				s_skipUpdates;
+extern cvar_t *				s_skipEmitters;
 extern cvar_t *				s_skipStreaming;
 extern cvar_t *				s_skipShakes;
+extern cvar_t *				s_skipFlicker;
 extern cvar_t *				s_skipSpatialization;
+extern cvar_t *				s_skipAttenuation;
+extern cvar_t *				s_skipCones;
+extern cvar_t *				s_skipPortals;
+extern cvar_t *				s_skipDynamic;
+extern cvar_t *				s_skipObstructions;
+extern cvar_t *				s_skipExclusions;
+extern cvar_t *				s_skipOcclusions;
+extern cvar_t *				s_skipReverbs;
+extern cvar_t *				s_skipFilters;
 extern cvar_t *				s_alDriver;
 extern cvar_t *				s_deviceName;
 extern cvar_t *				s_captureDeviceName;
 extern cvar_t *				s_masterVolume;
-extern cvar_t *				s_voiceCapture;
-extern cvar_t *				s_maxChannels;
+extern cvar_t *				s_emitterVolume;
+extern cvar_t *				s_reverbVolume;
 extern cvar_t *				s_musicVolume;
+extern cvar_t *				s_voiceVolume;
+extern cvar_t *				s_dopplerShifts;
+extern cvar_t *				s_airAbsorption;
+extern cvar_t *				s_reverbEffects;
+extern cvar_t *				s_lowPassFilters;
+extern cvar_t *				s_voiceCapture;
+extern cvar_t *				s_voiceScale;
+extern cvar_t *				s_voiceLatency;
+extern cvar_t *				s_maxChannels;
 extern cvar_t *				s_maxSoundsPerShader;
 extern cvar_t *				s_soundQuality;
 extern cvar_t *				s_playDefaultSound;
-
-#if 0
-extern cvar_t *				s_initSound;
-extern cvar_t *				s_show;
-extern cvar_t *				s_alDriver;
-extern cvar_t *				s_alDevice;
-extern cvar_t *				s_allowExtensions;
-extern cvar_t *				s_ext_eax;
-extern cvar_t *				s_masterVolume;
-extern cvar_t *				s_sfxVolume;
-extern cvar_t *				s_musicVolume;
-extern cvar_t *				s_minDistance;
-extern cvar_t *				s_maxDistance;
-extern cvar_t *				s_rolloffFactor;
-extern cvar_t *				s_dopplerFactor;
-extern cvar_t *				s_dopplerVelocity;
-#endif
+extern cvar_t *				s_muteOnLostFocus;
 
 void			S_CheckForErrors ();
 

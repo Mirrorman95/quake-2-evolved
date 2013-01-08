@@ -1,0 +1,13 @@
+
+//
+// Railgun
+//
+
+weapons/railgun
+{
+	minDistance		0
+	maxDistance		10
+	volume			1.0
+
+	sound/weapons/railgf1a.wav
+}

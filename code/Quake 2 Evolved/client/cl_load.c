@@ -116,51 +116,51 @@ static void CL_RegisterClipMap (){
 
 /*
  ==================
- CL_RegisterSounds
+ CL_RegisterSoundShaders
  ==================
 */
-static void CL_RegisterSounds (){
+static void CL_RegisterSoundShaders (){
 
 	int		i;
 
-	// Register sounds
-	CL_UpdateLoading("sounds");
+	// Register sound shaders
+	CL_UpdateLoading("sound shaders");
 
-	cl.media.richotecSounds[0] = S_RegisterSound("world/ric1.wav", 0);
-	cl.media.richotecSounds[1] = S_RegisterSound("world/ric2.wav", 0);
-	cl.media.richotecSounds[2] = S_RegisterSound("world/ric3.wav", 0);
-	cl.media.sparkSounds[0] = S_RegisterSound("world/spark5.wav", 0);
-	cl.media.sparkSounds[1] = S_RegisterSound("world/spark6.wav", 0);
-	cl.media.sparkSounds[2] = S_RegisterSound("world/spark7.wav", 0);
-	cl.media.footStepSounds[0] = S_RegisterSound("player/step1.wav", 0);
-	cl.media.footStepSounds[1] = S_RegisterSound("player/step2.wav", 0);
-	cl.media.footStepSounds[2] = S_RegisterSound("player/step3.wav", 0);
-	cl.media.footStepSounds[3] = S_RegisterSound("player/step4.wav", 0);
-	cl.media.laserHitSound = S_RegisterSound("weapons/lashit.wav", 0);
-	cl.media.railgunSound = S_RegisterSound("weapons/railgf1a.wav", 0);
-	cl.media.rocketExplosionSound = S_RegisterSound("weapons/rocklx1a.wav", 0);
-	cl.media.grenadeExplosionSound = S_RegisterSound("weapons/grenlx1a.wav", 0);
-	cl.media.waterExplosionSound = S_RegisterSound("weapons/xpld_wat.wav", 0);
-	cl.media.machinegunBrassSound = S_RegisterSound("weapons/brass_bullet.wav", 0);
-	cl.media.shotgunBrassSound = S_RegisterSound("weapons/brass_shell.wav", 0);
+	cl.media.richotecSoundShaders[0] = S_RegisterSoundShader("world/ric1.wav");
+	cl.media.richotecSoundShaders[1] = S_RegisterSoundShader("world/ric2.wav");
+	cl.media.richotecSoundShaders[2] = S_RegisterSoundShader("world/ric3.wav");
+	cl.media.sparkSoundShaders[0] = S_RegisterSoundShader("world/spark5.wav");
+	cl.media.sparkSoundShaders[1] = S_RegisterSoundShader("world/spark6.wav");
+	cl.media.sparkSoundShaders[2] = S_RegisterSoundShader("world/spark7.wav");
+	cl.media.footStepSoundShaders[0] = S_RegisterSoundShader("player/footstep1");
+	cl.media.footStepSoundShaders[1] = S_RegisterSoundShader("player/footstep2");
+	cl.media.footStepSoundShaders[2] = S_RegisterSoundShader("player/footstep3");
+	cl.media.footStepSoundShaders[3] = S_RegisterSoundShader("player/footstep4");
+	cl.media.laserHitSoundShader = S_RegisterSoundShader("weapons/lashit.wav");
+	cl.media.railgunSoundShader = S_RegisterSoundShader("weapons/railgun");
+	cl.media.rocketExplosionSoundShader = S_RegisterSoundShader("weapons/rocklx1a.wav");
+	cl.media.grenadeExplosionSoundShader = S_RegisterSoundShader("weapons/grenlx1a.wav");
+	cl.media.waterExplosionSoundShader = S_RegisterSoundShader("weapons/xpld_wat.wav");
+	cl.media.machinegunBrassSoundShader = S_RegisterSoundShader("weapons/brass_bullet.wav");
+	cl.media.shotgunBrassSoundShader = S_RegisterSoundShader("weapons/brass_shell.wav");
 
 	if (!Str_ICompare(cl.gameDir, "rogue")){
-		cl.media.lightningSound = S_RegisterSound("weapons/tesla.wav", 0);
-		cl.media.disruptorExplosionSound = S_RegisterSound("weapons/disrupthit.wav", 0);
+		cl.media.lightningSoundShader = S_RegisterSoundShader("weapons/tesla.wav");
+		cl.media.disruptorExplosionSoundShader = S_RegisterSoundShader("weapons/disrupthit.wav");
 	}
 
-	S_RegisterSound("player/land1.wav", 0);
-	S_RegisterSound("player/fall2.wav", 0);
-	S_RegisterSound("player/fall1.wav", 0);
+	S_RegisterSoundShader("player/land1.wav");
+	S_RegisterSoundShader("player/fall2.wav");
+	S_RegisterSoundShader("player/fall1.wav");
 
-	// Register the sounds that the server references
-	CL_UpdateLoading("game sounds");
+	// Register the sound shaders that the server references
+	CL_UpdateLoading("game sound shaders");
 
 	for (i = 1; i < MAX_SOUNDS; i++){
 		if (!cl.configStrings[CS_SOUNDS + i][0])
 			break;
 
-		cl.media.gameSounds[i] = S_RegisterSound(cl.configStrings[CS_SOUNDS + i], 0);
+		cl.media.gameSoundShaders[i] = S_RegisterSoundShader(cl.configStrings[CS_SOUNDS + i]);
 	}
 }
 
@@ -187,8 +187,14 @@ static void CL_RegisterGraphics (){
 	// Load the post-process effects
 	CL_UpdateLoading("post-process effects");
 
-	Str_SPrintf(name, sizeof(name), "maps/%s.postProcess", cls.loadingInfo.name);
+	Str_SPrintf(name, sizeof(name), "maps/%s.postProcess", cls.loadingInfo.map);
 	R_LoadPostProcess(name);
+
+	// Load the reverb effects
+	CL_UpdateLoading("reverb effects");
+
+	Str_SPrintf(name, sizeof(name), "maps/%s.reverb", cls.loadingInfo.map);
+	S_LoadReverb(name);
 
 	// Register models
 	CL_UpdateLoading("models");
@@ -386,7 +392,7 @@ static void CL_LoadAssets (){
 
 	CL_RegisterLoadingInfo();
 	CL_RegisterClipMap();
-	CL_RegisterSounds();
+	CL_RegisterSoundShaders();
 	CL_RegisterGraphics();
 	CL_RegisterClients();
 

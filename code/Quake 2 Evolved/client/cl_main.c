@@ -58,6 +58,7 @@ cvar_t *					cl_run;
 cvar_t *					cl_noDelta;
 cvar_t *					cl_showNet;
 cvar_t *					cl_showMiss;
+cvar_t *					cl_showEvents;
 cvar_t *					cl_showMaterial;
 cvar_t *					cl_timeOut;
 cvar_t *					cl_visibleWeapons;
@@ -193,7 +194,7 @@ void CL_InitAll (){
 
 	// Initialize renderer and sound system
 	R_Init(false);
-//	S_Init(false);
+	S_Init(false);
 
 	// Initialize UI system
 	UI_Init();
@@ -231,7 +232,7 @@ void CL_ShutdownAll (){
 	UI_Shutdown();
 
 	// Shutdown sound system and renderer
-//	S_Shutdown(false);
+	S_Shutdown(false);
 	R_Shutdown(false);
 }
 
@@ -1798,6 +1799,7 @@ static void CL_Register (){
 	cl_noDelta = CVar_Register("cl_noDelta", "0", CVAR_BOOL, 0, NULL, 0, 0);
 	cl_showNet = CVar_Register("cl_showNet", "0", CVAR_BOOL, 0, NULL, 0, 0);
 	cl_showMiss = CVar_Register("cl_showMiss", "0", CVAR_BOOL, 0, NULL, 0, 0);
+	cl_showEvents = CVar_Register("cl_showEvents", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_GAME, "Show entity events", 0, 0);
 	cl_showMaterial = CVar_Register("cl_showMaterial", "0", CVAR_BOOL, CVAR_CHEAT, NULL, 0, 0);
 	cl_timeOut = CVar_Register("cl_timeOut", "120", CVAR_FLOAT, 0, NULL, 0.0f, 500.0f);
 	cl_visibleWeapons = CVar_Register("cl_visibleWeapons", "1", CVAR_BOOL, CVAR_ARCHIVE, NULL, 0, 0);

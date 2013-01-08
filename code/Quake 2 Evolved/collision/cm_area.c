@@ -48,6 +48,44 @@ int CM_NumAreas (){
 
 /*
  ==================
+ CM_PointInArea
+ ==================
+*/
+int CM_PointInArea (const vec3_t point, int nodeNum){
+
+	clipNode_t	*node;
+	clipLeaf_t	*leaf;
+	int			side;
+
+	if (!cm.loaded)
+		Com_Error(ERR_DROP, "CM_PointInArea: map not loaded");
+
+	cm_stats.areaPoints++;
+
+	while (1){
+		// If < 0, we are in a leaf node
+		if (nodeNum < 0){
+			leaf = &cm.leafs[-1 - nodeNum];
+			break;
+		}
+
+		// Find which side of the node we are on
+		node = &cm.nodes[nodeNum];
+
+		side = PointOnPlaneSide(point, 0.0f, node->plane);
+
+		// Go down the appropriate side
+		if (side == PLANESIDE_FRONT)
+			nodeNum = node->children[0];
+		else
+			nodeNum = node->children[1];
+	}
+
+	return leaf->area;
+}
+
+/*
+ ==================
  
  ==================
 */

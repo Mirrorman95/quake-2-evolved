@@ -154,6 +154,8 @@ void			CM_ShutdownModels ();
 typedef struct {
 	int						leafPoints;
 	int						leafBounds;
+
+	int						areaPoints;
 } clipStats_t;
 
 extern clipMap_t			cm;

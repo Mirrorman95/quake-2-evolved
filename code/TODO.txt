@@ -174,14 +174,26 @@ Optimizations
 Sound
 ==================================================
 Cleanups
+- s_music (DONE!)
+- s_rawSamples (DONE!)
+- s_soundShader (DONE!)
+- s_sound (DONE!)
+- s_listener (DONE!)
+- s_channel (S_UpdateChannel etc.)
+- s_main (S_Register, clean unused CVars)
+- s_emitter (DONE!)
+- s_reverb (DONE!)
+- s_reverbEditor (update)
 
 Features
-- Rewrite parts of this when ready
-  - 1.) Figure out how to handle emitters
-  - 2.) Should be re-sound the levels too?
+- Rewrite
+  1.) Replace S_PlaySound, look at OverDose
+  2.) Reverb, filters, and portals
+  3.) Finish looping sounds
 
 Fixes
 - Some sounds are crashing in S_LoadWAV
+- Fix sound shader names since Quake 2 loaded the sound file direcly, we need to modifie it a bit
 
 Optimizations
 
