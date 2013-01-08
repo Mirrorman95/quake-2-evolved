@@ -91,6 +91,7 @@ static void CL_CalcFov (){
 static void CL_CalcFirstPersonView (){
 
 	vec3_t	viewOffset, kickAngles;
+	float	amplitude;
 	uint	delta;
 
     // Calculate the origin
@@ -120,8 +121,15 @@ static void CL_CalcFirstPersonView (){
 		// Just use interpolated values
 		LerpAngles(cl.oldPlayerState->viewangles, cl.playerState->viewangles, cl.lerpFrac, cl.renderViewAngles);
 
-	// Account for kick angles
+	// Account for kick angles and sound shake amplitude
 	LerpAngles(cl.oldPlayerState->kick_angles, cl.playerState->kick_angles, cl.lerpFrac, kickAngles);
+
+	amplitude = S_ShakeAmplitudeForListener();
+
+	kickAngles[PITCH] = crand() * amplitude;
+	kickAngles[YAW] = crand() * amplitude;
+	kickAngles[ROLL] = 0.0f;
+
 	VectorAdd(cl.renderViewAngles, kickAngles, cl.renderViewAngles);
 }
 
@@ -231,7 +239,7 @@ static void CL_CheckContentBlends (){
 */
 static void CL_CalcViewValues (){
 
-	// Clamp time
+	// Clamp client time to server time
 	if (cl.time > cl.frame.serverTime){
 		cl.time = cl.frame.serverTime;
 		cl.lerpFrac = 1.0f;
@@ -299,6 +307,40 @@ static void CL_CalcViewValues (){
 
 /*
  ==================
+ CL_SetupSoundListener
+
+ TODO: calculate velocity
+ ==================
+*/
+static void CL_SetupSoundListener (){
+
+	soundListener_t	soundListener;
+	bool			underwater;
+
+	// Check if we are underwater
+	if (CL_PointContents(cl.renderView.origin, -1) & MASK_WATER)
+		underwater = true;
+	else
+		underwater = false;
+
+	// Fill it in
+	soundListener.listenerId = cl.clientNum;
+
+	VectorCopy(cl.renderView.origin, soundListener.origin);
+	VectorClear(soundListener.velocity);
+	Matrix3_Copy(cl.renderView.axis, soundListener.axis);
+
+	soundListener.area = CM_PointInArea(cl.renderView.origin, 0);
+	soundListener.underwater = underwater;
+
+	soundListener.time = cl.time;
+
+	// Update listener
+	S_PlaceListener(&soundListener);
+}
+
+/*
+ ==================
  CL_RenderView
  ==================
 */
@@ -344,6 +386,9 @@ void CL_RenderActiveFrame (){
 
 	// Update test tools
 	CL_UpdateTestTools();
+
+	// Set up the sound listener
+	CL_SetupSoundListener();
 
 	// Render the game view
 	CL_RenderView();

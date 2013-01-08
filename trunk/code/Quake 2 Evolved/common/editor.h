@@ -123,5 +123,57 @@ void *			WIN_CreateLightEditorWindow ();
 void			WIN_DestroyLightEditorWindow ();
 void			WIN_EditLightParameters (int index, lightParms_t *parms);
 
+/*
+ ==============================================================================
+
+ INTEGRATED REVERB EDITOR
+
+ ==============================================================================
+*/
+
+#define REVERB_EQUAL_EPSILON		0.00001f
+
+typedef struct {
+	float					density;
+	float					diffusion;
+
+	float					gain;
+	float					gainHF;
+	float					gainLF;
+
+	float					decayTime;
+	float					decayHFRatio;
+	float					decayLFRatio;
+	bool					decayHFLimit;
+
+	float					reflectionsGain;
+	float					reflectionsDelay;
+	vec3_t					reflectionsPan;
+
+	float					lateReverbGain;
+	float					lateReverbDelay;
+	vec3_t					lateReverbPan;
+
+	float					echoTime;
+	float					echoDepth;
+
+	float					modulationTime;
+	float					modulationDepth;
+
+	float					hfReference;
+	float					lfReference;
+
+	float					airAbsorptionGainHF;
+	float					roomRolloffFactor;
+} reverbParms_t;
+
+void			S_ReverbEditorUpdateCallback (int index, reverbParms_t *parms);
+void			S_ReverbEditorSaveCallback ();
+void			S_ReverbEditorCloseCallback ();
+
+void *			WIN_CreateReverbEditorWindow ();
+void			WIN_DestroyReverbEditorWindow ();
+void			WIN_EditReverbParameters (int index, reverbParms_t *parms);
+
 
 #endif	// __EDITOR_H__

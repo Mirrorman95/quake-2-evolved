@@ -68,7 +68,7 @@ typedef struct localEntity_s {
 	color_t					color;
 
 	float					bounceFactor;
-	sound_t *				bounceSound;
+	soundShader_t *			bounceSound;
 
 	material_t *			markMaterial;
 	material_t *			remapMaterial;
@@ -418,7 +418,7 @@ static void CL_AddEjectBrass (localEntity_t *le){
 
 		// Play a bounce sound
 		if (le->flags & LE_BOUNCESOUND){
-			S_PlaySound(trace.endpos, 0, 0, le->bounceSound, 1.0f, ATTN_NORM, 0.0f);
+//			S_PlaySound(trace.endpos, 0, 0, le->bounceSound, 1.0f, ATTN_NORM, 0.0f);
 
 			// Only play it once, otherwise it gets too noisy
 			le->flags &= ~LE_BOUNCESOUND;
@@ -853,7 +853,7 @@ void CL_MachinegunEjectBrass (const centity_t *cent, int count, float x, float y
 		le->gravity = -400.0f;
 
 		le->bounceFactor = 1.2f;
-		le->bounceSound = cl.media.machinegunBrassSound;
+		le->bounceSound = cl.media.machinegunBrassSoundShader;
 
 		angles[0] = cent->current.angles[0] + (rand() & 31);
 		angles[1] = cent->current.angles[1] + (rand() & 31);
@@ -928,7 +928,7 @@ void CL_ShotgunEjectBrass (const centity_t *cent, int count, float x, float y, f
 		le->gravity = -300.0f;
 
 		le->bounceFactor = 0.8f;
-		le->bounceSound = cl.media.shotgunBrassSound;
+		le->bounceSound = cl.media.shotgunBrassSoundShader;
 
 		angles[0] = cent->current.angles[0] + (rand() & 31);
 		angles[1] = cent->current.angles[1] + (rand() & 31);

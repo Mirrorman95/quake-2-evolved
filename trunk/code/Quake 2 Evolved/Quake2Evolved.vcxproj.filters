@@ -605,6 +605,15 @@
     <ClCompile Include="sound\s_soundShader.c">
       <Filter>Source Files\sound</Filter>
     </ClCompile>
+    <ClCompile Include="sound\s_emitter.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\s_reverb.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
+    <ClCompile Include="sound\s_reverbEditor.c">
+      <Filter>Source Files\sound</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="windows\q2.ico">

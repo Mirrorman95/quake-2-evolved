@@ -317,9 +317,9 @@ void SV_StartSound (vec3_t origin, edict_t *entity, int channel, int sound, floa
 	if (!origin){
 		origin = originVec;
 		if (entity->solid == SOLID_BSP){
-			originVec[0] = entity->s.origin[0] + 0.5 * (entity->mins[0]+entity->maxs[0]);
-			originVec[1] = entity->s.origin[1] + 0.5 * (entity->mins[1]+entity->maxs[1]);
-			originVec[2] = entity->s.origin[2] + 0.5 * (entity->mins[2]+entity->maxs[2]);
+			originVec[0] = entity->s.origin[0] + 0.5f * (entity->mins[0]+entity->maxs[0]);
+			originVec[1] = entity->s.origin[1] + 0.5f * (entity->mins[1]+entity->maxs[1]);
+			originVec[2] = entity->s.origin[2] + 0.5f * (entity->mins[2]+entity->maxs[2]);
 		}
 		else
 			VectorCopy(entity->s.origin, originVec);

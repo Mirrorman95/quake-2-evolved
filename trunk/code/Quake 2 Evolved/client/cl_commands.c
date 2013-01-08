@@ -25,9 +25,6 @@
 // cl_commands.c - client commands
 //
 
-// TODO:
-// - testSound, testDecal
-
 
 #include "client.h"
 
@@ -706,32 +703,273 @@ static void CL_UpdateTestBeam (){
  ==============================================================================
 */
 
+#define ENTITYNUM_TEST 1024
+
 
 /*
  ==================
- 
+ CL_ClearTestSound
  ==================
 */
 static void CL_ClearTestSound (){
 
+	// Remove the sound emitter
+	if (cl.testSound.emitterHandle)
+		S_RemoveSoundEmitter(cl.testSound.emitterHandle, true);
+
+	// Clear the test sound
+	Mem_Fill(&cl.testSound, 0, sizeof(testSound_t));
 }
 
 /*
  ==================
- 
+ CL_TestSound_f
  ==================
 */
 static void CL_TestSound_f (){
 
+	if (Cmd_Argc() != 1 && Cmd_Argc() != 2 && Cmd_Argc() != 5){
+		Com_Printf("Usage: testSound [soundShader] [direction x y z]\n");
+		return;
+	}
+
+	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || cl.demoPlayback){
+		Com_Printf("You must be in a level to test a sound\n");
+		return;
+	}
+
+	if (!CVar_AllowCheats()){
+		Com_Printf("You must enable cheats to test a sound\n");
+		return;
+	}
+
+	// Clear the old sound, if any
+	CL_ClearTestSound();
+
+	if (Cmd_Argc() < 2)
+		return;
+
+	// Test the specified sound
+	cl.testSound.active = true;
+
+	cl.testSound.played = false;
+
+	// Load the sound shader
+	cl.testSound.soundShader = S_RegisterSoundShader(Cmd_Argv(1));
+
+	// Set up the sound emitter
+	cl.testSound.soundEmitter.emitterId = ENTITYNUM_TEST;
+
+	VectorMA(cl.renderView.origin, 100.0f, cl.renderView.axis[0], cl.testSound.soundEmitter.origin);
+	VectorClear(cl.testSound.soundEmitter.velocity);
+
+	if (Cmd_Argc() == 2)
+		VectorClear(cl.testSound.soundEmitter.direction);
+	else {
+		cl.testSound.soundEmitter.direction[0] = Str_ToFloat(Cmd_Argv(2));
+		cl.testSound.soundEmitter.direction[1] = Str_ToFloat(Cmd_Argv(3));
+		cl.testSound.soundEmitter.direction[2] = Str_ToFloat(Cmd_Argv(4));
+
+		VectorNormalize(cl.testSound.soundEmitter.direction);
+	}
+
+	Matrix3_Identity(cl.testSound.soundEmitter.axis);
+
+	cl.testSound.soundEmitter.area = CM_PointInArea(cl.testSound.soundEmitter.origin, 0);
+	cl.testSound.soundEmitter.underwater = false;
+
+	cl.testSound.soundEmitter.soundParms[SOUNDPARM_VOLUME] = 1.0f;
+	cl.testSound.soundEmitter.soundParms[SOUNDPARM_PITCH] = 1.0f;
+	cl.testSound.soundEmitter.soundParms[SOUNDPARM_DRYFILTER] = 1.0f;
+	cl.testSound.soundEmitter.soundParms[SOUNDPARM_DRYFILTERHF] = 1.0f;
+	cl.testSound.soundEmitter.soundParms[SOUNDPARM_WETFILTER] = 1.0f;
+	cl.testSound.soundEmitter.soundParms[SOUNDPARM_WETFILTERHF] = 1.0f;
+	cl.testSound.soundEmitter.soundParms[SOUNDPARM_MINDISTANCE] = 0.0f;
+	cl.testSound.soundEmitter.soundParms[SOUNDPARM_MAXDISTANCE] = 0.0f;
 }
 
 /*
  ==================
- 
+ CL_TestSoundParm_f
+ ==================
+*/
+static void CL_TestSoundParm_f (){
+
+	int		index;
+
+	if (Cmd_Argc() != 3){
+		Com_Printf("Usage: testSoundParm <index> <value>\n");
+		return;
+	}
+
+	if (!cl.testSound.active){
+		Com_Printf("No active testSound\n");
+		return;
+	}
+
+	// Set the specified sound parm to the specified value
+	index = Str_ToInteger(Cmd_Argv(1));
+	if (index < 0 || index >= MAX_SOUND_PARMS){
+		Com_Printf("Specified index is out of range\n");
+		return;
+	}
+
+	cl.testSound.soundEmitter.soundParms[index] = Str_ToFloat(Cmd_Argv(2));
+}
+
+/*
+ ==================
+ CL_UpdateTestSound
  ==================
 */
 static void CL_UpdateTestSound (){
 
+	if (!cl.testSound.active)
+		return;
+
+	// Update underwater
+	if (CL_PointContents(cl.testSound.soundEmitter.origin, -1) & MASK_WATER)
+		cl.testSound.soundEmitter.underwater = true;
+	else
+		cl.testSound.soundEmitter.underwater = false;
+
+	// Add or update the sound emitter
+	if (!cl.testSound.emitterHandle)
+		cl.testSound.emitterHandle = S_AddSoundEmitter(&cl.testSound.soundEmitter);
+	else
+		S_UpdateSoundEmitter(cl.testSound.emitterHandle, &cl.testSound.soundEmitter);
+
+	if (!cl.testSound.emitterHandle)
+		return;
+
+	// If currently playing, do nothing
+	if (S_PlayingFromEmitter(cl.testSound.emitterHandle, SOUND_CHANNEL_ANY))
+		return;
+
+	// If done playing, remove it
+	if (cl.testSound.played){
+		CL_ClearTestSound();
+		return;
+	}
+
+	// Play the sound
+	cl.testSound.played = true;
+
+	S_PlaySoundFromEmitter(cl.testSound.emitterHandle, SOUND_CHANNEL_ANY, cl.time, cl.testSound.soundShader);
+}
+
+
+/*
+ ==============================================================================
+
+ POST-PROCESS MATERIAL TESTING
+
+ ==============================================================================
+*/
+
+
+/*
+ ==================
+ CL_ClearTestPostProcess
+ ==================
+*/
+static void CL_ClearTestPostProcess (){
+
+	// Clear the test post-process
+	Mem_Fill(&cl.testPostProcess, 0, sizeof(testPostProcess_t));
+}
+
+/*
+ ==================
+ CL_TestPostProcess_f
+ ==================
+*/
+static void CL_TestPostProcess_f (){
+
+	if (Cmd_Argc() > 2){
+		Com_Printf("Usage: testPostProcess [material]\n");
+		return;
+	}
+
+	if ((cls.state != CA_ACTIVE || cls.loading) || cls.playingCinematic || cl.demoPlayback){
+		Com_Printf("You must be in a level to test a post-process material\n");
+		return;
+	}
+
+	if (!CVar_AllowCheats()){
+		Com_Printf("You must enable cheats to test a post-process material\n");
+		return;
+	}
+
+	// Clear the old post-process material, if any
+	CL_ClearTestPostProcess();
+
+	if (Cmd_Argc() != 2)
+		return;
+
+	// Test the specified post-process material
+	cl.testPostProcess.active = true;
+
+	// Set up the post-process material
+	cl.testPostProcess.material = R_RegisterMaterialNoMip(Cmd_Argv(1));
+
+	cl.testPostProcess.materialParms[MATERIALPARM_RED] = 1.0f;
+	cl.testPostProcess.materialParms[MATERIALPARM_GREEN] = 1.0f;
+	cl.testPostProcess.materialParms[MATERIALPARM_BLUE] = 1.0f;
+	cl.testPostProcess.materialParms[MATERIALPARM_ALPHA] = 1.0f;
+	cl.testPostProcess.materialParms[MATERIALPARM_TIMEOFFSET] = -MS2SEC(cl.time);
+	cl.testPostProcess.materialParms[MATERIALPARM_DIVERSITY] = crand();
+	cl.testPostProcess.materialParms[MATERIALPARM_MISC] = 0.0f;
+	cl.testPostProcess.materialParms[MATERIALPARM_MODE] = 0.0f;
+}
+
+/*
+ ==================
+ CL_TestPostProcessParm_f
+ ==================
+*/
+static void CL_TestPostProcessParm_f (){
+
+	int		index;
+
+	if (Cmd_Argc() != 3){
+		Com_Printf("Usage: testPostProcessParm <index> <value | \"time\">\n");
+		return;
+	}
+
+	if (!cl.testPostProcess.active){
+		Com_Printf("No active testPostProcess\n");
+		return;
+	}
+
+	// Set the specified material parm to the specified value
+	index = Str_ToInteger(Cmd_Argv(1));
+	if (index < 0 || index >= MAX_MATERIAL_PARMS){
+		Com_Printf("Specified index is out of range\n");
+		return;
+	}
+
+	if (!Str_ICompare(Cmd_Argv(2), "time"))
+		cl.testPostProcess.materialParms[index] = -MS2SEC(cl.time);
+	else
+		cl.testPostProcess.materialParms[index] = Str_ToFloat(Cmd_Argv(2));
+}
+
+
+/*
+ ==================
+ CL_UpdateTestPostProcess
+ ==================
+*/
+static void CL_UpdateTestPostProcess (){
+
+	if (!cl.testPostProcess.active)
+		return;
+
+	// Draw the material
+	R_SetColor1(1.0f);
+	R_SetParameters(cl.testPostProcess.materialParms);
+	R_DrawStretchPic(0.0f, 0.0f, SCREEN_WIDTH, SCREEN_HEIGHT, 0.0f, 0.0f, 1.0f, 1.0f, H_SCALE, 1.0f, V_SCALE, 1.0f, cl.testPostProcess.material);
 }
 
 
@@ -746,7 +984,7 @@ static void CL_UpdateTestSound (){
 
 /*
  ==================
- CL_TestDecal_f
+ 
  ==================
 */
 static void CL_TestDecal_f (){
@@ -859,6 +1097,7 @@ void CL_UpdateTestTools (){
 	CL_UpdateTestSprite();
 	CL_UpdateTestBeam();
 	CL_UpdateTestSound();
+	CL_UpdateTestPostProcess();
 }
 
 /*
@@ -871,7 +1110,8 @@ void CL_ClearTestTools (){
 	CL_ClearTestModel();
 	CL_ClearTestSprite();
 	CL_ClearTestBeam();
-	CL_ClearTestSound ();
+	CL_ClearTestSound();
+	CL_ClearTestPostProcess();
 }
 
 /*
@@ -895,7 +1135,10 @@ void CL_AddCommands (){
 	Cmd_AddCommand("testBeam", CL_TestBeam_f, "Tests a beam", Cmd_ArgCompletion_MaterialName);
 	Cmd_AddCommand("testBeamParm", CL_TestBeamParm_f, "Tests a material parm on the current test beam", NULL);
 	Cmd_AddCommand("testSound", CL_TestSound_f, "Tests a sound", NULL);
-	Cmd_AddCommand("testDecal", CL_TestDecal_f, "Tests a decal", Cmd_ArgCompletion_MaterialName);
+	Cmd_AddCommand("testSoundParm", CL_TestSoundParm_f, "Tests a sound parm on the current test sound", NULL);
+	Cmd_AddCommand("testPostProcess", CL_TestPostProcess_f, "Tests a post-process material", Cmd_ArgCompletion_MaterialName);
+	Cmd_AddCommand("testPostProcessParm", CL_TestPostProcessParm_f, "Tests a post-process parm on the current test post-process", NULL);
+	Cmd_AddCommand("testDecal", CL_TestDecal_f, "Tests a decal", Cmd_ArgCompletion_MaterialName);	
 	Cmd_AddCommand("where", CL_Where_f, "Shows the current view position and angles", NULL);
 	Cmd_AddCommand("sizeUp", CL_SizeUp_f, NULL, NULL);
 	Cmd_AddCommand("sizeDown", CL_SizeDown_f, NULL, NULL);
@@ -922,6 +1165,9 @@ void CL_ShutdownCommands (){
 	Cmd_RemoveCommand("testBeam");
 	Cmd_RemoveCommand("testBeamParm");
 	Cmd_RemoveCommand("testSound");
+	Cmd_RemoveCommand("testSoundParm");
+	Cmd_RemoveCommand("testPostProcess");
+	Cmd_RemoveCommand("testPostProcessParm");
 	Cmd_RemoveCommand("testDecal");
 	Cmd_RemoveCommand("where");
 	Cmd_RemoveCommand("sizeIp");

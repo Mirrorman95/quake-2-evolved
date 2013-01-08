@@ -370,113 +370,113 @@ void CL_ParsePlayerMuzzleFlash (){
 	switch (weapon){
 	case MZ_BLASTER:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/blastf1a.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/blastf1a.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_BLUEHYPERBLASTER:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 0.0f, 0.0f, 1.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/hyprbf1a.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/hyprbf1a.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_HYPERBLASTER:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/hyprbf1a.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/hyprbf1a.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_MACHINEGUN:
 		CL_MachinegunEjectBrass(centity, 1, 15.0f, -8.0f, 18.0f);
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
 		Str_SPrintf(name, sizeof(name), "weapons/machgf%ib.wav", (rand() % 5) + 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_SHOTGUN:
 		CL_ShotgunEjectBrass(centity, 1, 12.0f, -6.0f, 16.0f);
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/shotgf1b.wav", 0), volume, ATTN_NORM, 0.0f);
-		S_PlaySound(NULL, entity, CHAN_AUTO, S_RegisterSound("weapons/shotgr1b.wav", 0), volume, ATTN_NORM, 100.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/shotgf1b.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_AUTO, S_RegisterSound("weapons/shotgr1b.wav", 0), volume, ATTN_NORM, 100.0f);
 
 		break;
 	case MZ_SSHOTGUN:
 		CL_ShotgunEjectBrass(centity, 2, 8.0f, -8.0f, 16.0f);
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/sshotf1b.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/sshotf1b.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_CHAINGUN1:
 		CL_MachinegunEjectBrass(centity, 1, 10.0f, -8.0f, 18.0f);
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 0.25f, 0.0f, false, 1);
 		Str_SPrintf(name, sizeof(name), "weapons/machgf%ib.wav", (rand() % 5) + 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_CHAINGUN2:
 		CL_MachinegunEjectBrass(centity, 2, 10.0f, -8.0f, 18.0f);
 		CL_DynamicLight(origin, 255.0f + (rand() & 31), 1.0f, 0.5f, 0.0f, false, 1);
 		Str_SPrintf(name, sizeof(name), "weapons/machgf%ib.wav", (rand() % 5) + 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 0.0f);
 		Str_SPrintf(name, sizeof(name), "weapons/machgf%ib.wav", (rand() % 5) + 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 50.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 50.0f);
 
 		break;
 	case MZ_CHAINGUN3:
 		CL_MachinegunEjectBrass(centity, 3, 10.0f, -8.0f, 18.0f);
 		CL_DynamicLight(origin, 250.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
 		Str_SPrintf(name, sizeof(name), "weapons/machgf%ib.wav", (rand() % 5) + 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 0.0f);
 		Str_SPrintf(name, sizeof(name), "weapons/machgf%ib.wav", (rand() % 5) + 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 33.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 33.0f);
 		Str_SPrintf(name, sizeof(name), "weapons/machgf%ib.wav", (rand() % 5) + 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 66.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), volume, ATTN_NORM, 66.0f);
 
 		break;
 	case MZ_RAILGUN:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 0.5f, 0.5f, 1.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/railgf1a.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/railgf1a.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_ROCKET:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 0.5f, 0.2f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/rocklf1a.wav", 0), volume, ATTN_NORM, 0.0f);
-		S_PlaySound(NULL, entity, CHAN_AUTO, S_RegisterSound("weapons/rocklr1b.wav", 0), volume, ATTN_NORM, 100.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/rocklf1a.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_AUTO, S_RegisterSound("weapons/rocklr1b.wav", 0), volume, ATTN_NORM, 100.0f);
 
 		break;
 	case MZ_GRENADE:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 0.5f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav", 0), volume, ATTN_NORM, 0.0f);
-		S_PlaySound(NULL, entity, CHAN_AUTO, S_RegisterSound("weapons/grenlr1b.wav", 0), volume, ATTN_NORM, 100.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_AUTO, S_RegisterSound("weapons/grenlr1b.wav", 0), volume, ATTN_NORM, 100.0f);
 
 		break;
 	case MZ_BFG:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 0.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/bfg__f1y.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/bfg__f1y.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_LOGIN:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 0.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 		CL_LogParticles(centity->current.origin, 0.0f, 1.0f, 0.0f);
 
 		break;
 	case MZ_LOGOUT:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 0.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/grenlf1a.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 		CL_LogParticles(centity->current.origin, 1.0f, 0.0f, 0.0f);
 
 		break;
 	case MZ_PHALANX:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 0.5f, 0.5f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/plasshot.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/plasshot.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_IONRIPPER:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 0.5f, 0.5f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/rippfire.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/rippfire.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_ETF_RIFLE:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 0.9f, 0.7f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/nail1.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/nail1.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_HEATBEAM:
@@ -485,12 +485,12 @@ void CL_ParsePlayerMuzzleFlash (){
 		break;
 	case MZ_BLASTER2:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 0.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/blastf1a.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/blastf1a.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ_TRACKER:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), -1.0f, -1.0f, -1.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/disint2.wav", 0), volume, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/disint2.wav", 0), volume, ATTN_NORM, 0.0f);
 
 		break;		
 	case MZ_NUKE1:
@@ -559,7 +559,7 @@ void CL_ParseMonsterMuzzleFlash (){
 		CL_MachinegunEjectBrass(centity, 1, monster_flash_offset[flash][0], monster_flash_offset[flash][1], monster_flash_offset[flash][2]);
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
 		CL_SmokePuffParticles(origin, 3, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("infantry/infatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("infantry/infatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_SOLDIER_MACHINEGUN_1:
@@ -573,7 +573,7 @@ void CL_ParseMonsterMuzzleFlash (){
 		CL_MachinegunEjectBrass(centity, 1, monster_flash_offset[flash][0], monster_flash_offset[flash][1], monster_flash_offset[flash][2]);
 		CL_DynamicLight(origin, 200 + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
 		CL_SmokePuffParticles(origin, 3.0f, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("soldier/solatck3.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("soldier/solatck3.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_GUNNER_MACHINEGUN_1:
@@ -587,7 +587,7 @@ void CL_ParseMonsterMuzzleFlash (){
 		CL_MachinegunEjectBrass(centity, 1, monster_flash_offset[flash][0], monster_flash_offset[flash][1], monster_flash_offset[flash][2]);
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
 		CL_SmokePuffParticles(origin, 3.0f, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("gunner/gunatck2.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("gunner/gunatck2.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_ACTOR_MACHINEGUN_1:
@@ -601,7 +601,7 @@ void CL_ParseMonsterMuzzleFlash (){
 		CL_MachinegunEjectBrass(centity, 1, monster_flash_offset[flash][0], monster_flash_offset[flash][1], monster_flash_offset[flash][2]);
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
 		CL_SmokePuffParticles(origin, 3.0f, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("infantry/infatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("infantry/infatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_BOSS2_MACHINEGUN_L1:
@@ -614,7 +614,7 @@ void CL_ParseMonsterMuzzleFlash (){
 		CL_MachinegunEjectBrass(centity, 1, monster_flash_offset[flash][0], monster_flash_offset[flash][1], monster_flash_offset[flash][2]);
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
 		CL_SmokePuffParticles(origin, 3.0f, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("infantry/infatck1.wav", 0), 1.0f, ATTN_NONE, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("infantry/infatck1.wav", 0), 1.0f, ATTN_NONE, 0.0f);
 
 		break;
 	case MZ2_SOLDIER_BLASTER_1:
@@ -627,28 +627,28 @@ void CL_ParseMonsterMuzzleFlash (){
 	case MZ2_SOLDIER_BLASTER_8:
 	case MZ2_TURRET_BLASTER:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("soldier/solatck2.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("soldier/solatck2.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_FLYER_BLASTER_1:
 	case MZ2_FLYER_BLASTER_2:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("flyer/flyatck3.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("flyer/flyatck3.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_MEDIC_BLASTER_1:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("medic/medatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("medic/medatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_HOVER_BLASTER_1:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("hover/hovatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("hover/hovatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_FLOAT_BLASTER_1:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("floater/fltatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("floater/fltatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_SOLDIER_SHOTGUN_1:
@@ -662,14 +662,14 @@ void CL_ParseMonsterMuzzleFlash (){
 		CL_ShotgunEjectBrass(centity, 1, monster_flash_offset[flash][0], monster_flash_offset[flash][1], monster_flash_offset[flash][2]);
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
 		CL_SmokePuffParticles(origin, 3.0f, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("soldier/solatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("soldier/solatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_TANK_BLASTER_1:
 	case MZ2_TANK_BLASTER_2:
 	case MZ2_TANK_BLASTER_3:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("tank/tnkatck3.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("tank/tnkatck3.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_TANK_MACHINEGUN_1:
@@ -695,20 +695,20 @@ void CL_ParseMonsterMuzzleFlash (){
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
 		CL_SmokePuffParticles(origin, 3.0f, 1);
 		Str_SPrintf(name, sizeof(name), "tank/tnkatk2%c.wav", 'a' + rand() % 5);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound(name, 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_CHICK_ROCKET_1:
 	case MZ2_TURRET_ROCKET:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 0.5f, 0.2f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("chick/chkatck2.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("chick/chkatck2.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_TANK_ROCKET_1:
 	case MZ2_TANK_ROCKET_2:
 	case MZ2_TANK_ROCKET_3:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 0.5f, 0.2f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("tank/tnkatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("tank/tnkatck1.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_SUPERTANK_ROCKET_1:
@@ -720,7 +720,7 @@ void CL_ParseMonsterMuzzleFlash (){
 	case MZ2_BOSS2_ROCKET_4:
 	case MZ2_CARRIER_ROCKET_1:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 0.5f, 0.2f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("tank/rocket.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("tank/rocket.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_GUNNER_GRENADE_1:
@@ -728,7 +728,7 @@ void CL_ParseMonsterMuzzleFlash (){
 	case MZ2_GUNNER_GRENADE_3:
 	case MZ2_GUNNER_GRENADE_4:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 0.5f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("gunner/gunatck3.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("gunner/gunatck3.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_GLADIATOR_RAILGUN_1:
@@ -759,7 +759,7 @@ void CL_ParseMonsterMuzzleFlash (){
 	case MZ2_MAKRON_BLASTER_16:
 	case MZ2_MAKRON_BLASTER_17:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("makron/blaster.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("makron/blaster.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_JORG_MACHINEGUN_L1:
@@ -771,7 +771,7 @@ void CL_ParseMonsterMuzzleFlash (){
 		CL_MachinegunEjectBrass(centity, 1, monster_flash_offset[flash][0], monster_flash_offset[flash][1], monster_flash_offset[flash][2]);
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 1.0f, 1.0f, 0.0f, false, 1);
 		CL_SmokePuffParticles(origin, 3.0f, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("boss3/xfire.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("boss3/xfire.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_JORG_MACHINEGUN_R1:
@@ -841,12 +841,12 @@ void CL_ParseMonsterMuzzleFlash (){
 	case MZ2_WIDOW_RUN_7:
 	case MZ2_WIDOW_RUN_8:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), 0.0f, 1.0f, 0.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("tank/tnkatck3.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("tank/tnkatck3.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_WIDOW_DISRUPTOR:
 		CL_DynamicLight(origin, 200.0f + (rand() & 31), -1.0f, -1.0f, -1.0f, false, 1);
-		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/disint2.wav", 0), 1.0f, ATTN_NORM, 0.0f);
+//		S_PlaySound(NULL, entity, CHAN_WEAPON, S_RegisterSound("weapons/disint2.wav", 0), 1.0f, ATTN_NORM, 0.0f);
 
 		break;
 	case MZ2_WIDOW_PLASMABEAM:

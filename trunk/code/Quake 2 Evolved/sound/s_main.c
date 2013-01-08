@@ -35,21 +35,54 @@ alConfig_t					alConfig;
 
 cvar_t *					s_logFile;
 cvar_t *					s_ignoreALErrors;
+cvar_t *					s_speedOfSound;
+cvar_t *					s_reverbTime;
+cvar_t *					s_obstructionScale;
+cvar_t *					s_exclusionScale;
+cvar_t *					s_occlusionScale;
 cvar_t *					s_singleSoundShader;
+cvar_t *					s_singleEmitter;
+cvar_t *					s_showUpdates;
+cvar_t *					s_showEmitters;
 cvar_t *					s_showStreaming;
+cvar_t *					s_showChannels;
+cvar_t *					s_showPortals;
+cvar_t *					s_showSounds;
+cvar_t *					s_skipUpdates;
+cvar_t *					s_skipEmitters;
 cvar_t *					s_skipStreaming;
 cvar_t *					s_skipShakes;
+cvar_t *					s_skipFlicker;
 cvar_t *					s_skipSpatialization;
+cvar_t *					s_skipAttenuation;
+cvar_t *					s_skipCones;
+cvar_t *					s_skipPortals;
+cvar_t *					s_skipDynamic;
+cvar_t *					s_skipObstructions;
+cvar_t *					s_skipExclusions;
+cvar_t *					s_skipOcclusions;
+cvar_t *					s_skipReverbs;
+cvar_t *					s_skipFilters;
 cvar_t *					s_alDriver;
 cvar_t *					s_deviceName;
 cvar_t *					s_captureDeviceName;
 cvar_t *					s_masterVolume;
-cvar_t *					s_voiceCapture;
-cvar_t *					s_maxChannels;
+cvar_t *					s_emitterVolume;
+cvar_t *					s_reverbVolume;
 cvar_t *					s_musicVolume;
+cvar_t *					s_voiceVolume;
+cvar_t *					s_dopplerShifts;
+cvar_t *					s_airAbsorption;
+cvar_t *					s_reverbEffects;
+cvar_t *					s_lowPassFilters;
+cvar_t *					s_voiceCapture;
+cvar_t *					s_voiceScale;
+cvar_t *					s_voiceLatency;
+cvar_t *					s_maxChannels;
 cvar_t *					s_maxSoundsPerShader;
 cvar_t *					s_soundQuality;
 cvar_t *					s_playDefaultSound;
+cvar_t *					s_muteOnLostFocus;
 
 
 /*
@@ -130,187 +163,19 @@ void S_Activate (bool active){
 
 /*
  ==================
- S_AllocPlaySound
- ==================
-*/
-static playSound_t *S_AllocPlaySound (){
-
-	playSound_t	*playSound;
-
-	playSound = snd.freePlaySounds.next;
-	if (playSound == &snd.freePlaySounds)
-		return NULL;		// No free playSounds
-
-	playSound->prev->next = playSound->next;
-	playSound->next->prev = playSound->prev;
-
-	return playSound;
-}
-
-/*
- ==================
- S_FreePlaySound
- ==================
-*/
-static void S_FreePlaySound (playSound_t *playSound){
-
-	playSound->prev->next = playSound->next;
-	playSound->next->prev = playSound->prev;
-
-	// Add to free list
-	playSound->next = snd.freePlaySounds.next;
-	snd.freePlaySounds.next->prev = playSound;
-	playSound->prev = &snd.freePlaySounds;
-	snd.freePlaySounds.next = playSound;
-}
-
-/*
- ==================
- S_SortPlaySound
- ==================
-*/
-static void S_SortPlaySound (playSound_t *playSound){
-
-	playSound_t *sort;
-
-	// Sort into the pending playSounds list
-	for (sort = snd.pendingPlaySounds.next; sort != &snd.pendingPlaySounds&& sort->beginTime < playSound->beginTime; sort = sort->next)
-		;
-
-	playSound->next = sort;
-	playSound->prev = sort->prev;
-
-	playSound->next->prev = playSound;
-	playSound->prev->next = playSound;
-}
-
-/*
- ==================
- S_SetupPlaySound
- ==================
-*/
-static void S_SetupPlaySound (const vec3_t position, int emitter, int channelId, sound_t *sound, float volume, float attenuation, int timeOfs){
-
-	playSound_t *playSound;
-
-	// Allocate a play sound
-	playSound = S_AllocPlaySound();
-	if (!playSound){
-		if (sound->name[0] == '#')
-			Com_DPrintf(S_COLOR_RED "Dropped sound %s\n", &sound->name[1]);
-		else
-			Com_DPrintf(S_COLOR_RED "Dropped sound sound/%s\n", sound->name);
-
-		return;
-	}
-
-	// Fill it in
-	playSound->sound = sound;
-	playSound->emitter = emitter;
-	playSound->channelId = channelId;
-
-	if (position){
-		playSound->fixedPosition = true;
-		VectorCopy(position, playSound->position);
-	}
-	else
-		playSound->fixedPosition = false;
-
-	playSound->volume = volume;
-	playSound->attenuation = attenuation;
-	playSound->beginTime = cl.time + timeOfs;
-
-	// Sort it
-	S_SortPlaySound(playSound);
-}
-
-/*
- ==================
- S_IssuePlaySounds
-
- TODO: is the channel state right?
- TODO: might need to fill in some more parameters
- ==================
-*/
-static void S_IssuePlaySounds (){
-
-	playSound_t	*playSound;
-	channel_t	*channel;
-
-	while (1){
-		playSound = snd.pendingPlaySounds.next;
-		if (playSound == &snd.pendingPlaySounds)
-			break;		// No more pending playSounds
-
-		if (playSound->beginTime > cl.time)
-			break;		// No more pending playSounds this frame
-
-		// Pick a channel and start the sound effect
-		channel = S_PickChannel(playSound->emitter, playSound->channelId);
-		if (!channel){
-			if (playSound->sound->name[0] == '#')
-				Com_DPrintf(S_COLOR_RED "Dropped sound %s\n", &playSound->sound->name[1]);
-			else
-				Com_DPrintf(S_COLOR_RED "Dropped sound sound/%s\n", playSound->sound->name);
-
-			S_FreePlaySound(playSound);
-			continue;
-		}
-
-		// Set up a play sound
-		channel->state = CS_NORMAL;
-
-		channel->fixedPosition = playSound->fixedPosition;
-		VectorCopy(playSound->position, channel->position);
-
-		channel->volume = playSound->volume;
-
-		if (playSound->attenuation != ATTN_NONE)
-			channel->distanceMult = 1.0f / playSound->attenuation;
-		else
-			channel->distanceMult = 0.0f;
-
-		// Play it
-		S_PlayChannel(channel, playSound->sound);
-
-		// Free it
-		S_FreePlaySound(playSound);
-	}
-}
-
-/*
- ==================
- S_PlaySound
- ==================
-*/
-void S_PlaySound (const vec3_t position, int emitter, int channelId, sound_t *sound, float volume, float attenuation, int timeOfs){
-
-	if (!sound)
-		return;
-
-	// Check if we have a sexed sound
-	if (sound->name[0] == '*')
-		sound = S_FindSexedSound(sound->name, &cl.entities[emitter].current, 0);
-
-	// Make sure the sound is loaded
-	if (!S_FindSound(sound->name, 0))
-		return;
-
-	// Set up a play sound
-	S_SetupPlaySound(position, emitter, channelId, sound, volume, attenuation, timeOfs);
-}
-
-/*
- ==================
  S_PlayLocalSound
  ==================
 */
-void S_PlayLocalSound (sound_t *sound){
+void S_PlayLocalSound (soundShader_t *soundShader){
 
-	if (!sound)
+	channel_t	*channel;
+
+	// Pick a channel and play the sound
+	channel = S_PickChannel(snd.localEmitter, snd.localEmitter->e.emitterId, SOUND_CHANNEL_ANY, soundShader);
+	if (!channel)
 		return;
 
-	S_PlaySound(NULL, cl.clientNum, SOUND_CHANNEL_ANY, sound, 1.0f, ATTN_NONE, 0.0f);
+	S_PlayChannel(channel, true);
 }
 
 /*
@@ -322,22 +187,6 @@ void S_StopAllSounds (){
 
 	channel_t	*channel;
 	int			i;
-
-	// Reset frame count
-	snd.frameCount = 0;
-
-	// Clear all the playSounds
-	memset(snd.playSounds, 0, sizeof(snd.playSounds));
-
-	snd.freePlaySounds.next = snd.freePlaySounds.prev = &snd.freePlaySounds;
-	snd.pendingPlaySounds.next = snd.pendingPlaySounds.prev = &snd.pendingPlaySounds;
-
-	for (i = 0; i < MAX_PLAYSOUNDS; i++){
-		snd.playSounds[i].prev = &snd.freePlaySounds;
-		snd.playSounds[i].next = snd.freePlaySounds.next;
-		snd.playSounds[i].prev->next = &snd.playSounds[i];
-		snd.playSounds[i].next->prev = &snd.playSounds[i];
-	}
 
 	// Flush raw samples
 	S_FlushRawSamples(true);
@@ -381,9 +230,6 @@ static void S_UpdateSounds (){
 	// Update looping sounds
 	S_UpdateLoopingSounds();
 
-	// Issue playSounds
-	S_IssuePlaySounds();
-
 	// Update all channels
 	for (i = 0, channel = snd.channels; i < snd.numChannels; i++, channel++){
 		if (channel->state == CS_FREE)
@@ -423,7 +269,7 @@ static void S_PlaySound_f (){
 		return;
 	}
 
-	S_PlayLocalSound(S_FindSound(Cmd_Argv(1), 0));
+	S_PlayLocalSound(S_FindSoundShader(Cmd_Argv(1)));
 }
 
 /*
@@ -501,6 +347,22 @@ static void S_SfxInfo_f (){
 	Com_Printf("CPU: %s\n", Sys_GetProcessorString());
 	Com_Printf("\n");
 
+	if (alConfig.efxAvailable){
+		if (snd.reverb.enabled)
+			Com_Printf("Using reverb effects\n");
+		else
+			Com_Printf("Reverb effects are disabled\n");
+
+		if (snd.filter.enabled)
+			Com_Printf("Using low-pass filters\n");
+		else
+			Com_Printf("Low-pass filters are disabled\n");
+	}
+	else {
+		Com_Printf("Reverb effects not available\n");
+		Com_Printf("Low-pass filters not available\n");
+	}
+
 	if (alConfig.eaxRAMAvailable)
 		Com_Printf("Using EAX-RAM (%.2f MB total, %.2f MB free)\n", qalGetInteger(AL_EAX_RAM_SIZE) * (1.0f / 1048576.0f), qalGetInteger(AL_EAX_RAM_FREE) * (1.0f / 1048576.0f));
 	else
@@ -521,7 +383,7 @@ static void S_SfxInfo_f (){
 
 /*
  ==================
- 
+ S_Register
  ==================
 */
 static void S_Register (){
@@ -529,24 +391,57 @@ static void S_Register (){
 	// Register variables
 	s_logFile = CVar_Register("s_logFile", "0", CVAR_INTEGER, CVAR_CHEAT, "Number of frames to log AL calls", 0, 0);
 	s_ignoreALErrors = CVar_Register("s_ignoreALErrors", "1", CVAR_BOOL, CVAR_CHEAT, "Ignore AL errors", 0, 0);
+	s_speedOfSound = CVar_Register("s_speedOfSound", "343.3", CVAR_FLOAT, CVAR_CHEAT, "Speed of sound (in meters per second)", 1.0f, 10000.0f);
+	s_reverbTime = CVar_Register("s_reverbTime", "1.0", CVAR_FLOAT, CVAR_CHEAT, "Reverb transition time in seconds", 0.0f, 60.0f);
+	s_obstructionScale = CVar_Register("s_obstructionScale", "1.0", CVAR_FLOAT, CVAR_CHEAT, "Sound obstruction scale factor", 0.0f, 10.0f);
+	s_exclusionScale = CVar_Register("s_exclusionScale", "1.0", CVAR_FLOAT, CVAR_CHEAT, "Sound exclusion scale factor", 0.0f, 10.0f);
+	s_occlusionScale = CVar_Register("s_occlusionScale", "1.0", CVAR_FLOAT, CVAR_CHEAT, "Sound occlusion scale factor", 0.0f, 10.0f);
 	s_singleSoundShader = CVar_Register("s_singleSoundShader", "0", CVAR_BOOL, CVAR_CHEAT | CVAR_LATCH, "Use a single default sound shader on every emitter", 0, 0);
+	s_singleEmitter = CVar_Register("s_singleEmitter", "-1", CVAR_INTEGER, CVAR_CHEAT, "Only play the specified emitter", -1, MAX_SOUND_EMITTERS - 1);
+	s_showUpdates = CVar_Register("s_showUpdates", "0", CVAR_BOOL, CVAR_CHEAT, "Show number of emitter updates", 0, 0);
+	s_showEmitters = CVar_Register("s_showEmitters", "0", CVAR_BOOL, CVAR_CHEAT, "Show sound emitters activity", 0, 0);
 	s_showStreaming = CVar_Register("s_showStreaming", "0", CVAR_BOOL, CVAR_CHEAT, "Show streaming sounds activity", 0, 0);
+	s_showChannels = CVar_Register("s_showChannels", "0", CVAR_BOOL, CVAR_CHEAT, "Show number of active channels", 0, 0);
+	s_showPortals = CVar_Register("s_showPortals", "0", CVAR_BOOL, CVAR_CHEAT, "Show number of portals checked during flowing", 0, 0);
+	s_showSounds = CVar_Register("s_showSounds", "0", CVAR_INTEGER, CVAR_CHEAT, "Draw active sounds (1 = draw audible ones, 2 = draw everything)", 0, 2);
+	s_skipUpdates = CVar_Register("s_skipUpdates", "0", CVAR_BOOL, CVAR_CHEAT, "Skip emitter updates, making everything static", 0, 0);
+	s_skipEmitters = CVar_Register("s_skipEmitters", "0", CVAR_BOOL, CVAR_CHEAT, "Skip playing sound emitters", 0, 0);
 	s_skipStreaming = CVar_Register("s_skipStreaming", "0", CVAR_BOOL, CVAR_CHEAT, "Skip playing streaming sounds", 0, 0);
 	s_skipShakes = CVar_Register("s_skipShakes", "0", CVAR_BOOL, CVAR_CHEAT, "Skip sound shakes", 0, 0);
+	s_skipFlicker = CVar_Register("s_skipFlicker", "0", CVAR_BOOL, CVAR_CHEAT, "Skip sound flicker", 0, 0);
 	s_skipSpatialization = CVar_Register("s_skipSpatialization", "0", CVAR_BOOL, CVAR_CHEAT, "Skip sound spatialization", 0, 0);
+	s_skipAttenuation = CVar_Register("s_skipAttenuation", "0", CVAR_BOOL, CVAR_CHEAT, "Skip sound distance attenuation", 0, 0);
+	s_skipCones = CVar_Register("s_skipCones", "0", CVAR_BOOL, CVAR_CHEAT, "Skip directional sound cones", 0, 0);
+	s_skipPortals = CVar_Register("s_skipPortals", "0", CVAR_BOOL, CVAR_CHEAT, "Skip sound portal flowing", 0, 0);
+	s_skipDynamic = CVar_Register("s_skipDynamic", "0", CVAR_BOOL, CVAR_CHEAT, "Skip dynamically modifying sounds", 0, 0);
+	s_skipObstructions = CVar_Register("s_skipObstructions", "0", CVAR_BOOL, CVAR_CHEAT, "Skip sound obstructions", 0, 0);
+	s_skipExclusions = CVar_Register("s_skipExclusions", "0", CVAR_BOOL, CVAR_CHEAT, "Skip sound exclusions", 0, 0);
+	s_skipOcclusions = CVar_Register("s_skipOcclusions", "0", CVAR_BOOL, CVAR_CHEAT, "Skip sound occlusions", 0, 0);
+	s_skipReverbs = CVar_Register("s_skipReverbs", "0", CVAR_BOOL, CVAR_CHEAT, "Skip reverb effects", 0, 0);
+	s_skipFilters = CVar_Register("s_skipFilters", "0", CVAR_BOOL, CVAR_CHEAT, "Skip low-pass filters", 0, 0);
 	s_alDriver = CVar_Register("s_alDriver", "", CVAR_STRING, CVAR_ARCHIVE | CVAR_LATCH, "AL driver", 0, 0);
 	s_deviceName = CVar_Register("s_deviceName", "", CVAR_STRING, CVAR_ARCHIVE | CVAR_LATCH, "Sound device name", 0, 0);
 	s_captureDeviceName = CVar_Register("s_captureDeviceName", "", CVAR_STRING, CVAR_ARCHIVE | CVAR_LATCH, "Sound capture device name", 0, 0);
 	s_masterVolume = CVar_Register("s_masterVolume", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Master volume", 0.0f, 1.0f);
-	s_maxChannels = CVar_Register("s_maxChannels", "64", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Maximum number of mixing channels", 32, MAX_SOUND_CHANNELS);
+	s_emitterVolume = CVar_Register("s_emitterVolume", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Emitter volume", 0.0f, 1.0f);
+	s_reverbVolume = CVar_Register("s_reverbVolume", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Reverb volume", 0.0f, 1.0f);
 	s_musicVolume = CVar_Register("s_musicVolume", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Music volume", 0.0f, 1.0f);
+	s_voiceVolume = CVar_Register("s_voiceVolume", "1.0", CVAR_FLOAT, CVAR_ARCHIVE, "Voice volume", 0.0f, 1.0f);
+	s_dopplerShifts = CVar_Register("s_dopplerShifts", "1", CVAR_BOOL, CVAR_ARCHIVE, "Enable doppler shifts", 0, 0);
+	s_airAbsorption = CVar_Register("s_airAbsorption", "0", CVAR_BOOL, CVAR_ARCHIVE, "Enable air absorption", 0, 0);
+	s_reverbEffects = CVar_Register("s_reverbEffects", "0", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Enable reverb effects", 0, 0);
+	s_lowPassFilters = CVar_Register("s_lowPassFilters", "0", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Enable low-pass filters", 0, 0);
 	s_voiceCapture = CVar_Register("s_voiceCapture", "0", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Enable voice capture", 0, 0);
+	s_voiceScale = CVar_Register("s_voiceScale", "2.0", CVAR_FLOAT, CVAR_ARCHIVE, "Voice amplitude scale factor", 0.0f, 5.0f);
+	s_voiceLatency = CVar_Register("s_voiceLatency", "0", CVAR_INTEGER, CVAR_ARCHIVE, "Latency in milliseconds for voice playback", 0, 1000);
+	s_maxChannels = CVar_Register("s_maxChannels", "64", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Maximum number of mixing channels", 32, MAX_SOUND_CHANNELS);
 	s_maxSoundsPerShader = CVar_Register("s_maxSoundsPerShader", "2", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Maximum number of sounds per shader", 1, MAX_SOUNDS_PER_SHADER);
 	s_soundQuality = CVar_Register("s_soundQuality", "1", CVAR_INTEGER, CVAR_ARCHIVE | CVAR_LATCH, "Sound quality (0 = low, 1 = medium, 2 = high)", 0, 2);
 	s_playDefaultSound = CVar_Register("s_playDefaultSound", "1", CVAR_BOOL, CVAR_ARCHIVE | CVAR_LATCH, "Play a beep for missing sounds", 0, 0);
+	s_muteOnLostFocus = CVar_Register("s_muteOnLostFocus", "1", CVAR_BOOL, CVAR_ARCHIVE, "Mute all sounds if focus is lost", 0, 0);
 
 	// Add commands
-	Cmd_AddCommand("playSound", S_PlaySound_f, "Plays a sound", Cmd_ArgCompletion_SoundName);
+	Cmd_AddCommand("playSound", S_PlaySound_f, "Plays a sound", Cmd_ArgCompletion_SoundShaderName);
 	Cmd_AddCommand("stopSounds", S_StopSounds_f, "Stops all playing sounds", NULL);
 	Cmd_AddCommand("listSoundDevices", S_ListSoundDevices_f, "Lists sound devices", NULL);
 	Cmd_AddCommand("listSoundCaptureDevices", S_ListSoundCaptureDevices_f, "Lists sound capture devices", NULL);
@@ -674,8 +569,10 @@ void S_Init (bool all){
 	// Initialize all the sound system modules
 	S_InitSounds();
 	S_InitSoundShaders();
+	S_InitReverbs();
 	S_InitMusic();
 	S_InitRawSamples();
+	S_InitEmitters();
 	S_InitChannels();
 
 	if (!s_ignoreALErrors->integerValue)
@@ -696,8 +593,10 @@ void S_Shutdown (bool all){
 
 	// Shutdown all the sound system modules
 	S_ShutdownChannels();
+	S_ShutdownEmitters();
 	S_ShutdownRawSamples();
 	S_ShutdownMusic();
+	S_ShutdownReverbs();
 	S_ShutdownSoundShaders();
 	S_ShutdownSounds();
 

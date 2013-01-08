@@ -244,6 +244,19 @@ void VectorClear (vec3_t v){
 
 /*
  ==================
+ VectorIsCleared
+ ==================
+*/
+bool VectorIsCleared (vec3_t v){
+
+	if (v[0] != 0.0f || v[1] != 0.0f || v[2] != 0.0f)
+		return false;
+
+	return true;
+}
+
+/*
+ ==================
  VectorCompare
  ==================
 */

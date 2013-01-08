@@ -353,6 +353,7 @@ extern vec3_t	byteDirs[NUM_VERTEX_NORMALS];
 
 float Sqrt (float x);
 float Tan (float x);
+float ACos (float x);
 float ATan (float y, float x);
 float ClampFloat (float value, float min, float max);
 

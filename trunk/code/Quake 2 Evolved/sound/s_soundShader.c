@@ -822,7 +822,7 @@ static bool S_ParseSoundShader (script_t *script, soundShader_t *soundShader){
 			break;			// End of sound shader
 
 		// Parse a sound entry
-		if (token.string[0] == '_' || !Str_ICompareChars(token.string, "sounds/", 7) || !Str_ICompareChars(token.string, "sounds\\", 7)){
+		if (token.string[0] == '_' || !Str_ICompareChars(token.string, "sound/", 6) || !Str_ICompareChars(token.string, "sound\\", 7)){
 			if (!S_ParseSoundEntry(script, soundShader, token.string))
 				return false;
 
@@ -916,7 +916,7 @@ static void S_ParseSoundShaderFile (script_t *script){
  S_NewSoundShader
  ==================
 */
-static soundShader_t *S_NewSoundShader (void){
+static soundShader_t *S_NewSoundShader (){
 
 	soundShader_t	*soundShader;
 
@@ -1399,11 +1399,11 @@ void S_InitSoundShaders (){
 	Cmd_AddCommand("printSoundShaderDef", S_PrintSoundShaderDef_f, "Prints a sound shader definition", Cmd_ArgCompletion_SoundShaderName);
 
 	// Load and parse .sndshd files
-	fileList = FS_ListFiles("sounds", ".sndshd", true, &numFiles);
+	fileList = FS_ListFiles("sound", ".sndshd", true, &numFiles);
 
 	for (i = 0; i < numFiles; i++){
 		// Load the script file
-		Str_SPrintf(name, sizeof(name), "sounds/%s", fileList[i]);
+		Str_SPrintf(name, sizeof(name), "sound/%s", fileList[i]);
 		Com_Printf("...loading '%s'\n", name);
 
 		script = PS_LoadScriptFile(name);

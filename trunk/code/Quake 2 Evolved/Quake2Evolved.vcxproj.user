@@ -3,6 +3,6 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LocalDebuggerWorkingDirectory>C:\Users\Kevin\Desktop\Quake2\</LocalDebuggerWorkingDirectory>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-    <LocalDebuggerCommandArguments>+set com_developer 1 +set r_skipLightScissors 1 +set r_skipShadows 1 +set con_noNotify 0</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>+set s_skipSpatialization 1 +set com_developer 1 +set r_skipLightScissors 1 +set r_skipShadows 1 +set con_noNotify 0</LocalDebuggerCommandArguments>
   </PropertyGroup>
 </Project>

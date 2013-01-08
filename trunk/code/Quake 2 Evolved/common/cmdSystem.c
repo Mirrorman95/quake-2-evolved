@@ -434,7 +434,7 @@ void Cmd_ArgCompletion_TextureName (void (*callback)(const char *string)){
 */
 void Cmd_ArgCompletion_SoundName (void (*callback)(const char *string)){
 
-	Cmd_ArgCompletion_PathExtension(callback, "sounds", ".wav", false);
+	Cmd_ArgCompletion_PathExtension(callback, "sound", ".wav", false);
 }
 
 /*

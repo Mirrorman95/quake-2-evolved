@@ -60,6 +60,7 @@ void			SnapVector (vec3_t v);
 void			VectorCopy (const vec3_t in, vec3_t out);
 void			VectorSet (vec3_t v, float x, float y, float z);
 void			VectorClear (vec3_t v);
+bool			VectorIsCleared (vec3_t v);
 bool			VectorCompare (const vec3_t v1, const vec3_t v2);
 bool			VectorCompareEpsilon (const vec3_t v1, const vec3_t v2, const float epsilon);
 void			VectorAdd (const vec3_t v1, const vec3_t v2, vec3_t out);

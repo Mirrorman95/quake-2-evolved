@@ -1,0 +1,52 @@
+
+//
+// Burning Scream
+//
+
+//
+// Death
+//
+
+//
+// Drown
+//
+
+//
+// Footsteps
+//
+
+player/footstep1
+{
+	minDistance 		80
+	maxDistance 		500
+	volume 			1.0
+
+	sound/player/step1.wav
+}
+
+player/footstep2
+{
+	minDistance 		80
+	maxDistance 		500
+	volume 			1.0
+
+	sound/player/step2.wav
+}
+
+player/footstep3
+{
+	minDistance 		80
+	maxDistance 		500
+	volume 			1.0
+
+	sound/player/step3.wav
+}
+
+player/footstep4
+{
+	minDistance 		80
+	maxDistance 		500
+	volume 			1.0
+
+	sound/player/step4.wav
+}

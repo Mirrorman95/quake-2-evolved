@@ -67,6 +67,10 @@ int				CM_NumClusters ();
 // Returns the number of areas in the current map
 int				CM_NumAreas ();
 
+// Returns the area contacted by the given point, or -1 if no area was
+// contacted
+int				CM_PointInArea (const vec3_t point, int nodeNum);
+
 // Returns true if the given areas are connected
 bool			CM_AreasAreConnected (int areaNum1, int areaNum2);
 

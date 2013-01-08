@@ -47,6 +47,9 @@
 #define DEG2RAD(a)					((a) * M_PI / 180.0f)
 #define RAD2DEG(a)					((a) * 180.0f / M_PI)
 
+#define UNITS2METERS(x)				((x) * 0.0254f)
+#define METERS2UNITS(x)				((x) * (1.0f / 0.0254f))
+
 #define SqrtFast(x)					((x) * Q_rsqrt(x))
 
 #define	frand()						((rand() & 0x7FFF) * (1.0/0x7FFF))		// 0 to 1

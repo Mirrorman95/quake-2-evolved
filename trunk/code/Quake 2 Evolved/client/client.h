@@ -85,19 +85,19 @@ typedef struct {
 
 // The client precaches these files during level load
 typedef struct {
-	// Sounds
-	sound_t *				richotecSounds[3];
-	sound_t *				sparkSounds[3];
-	sound_t *				footStepSounds[4];
-	sound_t *				laserHitSound;
-	sound_t *				railgunSound;
-	sound_t *				rocketExplosionSound;
-	sound_t *				grenadeExplosionSound;
-	sound_t *				waterExplosionSound;
-	sound_t *				machinegunBrassSound;
-	sound_t *				shotgunBrassSound;
-	sound_t *				lightningSound;
-	sound_t *				disruptorExplosionSound;
+	// Sound shaders
+	soundShader_t *			richotecSoundShaders[3];
+	soundShader_t *			sparkSoundShaders[3];
+	soundShader_t *			footStepSoundShaders[4];
+	soundShader_t *			laserHitSoundShader;
+	soundShader_t *			railgunSoundShader;
+	soundShader_t *			rocketExplosionSoundShader;
+	soundShader_t *			grenadeExplosionSoundShader;
+	soundShader_t *			waterExplosionSoundShader;
+	soundShader_t *			machinegunBrassSoundShader;
+	soundShader_t *			shotgunBrassSoundShader;
+	soundShader_t *			lightningSoundShader;
+	soundShader_t *			disruptorExplosionSoundShader;
 
 	// Models
 	model_t *				parasiteBeamModel;
@@ -167,7 +167,7 @@ typedef struct {
 	material_t *			bloodMarkMaterials[2][6];
 
 	// Files referenced by the server that the client needs
-	sound_t *				gameSounds[MAX_SOUNDS];
+	soundShader_t *			gameSoundShaders[MAX_SOUNDS];
 	model_t *				gameModels[MAX_MODELS];
 	struct cmodel_s	*		gameCModels[MAX_MODELS];
 	material_t *			gameMaterials[MAX_IMAGES];
@@ -193,6 +193,19 @@ typedef struct {
 typedef struct {
 	bool					active;
 
+	bool					isGun;
+
+	char					name[MAX_PATH_LENGTH];
+
+	int						time;
+	int						frames;
+
+	renderEntity_t			renderEntity;
+} testModel_t;
+
+typedef struct {
+	bool					active;
+
 	renderEntity_t			renderEntity;
 } testSprite_t;
 
@@ -205,15 +218,20 @@ typedef struct {
 typedef struct {
 	bool					active;
 
-	bool					isGun;
+	bool					played;
 
-	char					name[MAX_PATH_LENGTH];
+	int						emitterHandle;
+	soundEmitter_t			soundEmitter;
 
-	int						time;
-	int						frames;
+	soundShader_t *			soundShader;
+} testSound_t;
 
-	renderEntity_t			renderEntity;
-} testModel_t;
+typedef struct {
+	bool					active;
+
+	material_t *			material;
+	float					materialParms[MAX_MATERIAL_PARMS];
+} testPostProcess_t;
 
 typedef struct {
 	bool					active;
@@ -276,9 +294,11 @@ typedef struct {
 	int						numWeaponModels;
 
 	// Development tools
+	testModel_t				testModel;
 	testSprite_t			testSprite;
 	testBeam_t				testBeam;
-	testModel_t				testModel;
+	testSound_t				testSound;
+	testPostProcess_t		testPostProcess;
 
 	lagometer_t				lagometer;
 
@@ -447,6 +467,7 @@ extern cvar_t *				cl_run;
 extern cvar_t *				cl_noDelta;
 extern cvar_t *				cl_showNet;
 extern cvar_t *				cl_showMiss;
+extern cvar_t *				cl_showEvents;
 extern cvar_t *				cl_showMaterial;
 extern cvar_t *				cl_timeOut;
 extern cvar_t *				cl_visibleWeapons;
