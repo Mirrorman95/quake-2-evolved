@@ -1,0 +1,1 @@
+Quake II Evolved is a modification of the original Quake II engine. It uses a advanced shader system, new particles, decals, UI and much more.
